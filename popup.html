@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html style="width: 350px; height: 427px">
+
+<head>
+    <script src="js-libs/jquery-3.4.1.min.js"></script>
+    <script src="js-libs/popper.min.js"></script>
+    <script src="bootstrap-4.4.1-dist\js\bootstrap.bundle.min.js"></script>
+    <script src="js-libs/clipboard.min.js"></script>
+    <script src="js-libs/peerjs.min.js"></script>
+    <script src="js-libs/uuidv4.min.js"></script>
+    <script src="popup.js"></script>
+    <link rel="stylesheet" href="bootstrap-4.4.1-dist/css/bootstrap.min.css">
+</head>
+
+<body class="bg-light p-2">
+    <h3 class="text- mt-4 text-center">Party management</h3>
+    <button type="button" class="btn btn-secondary btn-lg btn-block mt-4" data-toggle="modal"
+        data-target="#new-party-modal">Start a new party</button>
+    <div class="input-group mb-3 mt-3">
+        <input type="text" class="form-control" placeholder="Party ID" aria-label="Party ID"
+            aria-describedby="button-party-id" id="party-join-textarea">
+        <div class="input-group-append">
+            <button class="btn btn-outline-secondary" type="button" id="button-joinnow" data-toggle="modal"
+                data-target="#join-party-modal">Join existing party</button>
+        </div>
+    </div>
+
+    <h3 class="text- mt-4 text-center">Current party <svg data-toggle="tooltip" data-placement="top"
+            title="These are the people in your current session" class="bi bi-question-fill" width="1em" height="1em"
+            viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path fill-rule="evenodd"
+                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM8.57 8.033H7.25C7.22 6.147 8.68 5.5 10.006 5.5c1.397 0 2.673.73 2.673 2.24 0 1.08-.635 1.594-1.244 2.057-.737.559-1.01.768-1.01 1.486v.355H9.117l-.007-.463c-.038-.927.495-1.498 1.168-1.987.59-.444.965-.736.965-1.371 0-.825-.628-1.168-1.314-1.168-.901 0-1.358.603-1.358 1.384zm1.251 6.443c-.584 0-1.009-.394-1.009-.927 0-.552.425-.94 1.01-.94.609 0 1.028.388 1.028.94 0 .533-.42.927-1.029.927z"
+                clip-rule="evenodd"></path>
+        </svg></h3>
+    <div class="input-group mt-3">
+        <div class="input-group-append flex-grow-1">
+            <span class="input-group-text flex-grow-1 text-break text-wrap"
+                id="current-party-textarea">VGhpcyBpcyBzb21lIHRleHQgd2l0aGluIGEgY2FyZCBib2R5Lg==</span>
+            <button class="btn btn-outline-secondary flex-grow-1" type="button" id="button-copy"
+                data-clipboard-target="#current-party-textarea">Copy</button>
+        </div>
+    </div>
+    <table class="table table-dark table-hover">
+        <thead>
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">User</th>
+                <th scope="col">Priviliges</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <th scope="row">1</th>
+                <td>Sean
+                </td>
+                <td>
+                    <span class="badge badge-pill badge-success">Admin</span>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">2</th>
+                <td>Lila</td>
+                <td>
+                    <span class="badge badge-pill badge-info">User</span>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- New Party Modal -->
+    <div class="modal fade" id="new-party-modal" tabindex="-1" role="dialog" aria-labelledby="new-party-modal"
+        aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Start a new party</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    You are currently inside a party. Are you sure that you want to start a new party?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary">Start new party</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Join Party Modal -->
+    <div class="modal fade" id="join-party-modal" tabindex="-1" role="dialog" aria-labelledby="join-party-modal"
+        aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Join a party</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    You are currently inside a party. Are you sure that you want to join another party?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary">Start new party</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
