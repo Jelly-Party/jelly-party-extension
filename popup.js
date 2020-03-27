@@ -41,13 +41,6 @@ $(function () {
     $("#button-start-party").click(function () {
         console.log("Starting a new party..");
         partyOverview.startNewParty();
-        // chrome.storage.sync.get(["options"], function (result) {
-        //     var url = result.options.url;
-        //     console.log(`Triggered. Let's inject the content script to ${url}!`)
-        //     chrome.tabs.executeScript({
-        //         code: 'document.querySelector(".skinHeader").style.backgroundColor="orange"'
-        //     });
-        // })
     })
     // Periodically poll the content script for the new state
 });
