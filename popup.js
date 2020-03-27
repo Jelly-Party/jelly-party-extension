@@ -12,6 +12,11 @@ $(function () {
         methods: {
             startNewParty: function () {
                 this.remotePeers = [];
+                chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+                    chrome.tabs.sendMessage(tabs[0].id, { command: "startParty" }, function (response) {
+                        console.log(response.farewell);
+                    });
+                });
             }
         }
     })
@@ -25,31 +30,48 @@ $(function () {
     $("#button-copy").click(function () { });
     // Handle button-join-party click
     $("#button-join-party").click(function () {
-        console.log("Joining new party..");
+        console.log("Requesting content script to join a new party..");
+        chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+            chrome.tabs.sendMessage(tabs[0].id, { command: "startNewParty" }, function (response) {
+                console.log(response.status);
+            });
+        });
     });
     // Handle button-start-party click
     $("#button-start-party").click(function () {
         console.log("Starting a new party..");
         partyOverview.startNewParty();
+        // chrome.storage.sync.get(["options"], function (result) {
+        //     var url = result.options.url;
+        //     console.log(`Triggered. Let's inject the content script to ${url}!`)
+        //     chrome.tabs.executeScript({
+        //         code: 'document.querySelector(".skinHeader").style.backgroundColor="orange"'
+        //     });
+        // })
     })
+    // Periodically poll the content script for the new state
 });
 
+window.setInterval(() => {
+    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+        chrome.tabs.sendMessage(tabs[0].id, { greeting: "hello" }, function (response) {
+            console.log(response.farewell);
+        });
+    });
+}, 1000)
+
 class JellyfinParty {
-    constructor(localPeerName, admin, makeDummyPeers) {
+    constructor(admin, makeDummyPeers) {
         this.admin = admin;
         this.remotePeers = []
         this.localPeerId = uuidv4();
         this.localPeerName = "guest";
-        this.localPeer = new peerjs.Peer(this.localPeerId);
         chrome.storage.sync.get(["options"], function (result) {
-            this.localPeerName = result.options.name;
+            this.localPeerName = result.options.name ? result.options.name : "guest";
         });
         if (makeDummyPeers) {
             this.makeDummyPeers();
         }
-        this.connectToSignalingServer().then(() => {
-            this.handleConnections();
-        });
     }
 
     makeDummyPeers() {
@@ -60,92 +82,4 @@ class JellyfinParty {
             { name: "dummy3", admin: false, connection: { peer: "testPeer3", send: s } }
         ]
     }
-
-    async connectToSignalingServer() {
-        this.localPeer.on('open', function (id) {
-            console.log('My peer Id is: ' + id);
-        });
-    }
-
-    filterPeer(skipPeer) {
-        return this.remotePeers.filter(e => e.connection.peer != skipPeer);
-    }
-
-    receiveCommand(initiator, command) {
-        // If we're admin, forward command to all peers except the initiator
-        if (this.admin) {
-            var relevantRemotePeers = this.filterPeer(initiator);
-            for (var peerIndex in relevantRemotePeers) {
-                var remotePeer = relevantRemotePeers[peerIndex]
-                remotePeer.connection.send(command)
-            }
-        }
-        // Next exectute the respective command
-        switch (command.type) {
-            case "playPause":
-                // synchronize, then toggle playPause
-                this.seek(command.tick);
-                this.togglePlayPause();
-                break;
-            case "seek":
-                // synchronize only
-                this.seek(command.tick);
-                break;
-            default:
-                console.log("Unknown command:");
-                console.log(command);
-        }
-    }
-
-    requestSeek(tick) {
-        var command = JSON.stringify({ type: "seek", tick: tick });
-        // If we're admin, forward playPause to all peers
-        if (admin) {
-            for (var peerIndex in this.remotePeers) {
-                var remotePeer = this.remotePeers[peerIndex].connection
-                remotePeer.connection.send(command)
-            }
-        }
-        else {
-            // we're a User and must ask the admin to playPause        
-            var admin = relevantRemotePeers.filter(e => e.admin);
-            admin.connection.send(command)
-        }
-    }
-
-    requestPlayPause(tick) {
-        var command = JSON.stringify({ type: "playPause", tick: tick })
-    }
-
-    togglePlayPause() {
-
-    }
-
-    seek() {
-
-    }
-
-    handleConnections() {
-        var rc = this.remotePeers;
-        var admin = this.admin;
-        var outerThis = this;
-        this.localPeer.on('connection', function (conn) {
-            console.log(rc);
-            rc.push({ name: conn.label, admin: conn.metadata.admin, connection: conn });
-            conn.on('open', function () {
-                conn.on('data', function (data) {
-                    command = JSON.parse(data)
-                    outerThis.receiveCommand(conn.peer, command);
-                });
-                conn.on('close', function () {
-                    console.log("Connection was closed")
-                    rc = rc.filter((e) => {
-                        return e.connection.peer != conn.peer;
-                    });
-                    console.log(rc)
-                });
-            });
-        });
-    }
 }
-
