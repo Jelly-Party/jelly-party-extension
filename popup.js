@@ -1,78 +1,50 @@
+var partyOverview;
 $(function () {
     // enable clipboard for on buttons
     new ClipboardJS(".btn");
     // Get options
-    var options = chrome.storage.sync.get(["options"], function (result) {
-        console.log(result);
-    });
-    // Create party & initialize Vue frontend
-    var partyOverview = new Vue({
-        el: "#partyOverview",
-        data: new JellyfinParty(true, true),
-        methods: {
-            startNewParty: function () {
-                this.remotePeers = [];
-                chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-                    chrome.tabs.sendMessage(tabs[0].id, { command: "startParty" }, function (response) {
-                        console.log(response.farewell);
+    var options;
+    chrome.storage.sync.get(["options"], function (result) {
+        options = result.options;
+        // Create party & initialize Vue frontend
+        partyOverview = new Vue({
+            el: "#partyOverview",
+            data: { isActive: false, peers: [], me: { name: options.name, admin: false, id: "" } },
+            methods: {
+                startParty: function () {
+                    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+                        console.log("Trying to start a new party.");
+                        chrome.tabs.sendMessage(tabs[0].id, { command: "startParty" }, function (response) {
+                            partyOverview.isActive = true; // to immediately show "Leave Party"-button
+                            // getState will update peers once they have joined
+                        });
                     });
-                });
+                },
+                joinParty: function (Id) { 
+                    //tbd
+                },
+                leaveParty: function () {
+                    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+                        chrome.tabs.sendMessage(tabs[0].id, { command: "leaveParty" }, function (response) {
+                            partyOverview.isActive = false;
+                            partyOverview.peers = [];
+                        });
+                    });
+                },
+                getState: function () {
+                    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+                        chrome.tabs.sendMessage(tabs[0].id, { command: "getState" }, function (response) {
+                            partyOverview.isActive = response.data.isActive;
+                            partyOverview.peers = response.data.peers;
+                        });
+                    });
+                }
             }
-        }
-    })
-    // Let's reset the party when options are changed
-    chrome.storage.onChanged.addListener(function (changes, namespace) {
-        partyOverview.startNewParty();
-    });
-    // Enable bootstrap tooltips
-    $('[data-toggle="tooltip"]').tooltip();
-    // Handle button-copy click
-    $("#button-copy").click(function () { });
-    // Handle button-join-party click
-    $("#button-join-party").click(function () {
-        console.log("Requesting content script to join a new party..");
-        chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-            chrome.tabs.sendMessage(tabs[0].id, { command: "startNewParty" }, function (response) {
-                console.log(response.status);
-            });
         });
     });
-    // Handle button-start-party click
-    $("#button-start-party").click(function () {
-        console.log("Starting a new party..");
-        partyOverview.startNewParty();
-    })
     // Periodically poll the content script for the new state
+    window.setInterval(() => {
+        partyOverview.getState();
+    }, 1000);
 });
 
-window.setInterval(() => {
-    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-        chrome.tabs.sendMessage(tabs[0].id, { greeting: "hello" }, function (response) {
-            console.log(response.farewell);
-        });
-    });
-}, 1000)
-
-class JellyfinParty {
-    constructor(admin, makeDummyPeers) {
-        this.admin = admin;
-        this.remotePeers = []
-        this.localPeerId = uuidv4();
-        this.localPeerName = "guest";
-        chrome.storage.sync.get(["options"], function (result) {
-            this.localPeerName = result.options.name ? result.options.name : "guest";
-        });
-        if (makeDummyPeers) {
-            this.makeDummyPeers();
-        }
-    }
-
-    makeDummyPeers() {
-        var s = (_) => console.log("Fake sending to test peer..");
-        this.remotePeers = [
-            { name: "dummy1", admin: false, connection: { peer: "testPeer1", send: s } },
-            { name: "dummy2", admin: false, connection: { peer: "testPeer2", send: s } },
-            { name: "dummy3", admin: false, connection: { peer: "testPeer3", send: s } }
-        ]
-    }
-}

@@ -1,26 +1,33 @@
-class JellyfinParty {
+class JellyParty {
     constructor(localPeerName, video) {
         this.localPeerName = localPeerName;
         this.video = video;
         this.remotePeers = []
         this.localPeerId = uuidv4();
-        this.partyState = { isActive: false, peers: [], me: this.localPeerName }
+        this.partyState = { isActive: false, peers: [], me: { name: this.localPeerName, admin: false, id: this.localPeerId } }
     }
 
     startParty() {
+        console.log("Jelly-Party: Staring a new party.");
         if (this.partyState.isActive) {
-            console.log("Jelly-party: Error. Cannot start a party while still in an active party.")
+            console.log("Jelly-Party: Error. Cannot start a party while still in an active party.")
         } else {
             this.admin = true;
             this.localPeer = new peerjs.Peer(this.localPeerId);
             this.partyState.isActive = true;
+            this.partyState.me.admin = true;
             this.connectToSignalingServer().then(() => {
                 this.handleConnections();
             });
         }
     }
 
+    getPartyState() {
+        return this.partyState;
+    }
+
     joinParty(partyId) {
+        console.log("Jelly-Party: Joining a party.");
         if (this.partyState.isActive) {
             console.log("Jelly-party: Error. Cannot join a party while still in an active party.")
         } else {
@@ -39,6 +46,7 @@ class JellyfinParty {
     }
 
     leaveParty() {
+        console.log("Jelly-Party: Leaving current party.");
         this.localPeer.destroy();
         this.partyState.isActive = false;
     }
@@ -112,18 +120,26 @@ class JellyfinParty {
     }
 
     togglePlayPause() {
-        switch (this.video.paused) {
-            case true:
-                this.video.play();
-                break;
-            case false:
-                this.video.pause();
-                break;
+        if (!this.video) {
+            console.log("No video defined. I shouldn't be receiving commands..");
+        } else {
+            switch (this.video.paused) {
+                case true:
+                    this.video.play();
+                    break;
+                case false:
+                    this.video.pause();
+                    break;
+            }
         }
     }
 
     seek(tick) {
-        this.video.currentTime = tick;
+        if (!this.video) {
+            console.log("No video defined. I shouldn't be receiving commands..");
+        } else {
+            this.video.currentTime = tick;
+        }
     }
 
     handleConnections() {
@@ -176,59 +192,71 @@ class JellyfinParty {
 // Define global variables
 var video, party;
 
-var findVideoInterval = setInterval(() => {
-    // since, oddly enough, the event listener for hashchange doesn't seem to function reliably, 
-    // we must use an interval "listener". So much for event based programming......
-    if (location.hash === "#!/videoosd.html") {
-        if (!video) {
-            clearInterval(findVideoInterval);
-            video = document.querySelector("video");
-            party = new JellyfinParty(true, video);
-            function playPause() {
-                console.log({ type: "playPause", tick: video.currentTime });
-                party.requestPeersToPlayPause();
-            }
-            function seek() {
-                console.log({ type: "seek", tick: video.currentTime });
-                party.requestPeersToSeek();
-            }
-            video.addEventListener('pause', (event) => {
-                playPause();
-            })
-            video.addEventListener('play', (event) => {
-                playPause();
-            })
-            video.addEventListener('seeking', (event) => {
-                seek();
-            })
-        }
-    } else {
-        console.log("Jelly-Party: I'll be waiting for a video..")
-    }
-}, 1000);
-
 chrome.storage.sync.get(["options"], function (result) {
-    party = new JellyfinParty(result.options.name, video);
+    party = new JellyParty(result.options.name, video);
+    chrome.runtime.onMessage.addListener(
+        function (request, sender, sendResponse) {
+            switch (request.command) {
+                case "startParty":
+                    // Start an entirely new party
+                    party.startParty();
+                    sendResponse({ status: "success" });
+                    break;
+                case "joinParty":
+                    // Join an existing party
+                    party.joinParty(request.data.partyId);
+                    sendResponse({ status: "success" });
+                    break;
+                case "leaveParty":
+                    // Leave the current party
+                    party.leaveParty();
+                    sendResponse({ status: "success" });
+                    break;
+                case "getState":
+                    // Frontend queried party state, so we must respond
+                    console.log(party.partyState)
+                    sendResponse({ status: "success", data: party.getPartyState() });
+                    break;
+            }
+        });
+    var findVideoInterval = setInterval(() => {
+        // since, oddly enough, the event listener for hashchange doesn't seem to function reliably, 
+        // we must use an interval "listener". So much for event based programming......
+        if (location.hash === "#!/videoosd.html") {
+            if (!video) {
+                console.log("Jelly-Party: Searching for video..");
+                video = document.querySelector("video");
+                if (video) {
+                    party.video = video;
+                    clearInterval(findVideoInterval);
+                    console.log("Jelly-Party: Found video. Attaching to video..");
+                    function playPause() {
+                        console.log({ type: "playPause", tick: video.currentTime });
+                        party.requestPeersToPlayPause();
+                    }
+                    function seek() {
+                        console.log({ type: "seek", tick: video.currentTime });
+                        party.requestPeersToSeek();
+                    }
+                    video.addEventListener('pause', (event) => {
+                        playPause();
+                    })
+                    video.addEventListener('play', (event) => {
+                        playPause();
+                    })
+                    video.addEventListener('seeking', (event) => {
+                        seek();
+                    })
+                }
+            }
+        } else {
+            console.log("Jelly-Party: I'll be waiting for a video..");
+        }
+    }, 1000);
 })
 
-chrome.runtime.onMessage.addListener(
-    function (request, sender, sendResponse) {
-        switch (request.command) {
-            case "startParty":
-                // Start an entirely new party
-                party.startParty();
-                sendResponse({ status: "success" });
-                break;
-            case "joinParty":
-                // Join an existing party
-                party.joinParty(request.data.partyId);
-                sendResponse({ status: "success" });
-                break;
-            case "leaveParty":
-                party.leaveParty();
-                break;
-            case "getState":
-                sendResponse({ status: "success", data: party.partyState })
-                break;
-        }
-    });
+
+
+
+
+
