@@ -9,7 +9,7 @@ $(function () {
         // Create party & initialize Vue frontend
         partyOverview = new Vue({
             el: "#partyOverview",
-            data: { isActive: false, peers: [], me: { name: options.name, admin: false, id: "" } },
+            data: { isActive: false, partyId: "", peers: [], me: { name: options.name, admin: false, id: "" } },
             methods: {
                 startParty: function () {
                     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
@@ -17,17 +17,42 @@ $(function () {
                         chrome.tabs.sendMessage(tabs[0].id, { command: "startParty" }, function (response) {
                             partyOverview.isActive = true; // to immediately show "Leave Party"-button
                             // getState will update peers once they have joined
+                            window.setTimeout(() => {
+                                partyOverview.getState();
+                            }, 100);
                         });
                     });
                 },
-                joinParty: function (Id) { 
-                    //tbd
+                joinParty: function (Id) {
+                    // Let's first validate the party id
+                    var id = $("#party-join-textarea")[0].value;
+                    if (id.length === 36) {
+                        chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+                            console.log("Trying to join an existing party.");
+                            chrome.tabs.sendMessage(tabs[0].id, { command: "joinParty", data: { partyId: id } }, function (response) {
+                                partyOverview.isActive = true; // to immediately show "Leave Party"-button
+                                // getState will update peers once they have joined
+                                window.setTimeout(() => {
+                                    partyOverview.getState();
+                                }, 100);
+                            });
+                        });
+                    } else {
+                        console.log("Invalid Id..");
+                        // TODO:
+                        // close current modal
+                        // show new modal to inform user that Id is not valid
+                    }
+
                 },
                 leaveParty: function () {
                     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
                         chrome.tabs.sendMessage(tabs[0].id, { command: "leaveParty" }, function (response) {
                             partyOverview.isActive = false;
                             partyOverview.peers = [];
+                            window.setTimeout(() => {
+                                partyOverview.getState();
+                            }, 100);
                         });
                     });
                 },
@@ -35,16 +60,20 @@ $(function () {
                     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
                         chrome.tabs.sendMessage(tabs[0].id, { command: "getState" }, function (response) {
                             partyOverview.isActive = response.data.isActive;
+                            partyOverview.partyId = response.data.partyId;
+                            partyOverview.me.admin = response.data.me.admin;
+                            partyOverview.me.id = response.data.me.id;
                             partyOverview.peers = response.data.peers;
                         });
                     });
                 }
             }
         });
+        // Initially poll the state once
+        partyOverview.getState();
     });
     // Periodically poll the content script for the new state
     window.setInterval(() => {
         partyOverview.getState();
     }, 1000);
 });
-

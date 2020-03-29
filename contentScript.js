@@ -4,7 +4,12 @@ class JellyParty {
         this.video = video;
         this.remotePeers = []
         this.localPeerId = uuidv4();
-        this.partyState = { isActive: false, peers: [], me: { name: this.localPeerName, admin: false, id: this.localPeerId } }
+        this.resetPartyState();
+    }
+
+    resetPartyState() {
+        delete this.partyState;
+        this.partyState = { isActive: false, partyId: "", peers: [], me: { name: this.localPeerName, admin: false, id: this.localPeerId } }
     }
 
     startParty() {
@@ -15,6 +20,7 @@ class JellyParty {
             this.admin = true;
             this.localPeer = new peerjs.Peer(this.localPeerId);
             this.partyState.isActive = true;
+            this.partyState.partyId = this.partyState.me.id;
             this.partyState.me.admin = true;
             this.connectToSignalingServer().then(() => {
                 this.handleConnections();
@@ -32,10 +38,9 @@ class JellyParty {
             console.log("Jelly-party: Error. Cannot join a party while still in an active party.")
         } else {
             this.admin = false;
-            this.remotePeers = []
-            this.localPeerId = uuidv4();
             this.localPeer = new peerjs.Peer(this.localPeerId);
             this.partyState.isActive = true;
+            this.partyState.partyId = partyId;
             this.connectToSignalingServer().then(() => {
                 this.handleConnections();
             });
@@ -48,7 +53,7 @@ class JellyParty {
     leaveParty() {
         console.log("Jelly-Party: Leaving current party.");
         this.localPeer.destroy();
-        this.partyState.isActive = false;
+        this.resetPartyState();
     }
 
     async connectToSignalingServer() {
