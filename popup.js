@@ -13,7 +13,7 @@ $(function () {
             methods: {
                 startParty: function () {
                     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-                        console.log("Trying to start a new party.");
+                        console.log("Jelly-Party: Trying to start a new party.");
                         chrome.tabs.sendMessage(tabs[0].id, { command: "startParty" }, function (response) {
                             partyOverview.isActive = true; // to immediately show "Leave Party"-button
                             // getState will update peers once they have joined
@@ -28,7 +28,7 @@ $(function () {
                     var id = $("#party-join-textarea")[0].value;
                     if (id.length === 36) {
                         chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-                            console.log("Trying to join an existing party.");
+                            console.log("Jelly-Party: Trying to join an existing party.");
                             chrome.tabs.sendMessage(tabs[0].id, { command: "joinParty", data: { partyId: id } }, function (response) {
                                 partyOverview.isActive = true; // to immediately show "Leave Party"-button
                                 // getState will update peers once they have joined
@@ -38,7 +38,7 @@ $(function () {
                             });
                         });
                     } else {
-                        console.log("Invalid Id..");
+                        console.log("Jelly-Party: Invalid Id..");
                         // TODO:
                         // close current modal
                         // show new modal to inform user that Id is not valid

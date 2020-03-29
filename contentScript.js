@@ -13,7 +13,7 @@ class JellyParty {
     }
 
     startParty() {
-        console.log("Jelly-Party: Staring a new party.");
+        console.log("Jelly-Party: Starting a new party.");
         if (this.partyState.isActive) {
             console.log("Jelly-Party: Error. Cannot start a party while still in an active party.")
         } else {
@@ -35,7 +35,7 @@ class JellyParty {
     joinParty(partyId) {
         console.log("Jelly-Party: Joining a party.");
         if (this.partyState.isActive) {
-            console.log("Jelly-party: Error. Cannot join a party while still in an active party.")
+            console.log("Jelly-Party: Error. Cannot join a party while still in an active party.")
         } else {
             this.admin = false;
             this.localPeer = new peerjs.Peer(this.localPeerId);
@@ -57,7 +57,7 @@ class JellyParty {
 
     async connectToSignalingServer() {
         this.localPeer.on('open', function (id) {
-            console.log('My peer Id is: ' + id);
+            console.log('Jelly-Party: My peer Id is: ' + id);
         });
     }
 
@@ -90,7 +90,7 @@ class JellyParty {
                 this.partyState.peers = command.data.peers;
                 break;
             default:
-                console.log("Unknown command:");
+                console.log("Jelly-Party: Unknown command:");
                 console.log(command);
         }
     }
@@ -125,7 +125,7 @@ class JellyParty {
 
     togglePlayPause() {
         if (!this.video) {
-            console.log("No video defined. I shouldn't be receiving commands..");
+            console.log("Jelly-Party: No video defined. I shouldn't be receiving commands..");
         } else {
             switch (this.video.paused) {
                 case true:
@@ -140,7 +140,7 @@ class JellyParty {
 
     seek(tick) {
         if (!this.video) {
-            console.log("No video defined. I shouldn't be receiving commands..");
+            console.log("Jelly-Party: No video defined. I shouldn't be receiving commands..");
         } else {
             this.video.currentTime = tick;
         }
@@ -153,13 +153,14 @@ class JellyParty {
             rc.push({ name: conn.metadata.peerName, admin: !this.admin, connection: conn });
             conn.on('open', function () {
                 // New connection opened. Must update party status
+                console.log("Jelly-Party: New connection opened");
                 outerThis.updatepartyState();
                 conn.on('data', function (data) {
                     command = JSON.parse(data)
                     outerThis.receiveCommand(conn.peer, command);
                 });
                 conn.on('close', function () {
-                    console.log("Connection was closed")
+                    console.log("Jelly-Party: Connection was closed");
                     rc = rc.filter((e) => {
                         return e.connection.peer != conn.peer;
                     });
@@ -226,7 +227,6 @@ chrome.storage.sync.get(["options"], function (result) {
                     break;
                 case "getState":
                     // Frontend queried party state, so we must respond
-                    console.log(party.partyState)
                     sendResponse({ status: "success", data: party.getPartyState() });
                     break;
             }
