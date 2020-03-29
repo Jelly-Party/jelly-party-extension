@@ -45,8 +45,7 @@ class JellyParty {
                 this.handleConnections();
             });
             // We must connect to the admin of the party we wish to join
-            var conn = this.localPeer.connect(partyId);
-            this.remotePeers.push({ name: conn.label, admin: conn.metadata.admin, connection: conn });
+            this.localPeer.connect(partyId, metadata = { peerName: this.localPeerName });
         }
     }
 
@@ -151,7 +150,7 @@ class JellyParty {
         var rc = this.remotePeers;
         var outerThis = this;
         this.localPeer.on('connection', function (conn) {
-            rc.push({ name: conn.label, admin: conn.metadata.admin, connection: conn });
+            rc.push({ name: conn.metadata.peerName, admin: !this.admin, connection: conn });
             conn.on('open', function () {
                 // New connection opened. Must update party status
                 outerThis.updatepartyState();
@@ -165,31 +164,39 @@ class JellyParty {
                         return e.connection.peer != conn.peer;
                     });
                     // Connection closed. Must update party status
-                    outerThis.updatepartyState();
+                    if (rc.length) {
+                        // There are still peers in the party
+                        outerThis.updatepartyState();
+                    } else {
+                        // Admin cannot broadcast the partyState anymore.
+                        // The party is empty: Users + Admins must reset their party state
+                        this.resetPartyState();
+                    }
                 });
             });
         });
     }
 
     updatepartyState() {
-        // Let's check if this party is still active
-        this.partyState.isActive = Boolean(this.remotePeers.length)
-        // Next compute the new party status
-        var peers = []
-        for (const remotePeer of this.remotePeers) {
-            // For the User, this will be only the admin or nobody (no party)
-            // For the Admin, this will be all users or nobody (no party)
-            peers.push({ name: remotePeer.name, admin: remotePeer.admin });
-        }
-        // We must make sure to update our own party state
-        this.partyState.peers = peers;
-        // If we're admin, we must push out the party status to all peers
+        // Only the admin can update the party status, since he keeps track of all connections
+        // He will then broadcast updates to all his peers.
         if (this.admin) {
+            // Let's check if this party is still active
+            this.partyState.isActive = Boolean(this.remotePeers.length);
+            // Next compute the new party status
+            var peers = []
+            for (const remotePeer of this.remotePeers) {
+                // For the User, this will be only the admin or nobody (no party)
+                // For the Admin, this will be all users or nobody (no party)
+                peers.push({ name: remotePeer.name, admin: remotePeer.admin });
+            }
+            // We must make sure to update our own party state
+            this.partyState.peers = peers;
+            // If we're admin, we must push out the party status to all peers
             var command = JSON.stringify({ type: "statusUpdate", data: this.partyState })
             for (const remotePeer of this.remotePeers) {
                 remotePeer.connection.send(command);
             }
-
         }
     }
 }
