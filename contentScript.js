@@ -18,13 +18,11 @@ class JellyParty {
             console.log("Jelly-Party: Error. Cannot start a party while still in an active party.")
         } else {
             this.admin = true;
+            this.setupConnectionListeners();
             this.localPeer = new peerjs.Peer(this.localPeerId);
             this.partyState.isActive = true;
             this.partyState.partyId = this.partyState.me.id;
             this.partyState.me.admin = true;
-            this.connectToSignalingServer().then(() => {
-                this.handleConnections();
-            });
         }
     }
 
@@ -38,12 +36,10 @@ class JellyParty {
             console.log("Jelly-Party: Error. Cannot join a party while still in an active party.")
         } else {
             this.admin = false;
+            this.setupConnectionListeners();
             this.localPeer = new peerjs.Peer(this.localPeerId);
             this.partyState.isActive = true;
             this.partyState.partyId = partyId;
-            this.connectToSignalingServer().then(() => {
-                this.handleConnections();
-            });
             // We must connect to the admin of the party we wish to join
             this.localPeer.connect(partyId, { metadata: { peerName: this.localPeerName } });
         }
@@ -53,12 +49,6 @@ class JellyParty {
         console.log("Jelly-Party: Leaving current party.");
         this.localPeer.destroy();
         this.resetPartyState();
-    }
-
-    async connectToSignalingServer() {
-        this.localPeer.on('open', function (id) {
-            console.log('Jelly-Party: My peer Id is: ' + id);
-        });
     }
 
     filterPeer(skipPeer) {
@@ -146,11 +136,15 @@ class JellyParty {
         }
     }
 
-    handleConnections() {
-        var rc = this.remotePeers;
+    setupConnectionListeners() {
+        console.log("Jelly-Party: Setting up connection handling");
+        var remotePeers = this.remotePeers;
         var outerThis = this;
+        this.localPeer.on('open', function (id) {
+            console.log('Jelly-Party: Connected to signaling server. My peer Id is: ' + id);
+        });
         this.localPeer.on('connection', function (conn) {
-            rc.push({ name: conn.metadata.peerName, admin: !this.admin, connection: conn });
+            remotePeers.push({ name: conn.metadata.peerName, admin: !this.admin, connection: conn });
             conn.on('open', function () {
                 // New connection opened. Must update party status
                 console.log("Jelly-Party: New connection opened");
@@ -161,11 +155,11 @@ class JellyParty {
                 });
                 conn.on('close', function () {
                     console.log("Jelly-Party: Connection was closed");
-                    rc = rc.filter((e) => {
+                    remotePeers = remotePeers.filter((e) => {
                         return e.connection.peer != conn.peer;
                     });
                     // Connection closed. Must update party status
-                    if (rc.length) {
+                    if (remotePeers.length) {
                         // There are still peers in the party
                         outerThis.updatepartyState();
                     } else {
