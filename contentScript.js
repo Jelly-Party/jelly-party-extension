@@ -18,8 +18,8 @@ class JellyParty {
             console.log("Jelly-Party: Error. Cannot start a party while still in an active party.")
         } else {
             this.admin = true;
-            this.setupConnectionListeners();
             this.localPeer = new peerjs.Peer(this.localPeerId);
+            this.setupConnectionListeners();
             this.partyState.isActive = true;
             this.partyState.partyId = this.partyState.me.id;
             this.partyState.me.admin = true;
@@ -36,8 +36,8 @@ class JellyParty {
             console.log("Jelly-Party: Error. Cannot join a party while still in an active party.")
         } else {
             this.admin = false;
-            this.setupConnectionListeners();
             this.localPeer = new peerjs.Peer(this.localPeerId);
+            this.setupConnectionListeners();
             this.partyState.isActive = true;
             this.partyState.partyId = partyId;
             // We must connect to the admin of the party we wish to join
