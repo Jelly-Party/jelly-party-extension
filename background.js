@@ -25,6 +25,9 @@ chrome.webNavigation.onCompleted.addListener(function () {
             file: 'js-libs/uuidv4.min.js'
           });
           chrome.tabs.executeScript({
+            file: 'js-libs/loglevel.min.js'
+          });
+          chrome.tabs.executeScript({
             file: 'contentScript.js'
           });
         } else {

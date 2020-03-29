@@ -1,3 +1,10 @@
+var DEBUG = true;
+if (DEBUG) {
+    log.enableAll();
+} else {
+    log.setDefaultLevel("info");
+}
+
 class JellyParty {
     constructor(localPeerName, video) {
         this.localPeerName = localPeerName;
@@ -5,6 +12,8 @@ class JellyParty {
         this.remotePeers = []
         this.localPeerId = uuidv4();
         this.resetPartyState();
+        log.debug("Jelly-Party: Global JellyParty Object");
+        log.debug(this);
     }
 
     resetPartyState() {
@@ -13,9 +22,9 @@ class JellyParty {
     }
 
     startParty() {
-        console.log("Jelly-Party: Starting a new party.");
+        log.info("Jelly-Party: Starting a new party.");
         if (this.partyState.isActive) {
-            console.log("Jelly-Party: Error. Cannot start a party while still in an active party.")
+            log.error("Jelly-Party: Error. Cannot start a party while still in an active party.")
         } else {
             this.admin = true;
             this.localPeer = new peerjs.Peer(this.localPeerId);
@@ -31,22 +40,27 @@ class JellyParty {
     }
 
     joinParty(partyId) {
-        console.log("Jelly-Party: Joining a party.");
+        log.info("Jelly-Party: Joining a party.");
         if (this.partyState.isActive) {
-            console.log("Jelly-Party: Error. Cannot join a party while still in an active party.")
+            log.error("Jelly-Party: Error. Cannot join a party while still in an active party.")
         } else {
             this.admin = false;
             this.localPeer = new peerjs.Peer(this.localPeerId);
+            window.setTimeout(() => {
+                log.debug("Here's your local Peer..")
+                log.debug(this.localPeer);
+            }, 5000)
             this.setupConnectionListeners();
             this.partyState.isActive = true;
             this.partyState.partyId = partyId;
+            this.partyState.me.admin = false;
             // We must connect to the admin of the party we wish to join
             this.localPeer.connect(partyId, { metadata: { peerName: this.localPeerName } });
         }
     }
 
     leaveParty() {
-        console.log("Jelly-Party: Leaving current party.");
+        log.info("Jelly-Party: Leaving current party.");
         this.localPeer.destroy();
         this.resetPartyState();
     }
@@ -80,8 +94,8 @@ class JellyParty {
                 this.partyState.peers = command.data.peers;
                 break;
             default:
-                console.log("Jelly-Party: Unknown command:");
-                console.log(command);
+                console.warn("Jelly-Party: Unknown command:");
+                console.warn(command);
         }
     }
 
@@ -115,7 +129,7 @@ class JellyParty {
 
     togglePlayPause() {
         if (!this.video) {
-            console.log("Jelly-Party: No video defined. I shouldn't be receiving commands..");
+            log.warn("Jelly-Party: No video defined. I shouldn't be receiving commands..");
         } else {
             switch (this.video.paused) {
                 case true:
@@ -130,31 +144,34 @@ class JellyParty {
 
     seek(tick) {
         if (!this.video) {
-            console.log("Jelly-Party: No video defined. I shouldn't be receiving commands..");
+            log.warn("Jelly-Party: No video defined. I shouldn't be receiving commands..");
         } else {
             this.video.currentTime = tick;
         }
     }
 
     setupConnectionListeners() {
-        console.log("Jelly-Party: Setting up connection handling");
+        log.debug("Jelly-Party: Setting up connection handling");
         var remotePeers = this.remotePeers;
         var outerThis = this;
         this.localPeer.on('open', function (id) {
-            console.log('Jelly-Party: Connected to signaling server. My peer Id is: ' + id);
+            log.debug('Jelly-Party: Connected to signaling server. My peer Id is: ' + id);
         });
         this.localPeer.on('connection', function (conn) {
+            log.debug("Jelly-Party: New connection request (connection should open soon).");
             remotePeers.push({ name: conn.metadata.peerName, admin: !this.admin, connection: conn });
             conn.on('open', function () {
                 // New connection opened. Must update party status
-                console.log("Jelly-Party: New connection opened");
+                log.debug("Jelly-Party: New connection opened!");
                 outerThis.updatepartyState();
                 conn.on('data', function (data) {
+                    log.debug("Jelly-Party: Received data:");
+                    log.debug(data);
                     command = JSON.parse(data)
                     outerThis.receiveCommand(conn.peer, command);
                 });
                 conn.on('close', function () {
-                    console.log("Jelly-Party: Connection was closed");
+                    log.debug("Jelly-Party: Connection was closed");
                     remotePeers = remotePeers.filter((e) => {
                         return e.connection.peer != conn.peer;
                     });
@@ -230,18 +247,18 @@ chrome.storage.sync.get(["options"], function (result) {
         // we must use an interval "listener". So much for event based programming......
         if (location.hash === "#!/videoosd.html") {
             if (!video) {
-                console.log("Jelly-Party: Searching for video..");
+                log.debug("Jelly-Party: Searching for video..");
                 video = document.querySelector("video");
                 if (video) {
                     party.video = video;
                     clearInterval(findVideoInterval);
-                    console.log("Jelly-Party: Found video. Attaching to video..");
+                    log.info("Jelly-Party: Found video. Attaching to video..");
                     function playPause() {
-                        console.log({ type: "playPause", tick: video.currentTime });
+                        log.debug({ type: "playPause", tick: video.currentTime });
                         party.requestPeersToPlayPause();
                     }
                     function seek() {
-                        console.log({ type: "seek", tick: video.currentTime });
+                        log.debug({ type: "seek", tick: video.currentTime });
                         party.requestPeersToSeek();
                     }
                     video.addEventListener('pause', (event) => {
@@ -256,7 +273,7 @@ chrome.storage.sync.get(["options"], function (result) {
                 }
             }
         } else {
-            console.log("Jelly-Party: I'll be waiting for a video..");
+            log.debug("Jelly-Party: I'll be waiting for a video..");
         }
     }, 1000);
 })
