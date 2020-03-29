@@ -45,7 +45,7 @@ class JellyParty {
                 this.handleConnections();
             });
             // We must connect to the admin of the party we wish to join
-            var conn = peer.connect(partyId);
+            var conn = this.localPeer.connect(partyId);
             this.remotePeers.push({ name: conn.label, admin: conn.metadata.admin, connection: conn });
         }
     }
