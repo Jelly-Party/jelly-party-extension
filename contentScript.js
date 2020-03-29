@@ -219,34 +219,33 @@ class JellyParty {
 
 // Define global variables
 var video, party;
-
-party = new JellyParty(result.options.name, video);
-chrome.runtime.onMessage.addListener(
-    function (request, sender, sendResponse) {
-        switch (request.command) {
-            case "startParty":
-                // Start an entirely new party
-                party.startParty();
-                sendResponse({ status: "success" });
-                break;
-            case "joinParty":
-                // Join an existing party
-                party.joinParty(request.data.partyId);
-                sendResponse({ status: "success" });
-                break;
-            case "leaveParty":
-                // Leave the current party
-                party.leaveParty();
-                sendResponse({ status: "success" });
-                break;
-            case "getState":
-                // Frontend queried party state, so we must respond
-                sendResponse({ status: "success", data: party.getPartyState() });
-                break;
-        }
-    });
-    
 chrome.storage.sync.get(["options"], function (result) {
+    party = new JellyParty(result.options.name, video);
+    chrome.runtime.onMessage.addListener(
+        function (request, sender, sendResponse) {
+            switch (request.command) {
+                case "startParty":
+                    // Start an entirely new party
+                    party.startParty();
+                    sendResponse({ status: "success" });
+                    break;
+                case "joinParty":
+                    // Join an existing party
+                    party.joinParty(request.data.partyId);
+                    sendResponse({ status: "success" });
+                    break;
+                case "leaveParty":
+                    // Leave the current party
+                    party.leaveParty();
+                    sendResponse({ status: "success" });
+                    break;
+                case "getState":
+                    // Frontend queried party state, so we must respond
+                    sendResponse({ status: "success", data: party.getPartyState() });
+                    break;
+            }
+        });
+
     var findVideoInterval = setInterval(() => {
         // since, oddly enough, the event listener for hashchange doesn't seem to function reliably, 
         // we must use an interval "listener". So much for event based programming......
@@ -281,8 +280,6 @@ chrome.storage.sync.get(["options"], function (result) {
             log.debug("Jelly-Party: I'll be waiting for a video..");
         }
     }, 1000);
-
-
 })
 
 
