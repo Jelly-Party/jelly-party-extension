@@ -38,26 +38,24 @@ class JellyParty {
             this.partyState.partyId = start ? uuidv4() : partyId;
             this.partyState.me.admin = this.admin;
             this.ws = new WebSocket("wss://www.jelly-party.com:8080");
-            const webSocket = this.ws;
-            const partyState = this.partyState;
-            const clientName = this.localPeerName;
-            webSocket.onopen = function (event) {
+            var outerThis = this;
+            this.ws.onopen = function (event) {
                 log.debug("Connected to Jelly-Party Websocket.");
-                webSocket.send(JSON.stringify({ type: "join", clientName: clientName, partyId: partyState.partyId }));
+                outerThis.ws.send(JSON.stringify({ type: "join", clientName: outerThis.localPeerName, partyId: outerThis.partyState.partyId }));
             };
-            webSocket.onmessage = function (event) {
+            this.ws.onmessage = function (event) {
                 var msg = JSON.parse(event.data);
                 switch (msg.type) {
                     case "videoUpdate":
                         if (msg.data.variant === "playPause") {
-                            this.seek(msg.data.tick)
-                            this.togglePlayPause()
+                            outerThis.seek(msg.data.tick)
+                            outerThis.togglePlayPause()
                         } else if (msg.data.variant === "seek") {
-                            this.seek(msg.data.tick);
+                            outerThis.seek(msg.data.tick);
                         }
                         break;
                     case "partyStateUpdate":
-                        this.partyState = msg.data.partyState;
+                        outerThis.partyState = msg.data.partyState;
                         break;
                     default:
                         log.debug(`Received unknown message: ${JSON.stringify(msg)}`)
