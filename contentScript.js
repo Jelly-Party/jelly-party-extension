@@ -5,6 +5,8 @@ if (DEBUG) {
     log.setDefaultLevel("info");
 }
 
+var justReceivedVideoUpdateRequest;
+
 class JellyParty {
     constructor(localPeerName, video) {
         this.localPeerName = localPeerName;
@@ -46,9 +48,9 @@ class JellyParty {
                 var msg = JSON.parse(event.data);
                 switch (msg.type) {
                     case "videoUpdate":
+                        justReceivedVideoUpdateRequest = true;
                         if (msg.data.variant === "playPause") {
-                            outerThis.seek(msg.data.tick)
-                            outerThis.togglePlayPause()
+                            outerThis.togglePlayPause();
                         } else if (msg.data.variant === "seek") {
                             outerThis.seek(msg.data.tick);
                         }
@@ -157,22 +159,46 @@ chrome.storage.sync.get(["options"], function (result) {
                     party.video = video;
                     clearInterval(findVideoInterval);
                     log.info("Jelly-Party: Found video. Attaching to video..");
-                    function playPause() {
+                    function requestPlayPause() {
                         log.debug({ type: "playPause", tick: video.currentTime });
                         party.requestPeersToPlayPause();
                     }
-                    function seek() {
+                    function requestSeek() {
                         log.debug({ type: "seek", tick: video.currentTime });
                         party.requestPeersToSeek();
                     }
                     video.addEventListener('pause', (event) => {
-                        playPause();
+                        if (justReceivedVideoUpdateRequest) {
+                            // Somebody else is asking us to pause
+                            // We must not forward the event, otherwise we'll end up in an infinite PlayPause loop
+                            log.debug("Not asking party to act - we did not generate the event. Event was caused by a peer.")
+                        } else {
+                            // We triggered the PlayPause button, so forward it to everybody
+                            requestPlayPause();
+                        }
+                        justReceivedVideoUpdateRequest = false;
                     })
                     video.addEventListener('play', (event) => {
-                        playPause();
+                        if (justReceivedVideoUpdateRequest) {
+                            // Somebody else is asking us to pause
+                            // We must not forward the event, otherwise we'll end up in an infinite PlayPause loop
+                            log.debug("Not asking party to act - we did not generate the event. Event was caused by a peer.")
+                        } else {
+                            // We triggered the PlayPause button, so forward it to everybody
+                            requestPlayPause();
+                        }
+                        justReceivedVideoUpdateRequest = false;
                     })
                     video.addEventListener('seeking', (event) => {
-                        seek();
+                        if (justReceivedVideoUpdateRequest) {
+                            // Somebody else is asking us to seek
+                            // We must not forward the event, otherwise we'll end up in an infinite seek loop
+                            log.debug("Not asking party to act - we did not generate the event. Event was caused by a peer.")
+                        } else {
+                            // We triggered the seek, so forward it to everybody
+                            requestSeek();
+                        }
+                        justReceivedVideoUpdateRequest = false;
                     })
                 }
             }
