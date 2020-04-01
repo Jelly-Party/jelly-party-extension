@@ -167,28 +167,21 @@ chrome.storage.sync.get(["options"], function (result) {
                         log.debug({ type: "seek", tick: video.currentTime });
                         party.requestPeersToSeek();
                     }
-                    video.addEventListener('pause', (event) => {
+                    const playPauseHandler = (_) => {
                         if (justReceivedVideoUpdateRequest) {
                             // Somebody else is asking us to pause
                             // We must not forward the event, otherwise we'll end up in an infinite PlayPause loop
                             log.debug("Not asking party to act - we did not generate the event. Event was caused by a peer.")
                         } else {
                             // We triggered the PlayPause button, so forward it to everybody
+                            // Sync, then trigger playPause
+                            requestSeek();
                             requestPlayPause();
                         }
                         justReceivedVideoUpdateRequest = false;
-                    })
-                    video.addEventListener('play', (event) => {
-                        if (justReceivedVideoUpdateRequest) {
-                            // Somebody else is asking us to pause
-                            // We must not forward the event, otherwise we'll end up in an infinite PlayPause loop
-                            log.debug("Not asking party to act - we did not generate the event. Event was caused by a peer.")
-                        } else {
-                            // We triggered the PlayPause button, so forward it to everybody
-                            requestPlayPause();
-                        }
-                        justReceivedVideoUpdateRequest = false;
-                    })
+                    }
+                    video.addEventListener('pause', playPauseHandler);
+                    video.addEventListener('play', playPauseHandler);
                     video.addEventListener('seeking', (event) => {
                         if (justReceivedVideoUpdateRequest) {
                             // Somebody else is asking us to seek
