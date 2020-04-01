@@ -15,7 +15,7 @@ class JellyParty {
     }
 
     resetPartyState() {
-        this.partyState = { isActive: false, partyId: "", peers: [], me: { name: this.localPeerName, admin: false } }
+        this.partyState = { isActive: false, partyId: "", peers: [] }
     }
 
     startParty() {
@@ -36,7 +36,6 @@ class JellyParty {
             this.admin = Boolean(start);
             this.partyState.isActive = true;
             this.partyState.partyId = start ? uuidv4() : partyId;
-            this.partyState.me.admin = this.admin;
             this.ws = new WebSocket("wss://www.jelly-party.com:8080");
             var outerThis = this;
             this.ws.onopen = function (event) {
@@ -55,7 +54,9 @@ class JellyParty {
                         }
                         break;
                     case "partyStateUpdate":
-                        outerThis.partyState = msg.data.partyState;
+                        outerThis.partyState = { ...outerThis.partyState, ...msg.data.partyState };
+                        log.debug("Received party state update. New party state is:");
+                        log.debug(outerThis.partyState);
                         break;
                     default:
                         log.debug(`Received unknown message: ${JSON.stringify(msg)}`)

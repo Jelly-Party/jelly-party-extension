@@ -38,7 +38,7 @@
                         clip-rule="evenodd"></path>
                 </svg></h3>
 
-            <div v-if="me.admin" class="input-group mt-3">
+            <div v-if="isActive" class="input-group mt-3">
                 <div class="input-group-append flex-grow-1">
                     <span class="input-group-text flex-grow-1 text-break text-wrap" id="current-party-textarea">
                         {{ partyId }} </span>
@@ -55,23 +55,12 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <th scope="row"> <b>1</b> </th>
-                        <td> <b> {{ me.name }} </b></td>
-                        <td>
-                            <b>
-                                <span v-if="me.admin" class="badge badge-pill badge-success"> Party Host </span>
-                                <span v-else class="badge badge-pill badge-warning"> Party Guest </span>
-                            </b>
-                        </td>
-                    </tr>
                     <tr v-for="(remotePeer, index) in peers">
-                        <th scope="row"> {{ index + 2 }}</th>
-                        <td> {{ remotePeer.name }}
+                        <th scope="row"> {{ index + 1 }}</th>
+                        <td> {{ remotePeer }}
                         </td>
                         <td>
-                            <span v-if="remotePeer.admin" class="badge badge-pill badge-success"> Party Host </span>
-                            <span v-else class="badge badge-pill badge-warning"> Party Guest </span>
+                            <span class="badge badge-pill badge-warning"> Party Guest </span>
                         </td>
                     </tr>
                 </tbody>

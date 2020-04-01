@@ -9,7 +9,7 @@ $(function () {
         // Create party & initialize Vue frontend
         partyOverview = new Vue({
             el: "#partyOverview",
-            data: { isActive: false, partyId: "", peers: [], me: { name: options.name, admin: false } },
+            data: { isActive: false, partyId: "", peers: [] },
             methods: {
                 startParty: function () {
                     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
@@ -61,7 +61,6 @@ $(function () {
                         chrome.tabs.sendMessage(tabs[0].id, { command: "getState" }, function (response) {
                             partyOverview.isActive = response.data.isActive;
                             partyOverview.partyId = response.data.partyId;
-                            partyOverview.me.admin = response.data.me.admin;
                             partyOverview.peers = response.data.peers;
                         });
                     });
