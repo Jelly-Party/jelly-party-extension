@@ -9,103 +9,66 @@ class JellyParty {
     constructor(localPeerName, video) {
         this.localPeerName = localPeerName;
         this.video = video;
-        this.remotePeers = []
-        this.localPeerId = uuidv4();
         this.resetPartyState();
         log.debug("Jelly-Party: Global JellyParty Object");
         log.debug(this);
     }
 
     resetPartyState() {
-        delete this.partyState;
-        this.partyState = { isActive: false, partyId: "", peers: [], me: { name: this.localPeerName, admin: false, id: this.localPeerId } }
-    }
-
-    getPartyState() {
-        return this.partyState;
+        this.partyState = { isActive: false, partyId: "", peers: [], me: { name: this.localPeerName, admin: false } }
     }
 
     startParty() {
-        log.info("Jelly-Party: Starting a new party.");
-        if (this.partyState.isActive) {
-            log.error("Jelly-Party: Error. Cannot start a party while still in an active party.")
-        } else {
-            this.admin = true;
-            this.partyState.isActive = true;
-            this.partyState.partyId = this.partyState.me.id;
-            this.partyState.me.admin = true;
-
-            this.localPeer = new Peer(this.localPeerId);
-            log.debug("Jelly-Party: Setting up connection listener");
-            var outerThis = this;
-            this.localPeer.on('open', function (id) {
-                log.debug('Jelly-Party: Connected to signaling server. My peer Id is: ' + id);
-            });
-            this.localPeer.on('connection', function (conn) {
-                log.debug("Jelly-Party: New connection request (connection should open soon).");
-                outerThis.remotePeers.push({ name: conn.metadata.peerName, admin: !this.admin, connection: conn });
-                conn.on('open', function () {
-                    // New connection opened. Must update party status
-                    log.debug("Jelly-Party: New connection opened!");
-                    outerThis.updatepartyState();
-                    conn.on('data', function (data) {
-                        log.debug("Jelly-Party: Received data:");
-                        command = JSON.parse(data)
-                        log.debug(command);
-                        outerThis.handleCommand(conn.peer, command);
-                    });
-                    conn.on('close', function () {
-                        log.debug("Jelly-Party: Connection was closed");
-                        outerThis.remotePeers = remotePeers.filter((e) => {
-                            return e.connection.peer != conn.peer;
-                        });
-                        // Connection to one peer closed. Must update party status.
-                        outerThis.updatepartyState();
-                    });
-                });
-            });
-        }
+        this.connectToPartyHelper();
     }
 
     joinParty(partyId) {
-        log.info("Jelly-Party: Joining a party.");
-        if (this.partyState.isActive) {
-            log.error("Jelly-Party: Error. Cannot join a party while still in an active party.")
-        } else {
-            this.admin = false;
-            this.partyState.isActive = true;
-            this.partyState.partyId = partyId;
-            this.partyState.me.admin = false;
+        this.connectToPartyHelper(partyId);
+    }
 
-            this.localPeer = new Peer(this.localPeerId);
-            // We must connect to the admin of the party we wish to join
-            var conn = this.localPeer.connect(partyId, { metadata: { peerName: this.localPeerName } });
-            this.remotePeers.push({ name: "partyAdmin", admin: true, connection: conn });
-            var outerThis = this;
-            conn.on('open', function () {
-                // New connection opened. Must update party status
-                log.debug("Jelly-Party: New connection to admin opened!");
-                conn.on('data', function (data) {
-                    log.debug("Jelly-Party: Received data:");
-                    command = JSON.parse(data)
-                    log.debug(command);
-                    outerThis.handleCommand(conn.peer, command);
-                });
-                conn.on('close', function () {
-                    log.debug("Jelly-Party: Connection was closed");
-                    outerThis.remotePeers = remotePeers.filter((e) => {
-                        return e.connection.peer != conn.peer;
-                    });
-                    // Connection closed. Must reset party status
-                    outerThis.resetPartyState();
-                });
-            });
+    connectToPartyHelper(partyId = "") {
+        // Start a new party if no partyId is given, else join an existing party
+        var start = partyId ? false : true;
+        log.info(`Jelly-Party: ${start ? "Starting a new party." : "Joining a new party."}`);
+        if (this.partyState.isActive) {
+            log.error(`Jelly-Party: Error. Cannot ${start ? "start" : "join"} a party while still in an active party.`)
+        } else {
+            this.admin = Boolean(start);
+            this.partyState.isActive = true;
+            this.partyState.partyId = start ? uuidv4() : partyId;
+            this.partyState.me.admin = this.admin;
+            this.ws = new WebSocket("wss://www.jelly-party.com:8080");
+            const webSocket = this.ws;
+            const partyState = this.partyState;
+            const clientName = this.localPeerName;
+            webSocket.onopen = function (event) {
+                log.debug("Connected to Jelly-Party Websocket.");
+                webSocket.send(JSON.stringify({ type: "join", clientName: clientName, partyId: partyState.partyId }));
+            };
+            webSocket.onmessage = function (event) {
+                var msg = JSON.parse(event.data);
+                switch (msg.type) {
+                    case "videoUpdate":
+                        if (msg.data.variant === "playPause") {
+                            this.seek(msg.data.tick)
+                            this.togglePlayPause()
+                        } else if (msg.data.variant === "seek") {
+                            this.seek(msg.data.tick);
+                        }
+                        break;
+                    case "partyStateUpdate":
+                        this.partyState = msg.data.partyState;
+                        break;
+                    default:
+                        log.debug(`Received unknown message: ${JSON.stringify(msg)}`)
+                }
+            }
         }
     }
 
     leaveParty() {
         log.info("Jelly-Party: Leaving current party.");
-        this.localPeer.destroy();
+        this.ws.close();
         this.resetPartyState();
     }
 
@@ -113,62 +76,21 @@ class JellyParty {
         return this.remotePeers.filter(e => e.connection.peer != skipPeer);
     }
 
-    handleCommand(initiator, command) {
-        // If we're admin, forward command to all peers except the initiator
-        if (this.admin) {
-            var relevantRemotePeers = this.filterPeer(initiator);
-            for (const remotePeer of relevantRemotePeers) {
-                remotePeer.connection.send(command)
-            }
-        }
-        // Next exectute the respective command
-        switch (command.type) {
-            case "playPause":
-                // synchronize, then toggle playPause
-                this.seek(command.tick);
-                this.togglePlayPause();
-                break;
-            case "seek":
-                // synchronize only
-                this.seek(command.tick);
-                break;
-            case "statusUpdate":
-                // only Users should receive this command! The admin knows about the
-                // party state at all times, since it handles all RTC connections.
-                this.partyState.peers = command.data.peers;
-                break;
-            default:
-                console.warn("Jelly-Party: Unknown command:");
-                console.warn(command);
-        }
-    }
-
     requestPeersToSeek() {
-        var command = JSON.stringify({ type: "seek", tick: this.video.currentTime });
-        // If we're admin, forward seek to all peers
-        this.requestForwarder(command);
+        if (this.partyState.isActive) {
+            var clientCommand = { type: "videoUpdate", data: { variant: "seek", tick: this.video.currentTime } };
+            var serverCommand = { type: "forward", partyId: this.partyState.partyId, data: { commandToForward: clientCommand } };
+            this.ws.send(JSON.stringify(serverCommand));
+        }
     }
 
     requestPeersToPlayPause() {
-        var command = JSON.stringify({ type: "playPause", tick: this.video.currentTime })
-        // If we're admin, forward playPause to all peers
-        this.requestForwarder(command);
-    }
-
-    requestForwarder(command) {
-        // Begin by checking if there's anybody to forward to..
-        if (this.remotePeers.length) {
-            if (this.admin) {
-                for (const remotePeer of this.remotePeers) {
-                    remotePeer.connection.send(command)
-                }
-            }
-            else {
-                // we're a User and must ask the admin to playPause
-                var adminPeer = this.remotePeers.filter(e => e.admin);
-                adminPeer.connection.send(command)
-            }
+        if (this.partyState.isActive) {
+            var clientCommand = { type: "videoUpdate", data: { variant: "playPause", tick: this.video.currentTime } };
+            var serverCommand = { type: "forward", partyId: this.partyState.partyId, data: { commandToForward: clientCommand } };
+            this.ws.send(JSON.stringify(serverCommand));
         }
+
     }
 
     togglePlayPause() {
@@ -191,29 +113,6 @@ class JellyParty {
             log.warn("Jelly-Party: No video defined. I shouldn't be receiving commands..");
         } else {
             this.video.currentTime = tick;
-        }
-    }
-
-    updatepartyState() {
-        // Only the admin can update the party status, since he keeps track of all connections
-        // He will then broadcast updates to all his peers.
-        if (this.admin) {
-            // Let's check if this party is still active
-            this.partyState.isActive = Boolean(this.remotePeers.length);
-            // Next compute the new party status
-            var peers = []
-            for (const remotePeer of this.remotePeers) {
-                // For the User, this will be only the admin or nobody (no party)
-                // For the Admin, this will be all users or nobody (no party)
-                peers.push({ name: remotePeer.name, admin: remotePeer.admin });
-            }
-            // We must make sure to update our own party state
-            this.partyState.peers = peers;
-            // If we're admin, we must push out the party status to all peers
-            var command = JSON.stringify({ type: "statusUpdate", data: this.partyState })
-            for (const remotePeer of this.remotePeers) {
-                remotePeer.connection.send(command);
-            }
         }
     }
 }
@@ -243,7 +142,7 @@ chrome.storage.sync.get(["options"], function (result) {
                     break;
                 case "getState":
                     // Frontend queried party state, so we must respond
-                    sendResponse({ status: "success", data: party.getPartyState() });
+                    sendResponse({ status: "success", data: party.partyState });
                     break;
             }
         });

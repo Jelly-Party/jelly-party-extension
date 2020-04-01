@@ -41,7 +41,7 @@
             <div v-if="me.admin" class="input-group mt-3">
                 <div class="input-group-append flex-grow-1">
                     <span class="input-group-text flex-grow-1 text-break text-wrap" id="current-party-textarea">
-                        {{ me.id }} </span>
+                        {{ partyId }} </span>
                     <button class="btn btn-outline-secondary flex-grow-1" type="button" id="button-copy"
                         data-clipboard-target="#current-party-textarea">Copy</button>
                 </div>
@@ -51,7 +51,7 @@
                     <tr>
                         <th scope="col">#</th>
                         <th scope="col">User</th>
-                        <th scope="col">Priviliges</th>
+                        <th scope="col">Role</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -60,8 +60,8 @@
                         <td> <b> {{ me.name }} </b></td>
                         <td>
                             <b>
-                                <span v-if="me.admin" class="badge badge-pill badge-success"> Admin </span>
-                                <span v-else class="badge badge-pill badge-warning"> User </span>
+                                <span v-if="me.admin" class="badge badge-pill badge-success"> Party Host </span>
+                                <span v-else class="badge badge-pill badge-warning"> Party Guest </span>
                             </b>
                         </td>
                     </tr>
@@ -70,8 +70,8 @@
                         <td> {{ remotePeer.name }}
                         </td>
                         <td>
-                            <span v-if="remotePeer.admin" class="badge badge-pill badge-success"> Admin </span>
-                            <span v-else class="badge badge-pill badge-warning"> User </span>
+                            <span v-if="remotePeer.admin" class="badge badge-pill badge-success"> Party Host </span>
+                            <span v-else class="badge badge-pill badge-warning"> Party Guest </span>
                         </td>
                     </tr>
                 </tbody>
