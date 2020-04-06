@@ -20,7 +20,7 @@ $(function () {
         // Create party & initialize Vue frontend
         partyOverview = new Vue({
             el: "#partyOverview",
-            data: { isActive: false, partyId: "", peers: [] },
+            data: { isActive: false, partyId: "", peers: [], websocketConnection: false },
             methods: {
                 startParty: function () {
                     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
@@ -73,6 +73,7 @@ $(function () {
                             partyOverview.isActive = response.data.isActive;
                             partyOverview.partyId = response.data.partyId;
                             partyOverview.peers = response.data.peers;
+                            partyOverview.websocketConnection = response.data.wsIsConnected;
                         });
                     });
                 }

@@ -10,6 +10,12 @@
     <script src="js-libs/vue.dev.js"></script>
     <script src="popup.js"></script>
     <link rel="stylesheet" href="bootstrap-4.4.1-dist/css/bootstrap.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+        }
+    </style>
 </head>
 
 <body class="bg-light p-2">
@@ -19,6 +25,9 @@
             data-target="#leave-party-modal">Leave current party</button>
         <button v-else type="button" class="btn btn-secondary btn-lg btn-block mt-4" data-toggle="modal"
             data-target="#start-party-modal">Start a new party</button>
+        <button v-if="!isActive" type="button" class="btn btn-secondary btn-lg btn-block mt-2" data-toggle="modal"
+            data-target="#start-party-modal">Rejoin last party</button>
+        <p class="text-center mt-3">or join an existing party by link</p>
         <div v-if="!isActive" class="input-group mb-3 mt-3">
             <input type="text" class="form-control" placeholder="Party ID" aria-label="Party ID"
                 aria-describedby="button-party-id" id="party-join-textarea">
@@ -28,7 +37,7 @@
             </div>
         </div>
 
-        <div>
+        <div v-if="isActive">
             <h3 class="text- mt-4 text-center">Current party <svg data-toggle="tooltip" data-placement="top"
                     title="These are the people in your current session" class="bi bi-question-fill" width="1em"
                     height="1em" viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
@@ -37,7 +46,7 @@
                         clip-rule="evenodd"></path>
                 </svg></h3>
 
-            <div v-if="isActive" class="input-group mt-3">
+            <div class="input-group mt-3">
                 <div class="input-group-append flex-grow-1">
                     <span class="input-group-text flex-grow-1 text-break text-wrap" id="current-party-textarea">
                         {{ partyId }} </span>
@@ -65,6 +74,14 @@
                 </tbody>
             </table>
         </div>
+        <!-- <div style="position: absolute; bottom: 15px; right: 15px; font-size: 11px">
+            {{ websocketConnection ? "Connected to server" : "Not connected to server" }} <svg class="bi bi-circle-fill"
+                width="1em" height="1em" viewBox="0 0 16 16"
+                v-bind:style="[websocketConnection ? {fill: 'green'} : {fill: 'grey'}]"
+                xmlns="http://www.w3.org/2000/svg">
+                <circle cx="8" cy="8" r="8" />
+            </svg>
+        </div> -->
 
         <!-- New Party Modal -->
         <div class="modal fade" id="start-party-modal" tabindex="-1" role="dialog" aria-labelledby="start-party-modal"
@@ -78,7 +95,7 @@
                         </button>
                     </div>
                     <div class="modal-body">
-                        You are currently inside a party. Are you sure that you want to start a new party?
+                        Are you sure that you want to start a new party?
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
@@ -100,7 +117,7 @@
                         </button>
                     </div>
                     <div class="modal-body">
-                        You are currently inside a party. Are you sure that you want to join another party?
+                        Are you sure that you want to join another party?
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>

@@ -22,7 +22,7 @@ if (typeof scriptAlreadyInjected === 'undefined') {
         }
 
         resetPartyState() {
-            this.partyState = { isActive: false, partyId: "", peers: [] }
+            this.partyState = { isActive: false, partyId: "", peers: [], wsIsConnected = false }
         }
 
         startParty() {
@@ -47,6 +47,7 @@ if (typeof scriptAlreadyInjected === 'undefined') {
                 var outerThis = this;
                 this.ws.onopen = function (event) {
                     log.debug("Connected to Jelly-Party Websocket.");
+                    outerThis.partyState.wsIsConnected = true;
                     outerThis.ws.send(JSON.stringify({ type: "join", clientName: outerThis.localPeerName, partyId: outerThis.partyState.partyId }));
                 };
                 this.ws.onmessage = function (event) {
@@ -71,6 +72,9 @@ if (typeof scriptAlreadyInjected === 'undefined') {
                         default:
                             log.debug(`Received unknown message: ${JSON.stringify(msg)}`)
                     }
+                }
+                this.ws.onclose = function (event) {
+                    outerThis.partyState.wsIsConnected = false;
                 }
             }
         }
