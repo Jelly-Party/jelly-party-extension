@@ -43,7 +43,7 @@ if (typeof scriptAlreadyInjected === 'undefined') {
                 this.admin = Boolean(start);
                 this.partyState.isActive = true;
                 this.partyState.partyId = start ? uuidv4() : partyId;
-                this.ws = new WebSocket("wss://www.jelly-party.com:8080");
+                this.ws = new WebSocket("wss://ws.jelly-party.com:8080");
                 var outerThis = this;
                 this.ws.onopen = function (event) {
                     log.debug("Connected to Jelly-Party Websocket.");
