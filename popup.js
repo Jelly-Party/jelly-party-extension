@@ -1,4 +1,15 @@
 var partyOverview;
+console.log(`We're on fire! Injecting script for ${window.location.href}`);
+chrome.tabs.executeScript({
+    file: 'js-libs/uuidv4.min.js'
+});
+chrome.tabs.executeScript({
+    file: 'js-libs/loglevel.min.js'
+});
+chrome.tabs.executeScript({
+    file: 'contentScript.js'
+});
+
 $(function () {
     // enable clipboard for on buttons
     new ClipboardJS(".btn");
