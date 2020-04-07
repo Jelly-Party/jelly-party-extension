@@ -22,7 +22,7 @@ if (typeof scriptAlreadyInjected === 'undefined') {
         }
 
         resetPartyState() {
-            this.partyState = { isActive: false, partyId: "", peers: [], wsIsConnected = false }
+            this.partyState = { isActive: false, partyId: "", peers: [], wsIsConnected: false }
         }
 
         startParty() {

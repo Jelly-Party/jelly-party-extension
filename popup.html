@@ -27,7 +27,7 @@
             data-target="#start-party-modal">Start a new party</button>
         <button v-if="!isActive" type="button" class="btn btn-secondary btn-lg btn-block mt-2" data-toggle="modal"
             data-target="#start-party-modal">Rejoin last party</button>
-        <p class="text-center mt-3">or join an existing party by link</p>
+        <p v-if="!isActive" class="text-center mt-3">or join an existing party by Id</p>
         <div v-if="!isActive" class="input-group mb-3 mt-3">
             <input type="text" class="form-control" placeholder="Party ID" aria-label="Party ID"
                 aria-describedby="button-party-id" id="party-join-textarea">
