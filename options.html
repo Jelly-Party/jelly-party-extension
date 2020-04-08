@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html style="width: 350px; height: 427px">
 
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,15 +12,12 @@
 </head>
 
 <body>
-    <nav class="navbar navbar-light bg-light" style="height:5vh">
-        <span class="navbar-brand mb-0 h1">Jelly-Party Options</span>
-    </nav>
     <div class="container">
 
         <!-- As a heading -->
         <div class="row align-items-center" style="height:95vh">
             <div class="col">
-                <h1 class="mb-3">Options</h1>
+                <h2 class="mb-3">Options</h2>
                 <div class="input-group mb-3">
                     <div class="input-group-prepend">
                         <span class="input-group-text">Username</span>
@@ -29,41 +26,11 @@
                         placeholder="Your username will be displayed in the Party" id="usernameTextfield"
                         aria-label="Your username will be displayed in the Party" aria-describedby="button-addon2">
                 </div>
-                <div class="input-group mb-3">
-                    <div class="input-group-prepend">
-                        <span class="input-group-text">URL</span>
-                    </div>
-                    <input type="text" class="form-control" required
-                        placeholder="The URL for which this plugin will work (e.g. www.example.com)" id="configuredURL"
-                        aria-label="The URL for which this plugin will work (e.g. www.example.com)" aria-describedby="button-addon2">
-                </div>
-                <div class="custom-control custom-switch">
-                    <input type="checkbox" class="custom-control-input" id="customSwitch1">
-                    <label class="custom-control-label" for="customSwitch1">Allow peers to pause/unpause</label>
-                    <svg data-toggle="tooltip" data-placement="top"
-                        title="Toggling this options allows peers to pause and unpause the video for a party for which you are the admin."
-                        class="bi bi-question-fill" width="1em" height="1em" viewBox="0 0 20 20" fill="currentColor"
-                        xmlns="http://www.w3.org/2000/svg">
-                        <path fill-rule="evenodd"
-                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM8.57 8.033H7.25C7.22 6.147 8.68 5.5 10.006 5.5c1.397 0 2.673.73 2.673 2.24 0 1.08-.635 1.594-1.244 2.057-.737.559-1.01.768-1.01 1.486v.355H9.117l-.007-.463c-.038-.927.495-1.498 1.168-1.987.59-.444.965-.736.965-1.371 0-.825-.628-1.168-1.314-1.168-.901 0-1.358.603-1.358 1.384zm1.251 6.443c-.584 0-1.009-.394-1.009-.927 0-.552.425-.94 1.01-.94.609 0 1.028.388 1.028.94 0 .533-.42.927-1.029.927z"
-                            clip-rule="evenodd"></path>
-                    </svg>
-                </div>
-                <div class="custom-control custom-switch">
-                    <input type="checkbox" class="custom-control-input" id="customSwitch2">
-                    <label class="custom-control-label" for="customSwitch2">Allow peers to seek</label>
-                    <svg data-toggle="tooltip" data-placement="top"
-                        title="Toggling this options allows peers to jump to another video location for a party for which you are the admin."
-                        class="bi bi-question-fill" width="1em" height="1em" viewBox="0 0 20 20" fill="currentColor"
-                        xmlns="http://www.w3.org/2000/svg">
-                        <path fill-rule="evenodd"
-                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM8.57 8.033H7.25C7.22 6.147 8.68 5.5 10.006 5.5c1.397 0 2.673.73 2.673 2.24 0 1.08-.635 1.594-1.244 2.057-.737.559-1.01.768-1.01 1.486v.355H9.117l-.007-.463c-.038-.927.495-1.498 1.168-1.987.59-.444.965-.736.965-1.371 0-.825-.628-1.168-1.314-1.168-.901 0-1.358.603-1.358 1.384zm1.251 6.443c-.584 0-1.009-.394-1.009-.927 0-.552.425-.94 1.01-.94.609 0 1.028.388 1.028.94 0 .533-.42.927-1.029.927z"
-                            clip-rule="evenodd"></path>
-                    </svg>
-                </div>
                 <button type="button" class="btn btn-secondary btn-lg btn-block mt-3" id="button-save-options"
                     data-toggle="collapse" href="#collapseExample">Save
                     changes </button>
+                <button type="button" class="btn btn-secondary btn-lg btn-block mt-3" id="button-go-back">Go
+                    Back</button>
                 <div class="collapse" id="collapseExample">
                     <div class="card bg-light mb-3">
                         <div class="card-body">
@@ -75,9 +42,7 @@
                 </div>
             </div>
         </div>
-
     </div>
-
     <script src="options.js"></script>
 </body>
 

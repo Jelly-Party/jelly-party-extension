@@ -1,5 +1,4 @@
 var partyOverview;
-console.log(`We're on fire! Injecting script for ${window.location.href}`);
 chrome.tabs.executeScript({
     file: 'js-libs/uuidv4.min.js'
 });
@@ -20,13 +19,12 @@ $(function () {
         // Create party & initialize Vue frontend
         partyOverview = new Vue({
             el: "#partyOverview",
-            data: { isActive: false, partyId: "", peers: [], websocketConnection: false },
+            data: { isActive: false, partyId: "", peers: [], websocketConnection: false, lastPartyId: "" },
             methods: {
                 startParty: function () {
                     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
                         console.log("Jelly-Party: Trying to start a new party.");
                         chrome.tabs.sendMessage(tabs[0].id, { command: "startParty" }, function (response) {
-                            partyOverview.isActive = true; // to immediately show "Leave Party"-button
                             // getState will update peers once they have joined
                             window.setTimeout(() => {
                                 partyOverview.getState();
@@ -34,14 +32,13 @@ $(function () {
                         });
                     });
                 },
-                joinParty: function (Id) {
+                joinParty: function () {
                     // Let's first validate the party id
                     var id = $("#party-join-textarea")[0].value;
                     if (id.length === 36) {
                         chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
                             console.log("Jelly-Party: Trying to join an existing party.");
                             chrome.tabs.sendMessage(tabs[0].id, { command: "joinParty", data: { partyId: id } }, function (response) {
-                                partyOverview.isActive = true; // to immediately show "Leave Party"-button
                                 // getState will update peers once they have joined
                                 window.setTimeout(() => {
                                     partyOverview.getState();
@@ -55,6 +52,24 @@ $(function () {
                         // show new modal to inform user that Id is not valid
                     }
 
+                },
+                rejoinParty: function () {
+                    if (partyOverview.lastPartyId) {
+                        console.log(`Rejoing last party with Party-Id: ${partyOverview.lastPartyId}`);
+                        console.log(`partyOverview.lastPartyId is ${partyOverview.lastPartyId}`);
+                        chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+                            console.log("Jelly-Party: Trying to rejoin previous party.");
+                            chrome.tabs.sendMessage(tabs[0].id, { command: "joinParty", data: { partyId: partyOverview.lastPartyId } }, function (response) {
+                                // getState will update peers once they have joined
+                                window.setTimeout(() => {
+                                    partyOverview.getState();
+                                }, 100);
+                            });
+                        });
+                    } else {
+                        // If there's no previous party, we'll just start a new one
+                        partyOverview.startParty();
+                    }
                 },
                 leaveParty: function () {
                     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
@@ -74,6 +89,7 @@ $(function () {
                             partyOverview.partyId = response.data.partyId;
                             partyOverview.peers = response.data.peers;
                             partyOverview.websocketConnection = response.data.wsIsConnected;
+                            partyOverview.lastPartyId = response.data.lastPartyId;
                         });
                     });
                 }
@@ -84,6 +100,8 @@ $(function () {
     });
     // Periodically poll the content script for the new state
     window.setInterval(() => {
+        console.log("Querying party state");
+        $('[data-toggle="tooltip"]').tooltip();
         partyOverview.getState();
     }, 1000);
 });

@@ -1,5 +1,5 @@
 {
-  "name": "Jelly-party",
+  "name": "Jelly-Party",
   "version": "1.0",
   "description": "An extension that synchronizes video sessions!",
   "permissions": [
@@ -8,7 +8,6 @@
     "storage",
     "webNavigation"
   ],
-  "options_page": "options.html",
   "background": {
     "scripts": [
       "background.js"
