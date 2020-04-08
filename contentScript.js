@@ -32,7 +32,7 @@ if (typeof scriptAlreadyInjected === 'undefined') {
             return videoPlayer.getVideoPlayerBySessionId(videoPlayer.getAllPlayerSessionIds()[0]).seek;
         }
         window.addEventListener('seekRequest', function (e) {
-            var tick = e.detail;
+            var tick = e.detail*1000;
             getSeekHook()(tick);
             console.log(`Received seek request: ${tick}.`);
         })
