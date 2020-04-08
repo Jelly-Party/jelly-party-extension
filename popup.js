@@ -1,10 +1,13 @@
 var partyOverview;
-chrome.tabs.executeScript({
-    file: 'js-libs/uuidv4.min.js'
-});
+// chrome.tabs.executeScript({
+//     file: 'js-libs/uuidv4.min.js'
+// });
 chrome.tabs.executeScript({
     file: 'js-libs/loglevel.min.js'
 });
+chrome.tabs.executeScript({
+    file: 'js-libs/randomName.js'
+})
 chrome.tabs.executeScript({
     file: 'contentScript.js'
 });
@@ -19,7 +22,7 @@ $(function () {
         // Create party & initialize Vue frontend
         partyOverview = new Vue({
             el: "#partyOverview",
-            data: { isActive: false, partyId: "", peers: [], websocketConnection: false, lastPartyId: "", websiteIsTested: false, currentlyWatching: "Nothing" },
+            data: { mainPage: true, isActive: false, partyId: "", peers: [], websocketConnection: false, lastPartyId: "", websiteIsTested: false, currentlyWatching: "Nothing", name: "guest" },
             methods: {
                 startParty: function () {
                     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
@@ -34,8 +37,8 @@ $(function () {
                 },
                 joinParty: function () {
                     // Let's first validate the party id
-                    var id = $("#party-join-textarea")[0].value;
-                    if (id.length === 36) {
+                    var id = $("#party-join-textarea")[0].value.strip();
+                    if (id.length < 8) {
                         chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
                             console.log("Jelly-Party: Trying to join an existing party.");
                             chrome.tabs.sendMessage(tabs[0].id, { command: "joinParty", data: { partyId: id } }, function (response) {
@@ -47,6 +50,7 @@ $(function () {
                         });
                     } else {
                         console.log("Jelly-Party: Invalid Id..");
+                        partyOverview.leaveParty();
                         // TODO:
                         // close current modal
                         // show new modal to inform user that Id is not valid
@@ -95,6 +99,28 @@ $(function () {
                             partyOverview.currentlyWatching = response.data.currentlyWatching;
                         });
                     });
+                },
+                toggleOptions: function () {
+                    // Read options and set input fields
+                    partyOverview.setOptions();
+                    partyOverview.mainPage = !partyOverview.mainPage;
+                },
+                saveOptions: function () {
+                    var name = $("#usernameTextfield")[0];
+                    var options = { name: (name.value) ? name.value : "guest" };
+                    chrome.storage.sync.set({ options: options }, function () {
+                        console.log('Options have been set:');
+                        console.log(options);
+                    })
+                    window.setTimeout(() => {
+                        $("#collapseExample").collapse("hide");
+                    }, 1000);
+                },
+                setOptions: function () {
+                    chrome.storage.sync.get(["options"], function (res) {
+                        console.log(res.options.name)
+                        partyOverview.name = res.options.name ? res.options.name : "guest";
+                    })
                 }
             }
         });

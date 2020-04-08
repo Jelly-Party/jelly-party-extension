@@ -1,4 +1,3 @@
-
 if (typeof scriptAlreadyInjected === 'undefined') {
     // scriptAlreadyInjected is undefined, therefore let's load everything
     var scriptAlreadyInjected = true;
@@ -16,7 +15,7 @@ if (typeof scriptAlreadyInjected === 'undefined') {
     const currentWebsite = window.location.href;
     const websiteIsTested = (() => {
         for (const stableWebsite of stableWebsites) {
-            if(currentWebsite.includes(stableWebsite)) {
+            if (currentWebsite.includes(stableWebsite)) {
                 return true;
             }
         }
@@ -61,7 +60,7 @@ if (typeof scriptAlreadyInjected === 'undefined') {
         resetPartyState() {
             const outerThis = this;
             chrome.storage.sync.get(["lastPartyId"], function (result) {
-                outerThis.partyState = { isActive: false, partyId: "", peers: [], wsIsConnected: false, lastPartyId: result.lastPartyId, websiteIsTested: websiteIsTested, currentlyWatching: currentWebsite.match(/https:\/\/(.+?)\//)[1] };
+                outerThis.partyState = { isActive: false, partyId: "", peers: [], wsIsConnected: false, lastPartyId: result.lastPartyId, websiteIsTested: websiteIsTested };
             })
         }
 
@@ -81,7 +80,7 @@ if (typeof scriptAlreadyInjected === 'undefined') {
             } else {
                 this.admin = Boolean(start);
                 this.partyState.isActive = true;
-                this.partyState.partyId = start ? uuidv4() : partyId;
+                this.partyState.partyId = start ? generateRoomWithoutSeparator() : partyId;
                 this.ws = new WebSocket("wss://ws.jelly-party.com:8080");
                 var outerThis = this;
                 this.ws.onopen = function (event) {
@@ -90,7 +89,7 @@ if (typeof scriptAlreadyInjected === 'undefined') {
                         log.debug(`Jelly-Party: Last Party Id set to ${outerThis.partyState.partyId}`);
                     })
                     outerThis.partyState.wsIsConnected = true;
-                    outerThis.ws.send(JSON.stringify({ type: "join", clientName: outerThis.localPeerName, partyId: outerThis.partyState.partyId }));
+                    outerThis.ws.send(JSON.stringify({ type: "join", clientName: outerThis.localPeerName, partyId: outerThis.partyState.partyId, currentlyWatching: currentWebsite.match(/https:\/\/(.+?)\//)[1] }));
                 };
                 this.ws.onmessage = function (event) {
                     var msg = JSON.parse(event.data);
