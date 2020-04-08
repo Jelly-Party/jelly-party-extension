@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html style="width: 350px; height: 427px">
+<html style="width: 350px; min-height: 427px">
 
 <head>
     <script src="js-libs/jquery-3.4.1.min.js"></script>
@@ -56,13 +56,20 @@
                             d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM8.57 8.033H7.25C7.22 6.147 8.68 5.5 10.006 5.5c1.397 0 2.673.73 2.673 2.24 0 1.08-.635 1.594-1.244 2.057-.737.559-1.01.768-1.01 1.486v.355H9.117l-.007-.463c-.038-.927.495-1.498 1.168-1.987.59-.444.965-.736.965-1.371 0-.825-.628-1.168-1.314-1.168-.901 0-1.358.603-1.358 1.384zm1.251 6.443c-.584 0-1.009-.394-1.009-.927 0-.552.425-.94 1.01-.94.609 0 1.028.388 1.028.94 0 .533-.42.927-1.029.927z"
                             clip-rule="evenodd"></path>
                     </svg></h3>
-
-                <div class="input-group mt-3">
-                    <div class="input-group-append flex-grow-1">
-                        <span class="input-group-text flex-grow-1 text-break text-wrap" id="current-party-textarea">
+                <div v-if="websiteIsTested" class="input-group">
+                    <div class="input-group-append">
+                        <span class="input-group-text" id="magicLink-link-textarea" style="font-size: 11px; width: 60vw; overflow:hidden">
+                            {{ magicLink }}</span>
+                        <button class="btn btn-outline-secondary" type="button" id="button-copy"
+                            data-clipboard-target="#magicLink-link-textarea">Copy Magic Link</button>
+                    </div>
+                </div>
+                <div v-else class="input-group mt-3">
+                    <div class="input-group-append">
+                        <span class="input-group-text text-break text-wrap" id="current-party-textarea" style="width: 65vw; overflow:hidden">
                             {{ partyId }} </span>
-                        <button class="btn btn-outline-secondary flex-grow-1" type="button" id="button-copy"
-                            data-clipboard-target="#current-party-textarea">Copy</button>
+                        <button class="btn btn-outline-secondary" type="button" id="button-copy"
+                            data-clipboard-target="#current-party-textarea">Copy Party Id</button>
                     </div>
                 </div>
                 <table class="table table-dark table-hover" id="sessionTable">
@@ -101,7 +108,7 @@
                     xmlns="http://www.w3.org/2000/svg">
                     <circle cx="8" cy="8" r="8" />
                 </svg>
-                {{websiteIsTested ? "Website Supported" : "Website experimental"}}
+                {{websiteIsTested ? "Website supported" : "Website experimental"}}
             </div>
             <div v-if="isActive" style="position: absolute; bottom: 15px; right: 15px; font-size: 0.7em">
                 {{ websocketConnection ? "Connected to server" : "Connection error." }}
@@ -220,10 +227,11 @@
                                 aria-label="Your username will be displayed in the Party"
                                 aria-describedby="button-addon2" v-bind:value="name">
                         </div>
-                        <button v-on:click="saveOptions" type="button" class="btn btn-secondary btn-lg btn-block mt-3" id="button-save-options"
-                            data-toggle="collapse" href="#collapseExample">Save
+                        <button v-on:click="saveOptions" type="button" class="btn btn-secondary btn-lg btn-block mt-3"
+                            id="button-save-options" data-toggle="collapse" href="#collapseExample">Save
                             changes </button>
-                        <button v-on:click="toggleOptions" type="button" class="btn btn-secondary btn-lg btn-block mt-3" id="button-go-back">Go
+                        <button v-on:click="toggleOptions" type="button" class="btn btn-secondary btn-lg btn-block mt-3"
+                            id="button-go-back">Go
                             Back</button>
                         <div class="collapse" id="collapseExample">
                             <div class="card bg-light mb-3">

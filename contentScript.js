@@ -11,7 +11,7 @@ if (typeof scriptAlreadyInjected === 'undefined') {
 
     var justReceivedVideoUpdateRequest;
     // Stable Websites; other websites will likely work, but will receive the "experimental"-flag
-    const stableWebsites = ["https://www.netflix.com", "https://www.amazon", "https://www.youtube.com", "https://www.vimeo.com", "https://www.disneyplus.com"];
+    const stableWebsites = ["https://www.netflix.com", "https://www.amazon", "https://www.youtube.com", "https://vimeo.com", "https://www.disneyplus.com"];
     const currentWebsite = window.location.href;
     const websiteIsTested = (() => {
         for (const stableWebsite of stableWebsites) {
@@ -21,6 +21,12 @@ if (typeof scriptAlreadyInjected === 'undefined') {
         }
         return false;
     })()
+    const websiteURL = window.location.href;
+    var partyIdFromURL = window.location.search.match(/jellyPartyId=(.+)/);
+    if (partyIdFromURL) {
+        partyIdFromURL = partyIdFromURL[1];
+    }
+    log.debug(`partyIdFromURL is ${partyIdFromURL}`);
 
     // Required for Netflix hack
     const injectScript = function (func) {
@@ -52,6 +58,7 @@ if (typeof scriptAlreadyInjected === 'undefined') {
         constructor(localPeerName, video) {
             this.localPeerName = localPeerName;
             this.video = video;
+            this.magicLinkUsed = false;
             this.resetPartyState();
             log.debug("Jelly-Party: Global JellyParty Object");
             log.debug(this);
@@ -61,6 +68,11 @@ if (typeof scriptAlreadyInjected === 'undefined') {
             const outerThis = this;
             chrome.storage.sync.get(["lastPartyId"], function (result) {
                 outerThis.partyState = { isActive: false, partyId: "", peers: [], wsIsConnected: false, lastPartyId: result.lastPartyId, websiteIsTested: websiteIsTested };
+                if (partyIdFromURL && !outerThis.magicLinkUsed) {
+                    log.debug("Joining party once via magic link.");
+                    outerThis.magicLinkUsed = true;
+                    outerThis.joinParty(partyIdFromURL);
+                }
             })
         }
 
@@ -81,6 +93,12 @@ if (typeof scriptAlreadyInjected === 'undefined') {
                 this.admin = Boolean(start);
                 this.partyState.isActive = true;
                 this.partyState.partyId = start ? generateRoomWithoutSeparator() : partyId;
+                // Set the magic link
+                if (websiteIsTested) {
+                    // This is a stable website for which magic links work. Let's generate one.
+                    // Reuse the website URL as magic link if we joined through it, else generate new magic link for other peers
+                    this.partyState.magicLink = partyIdFromURL ? websiteURL : (websiteURL + (websiteURL.includes("?") ? "&" : "?") + `jellyPartyId=${this.partyState.partyId}`);
+                }
                 this.ws = new WebSocket("wss://ws.jelly-party.com:8080");
                 var outerThis = this;
                 this.ws.onopen = function (event) {

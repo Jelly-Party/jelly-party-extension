@@ -13,7 +13,7 @@ chrome.tabs.executeScript({
 });
 
 $(function () {
-    // enable clipboard for on buttons
+    // enable clipboard for buttons
     new ClipboardJS(".btn");
     // Get options
     var options;
@@ -22,7 +22,7 @@ $(function () {
         // Create party & initialize Vue frontend
         partyOverview = new Vue({
             el: "#partyOverview",
-            data: { mainPage: true, isActive: false, partyId: "", peers: [], websocketConnection: false, lastPartyId: "", websiteIsTested: false, currentlyWatching: "Nothing", name: "guest" },
+            data: { mainPage: true, isActive: false, partyId: "", peers: [], websocketConnection: false, lastPartyId: "", websiteIsTested: false, name: "guest", magicLink: "" },
             methods: {
                 startParty: function () {
                     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
@@ -97,6 +97,7 @@ $(function () {
                             partyOverview.lastPartyId = response.data.lastPartyId;
                             partyOverview.websiteIsTested = response.data.websiteIsTested;
                             partyOverview.currentlyWatching = response.data.currentlyWatching;
+                            partyOverview.magicLink = response.data.magicLink;
                         });
                     });
                 },
