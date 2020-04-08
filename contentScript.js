@@ -11,6 +11,17 @@ if (typeof scriptAlreadyInjected === 'undefined') {
     }
 
     var justReceivedVideoUpdateRequest;
+    // Stable Websites; other websites will likely work, but will receive the "experimental"-flag
+    const stableWebsites = ["https://www.netflix.com", "https://www.amazon", "https://www.youtube.com", "https://www.vimeo.com", "https://www.disneyplus.com"];
+    const currentWebsite = window.location.href;
+    const websiteIsTested = (() => {
+        for (const stableWebsite of stableWebsites) {
+            if(currentWebsite.includes(stableWebsite)) {
+                return true;
+            }
+        }
+        return false;
+    })()
 
     // Required for Netflix hack
     const injectScript = function (func) {
@@ -32,7 +43,7 @@ if (typeof scriptAlreadyInjected === 'undefined') {
             return videoPlayer.getVideoPlayerBySessionId(videoPlayer.getAllPlayerSessionIds()[0]).seek;
         }
         window.addEventListener('seekRequest', function (e) {
-            var tick = e.detail*1000;
+            var tick = e.detail * 1000;
             getSeekHook()(tick);
             console.log(`Received seek request: ${tick}.`);
         })
@@ -50,7 +61,7 @@ if (typeof scriptAlreadyInjected === 'undefined') {
         resetPartyState() {
             const outerThis = this;
             chrome.storage.sync.get(["lastPartyId"], function (result) {
-                outerThis.partyState = { isActive: false, partyId: "", peers: [], wsIsConnected: false, lastPartyId: result.lastPartyId };
+                outerThis.partyState = { isActive: false, partyId: "", peers: [], wsIsConnected: false, lastPartyId: result.lastPartyId, websiteIsTested: websiteIsTested, currentlyWatching: currentWebsite.match(/https:\/\/(.+?)\//)[1] };
             })
         }
 

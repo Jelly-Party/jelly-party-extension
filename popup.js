@@ -19,7 +19,7 @@ $(function () {
         // Create party & initialize Vue frontend
         partyOverview = new Vue({
             el: "#partyOverview",
-            data: { isActive: false, partyId: "", peers: [], websocketConnection: false, lastPartyId: "" },
+            data: { isActive: false, partyId: "", peers: [], websocketConnection: false, lastPartyId: "", websiteIsTested: false, currentlyWatching: "Nothing" },
             methods: {
                 startParty: function () {
                     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
@@ -85,11 +85,14 @@ $(function () {
                 getState: function () {
                     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
                         chrome.tabs.sendMessage(tabs[0].id, { command: "getState" }, function (response) {
+                            console.log(response)
                             partyOverview.isActive = response.data.isActive;
                             partyOverview.partyId = response.data.partyId;
                             partyOverview.peers = response.data.peers;
                             partyOverview.websocketConnection = response.data.wsIsConnected;
                             partyOverview.lastPartyId = response.data.lastPartyId;
+                            partyOverview.websiteIsTested = response.data.websiteIsTested;
+                            partyOverview.currentlyWatching = response.data.currentlyWatching;
                         });
                     });
                 }
