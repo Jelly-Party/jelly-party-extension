@@ -58,7 +58,8 @@
                     </svg></h3>
                 <div v-if="websiteIsTested" class="input-group">
                     <div class="input-group-append">
-                        <span class="input-group-text" id="magicLink-link-textarea" style="font-size: 11px; width: 60vw; overflow:hidden">
+                        <span class="input-group-text" id="magicLink-link-textarea"
+                            style="font-size: 11px; width: 60vw; overflow:hidden">
                             {{ magicLink }}</span>
                         <button class="btn btn-outline-secondary" type="button" id="button-copy"
                             data-clipboard-target="#magicLink-link-textarea">Copy Magic Link</button>
@@ -66,7 +67,8 @@
                 </div>
                 <div v-else class="input-group mt-3">
                     <div class="input-group-append">
-                        <span class="input-group-text text-break text-wrap" id="current-party-textarea" style="width: 65vw; overflow:hidden">
+                        <span class="input-group-text text-break text-wrap" id="current-party-textarea"
+                            style="width: 65vw; overflow:hidden">
                             {{ partyId }} </span>
                         <button class="btn btn-outline-secondary" type="button" id="button-copy"
                             data-clipboard-target="#current-party-textarea">Copy Party Id</button>
@@ -118,99 +120,6 @@
                     <circle cx="8" cy="8" r="8" />
                 </svg>
             </div>
-
-            <!-- New Party Modal -->
-            <div class="modal fade" id="start-party-modal" tabindex="-1" role="dialog"
-                aria-labelledby="start-party-modal" aria-hidden="true">
-                <div class="modal-dialog" role="document">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="exampleModalLabel">Start a new party</h5>
-                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
-                        </div>
-                        <div class="modal-body">
-                            Are you sure that you want to start a new party?
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                            <button type="button" class="btn btn-secondary" data-dismiss="modal"
-                                v-on:click="startParty">Start
-                                new party</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- Join Party Modal -->
-            <div class="modal fade" id="join-party-modal" tabindex="-1" role="dialog" aria-labelledby="join-party-modal"
-                aria-hidden="true">
-                <div class="modal-dialog" role="document">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="exampleModalLabel">Join a party</h5>
-                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
-                        </div>
-                        <div class="modal-body">
-                            Are you sure that you want to join another party?
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                            <button type="button" class="btn btn-secondary" data-dismiss="modal"
-                                v-on:click="joinParty">Join
-                                party</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- Rejoin Party Modal -->
-            <div class="modal fade" id="rejoin-party-modal" tabindex="-1" role="dialog"
-                aria-labelledby="rejoin-party-modal" aria-hidden="true">
-                <div class="modal-dialog" role="document">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="exampleModalLabel">Rejoin last party?</h5>
-                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
-                        </div>
-                        <div class="modal-body">
-                            Are you sure that you want to rejoin the last party with the following Party-Id?<br />
-                            {{lastPartyId}}
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                            <button type="button" class="btn btn-secondary" data-dismiss="modal"
-                                v-on:click="rejoinParty">Yes</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- Leave Party Modal -->
-            <div class="modal fade" id="leave-party-modal" tabindex="-1" role="dialog"
-                aria-labelledby="leave-party-modal" aria-hidden="true">
-                <div class="modal-dialog" role="document">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="exampleModalLabel">Leave current party</h5>
-                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
-                        </div>
-                        <div class="modal-body">
-                            You are currently inside a party. Are you sure that you want to leave this party?
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                            <button type="button" class="btn btn-secondary" data-dismiss="modal"
-                                v-on:click="leaveParty">Leave
-                                this party</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
         <div v-else>
             <div class="container">
@@ -241,6 +150,97 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- New Party Modal -->
+        <div class="modal fade" id="start-party-modal" tabindex="-1" role="dialog" aria-labelledby="start-party-modal"
+            aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel">Start a new party</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        Are you sure that you want to start a new party?
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal"
+                            v-on:click="startParty">Start
+                            new party</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Join Party Modal -->
+        <div class="modal fade" id="join-party-modal" tabindex="-1" role="dialog" aria-labelledby="join-party-modal"
+            aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel">Join a party</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        Are you sure that you want to join another party?
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal" v-on:click="joinParty">Join
+                            party</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Rejoin Party Modal -->
+        <div class="modal fade" id="rejoin-party-modal" tabindex="-1" role="dialog" aria-labelledby="rejoin-party-modal"
+            aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel">Rejoin last party?</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        Are you sure that you want to rejoin the last party with the following Party-Id?<br />
+                        {{lastPartyId}}
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal"
+                            v-on:click="rejoinParty">Yes</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Leave Party Modal -->
+        <div class="modal fade" id="leave-party-modal" tabindex="-1" role="dialog" aria-labelledby="leave-party-modal"
+            aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel">Leave current party</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        You are currently inside a party. Are you sure that you want to leave this party?
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal"
+                            v-on:click="leaveParty">Leave
+                            this party</button>
                     </div>
                 </div>
             </div>

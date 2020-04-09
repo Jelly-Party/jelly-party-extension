@@ -78,8 +78,6 @@ $(function () {
                 leaveParty: function () {
                     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
                         chrome.tabs.sendMessage(tabs[0].id, { command: "leaveParty" }, function (response) {
-                            partyOverview.isActive = false;
-                            partyOverview.peers = [];
                             window.setTimeout(() => {
                                 partyOverview.getState();
                             }, 100);
@@ -98,13 +96,14 @@ $(function () {
                             partyOverview.websiteIsTested = response.data.websiteIsTested;
                             partyOverview.currentlyWatching = response.data.currentlyWatching;
                             partyOverview.magicLink = response.data.magicLink;
+                            console.log(partyOverview)
                         });
                     });
                 },
                 toggleOptions: function () {
                     // Read options and set input fields
-                    partyOverview.setOptions();
                     partyOverview.mainPage = !partyOverview.mainPage;
+                    partyOverview.setOptions();
                 },
                 saveOptions: function () {
                     var name = $("#usernameTextfield")[0];

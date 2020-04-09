@@ -50,7 +50,7 @@ if (typeof scriptAlreadyInjected === 'undefined') {
         window.addEventListener('seekRequest', function (e) {
             var tick = e.detail * 1000;
             getSeekHook()(tick);
-            console.log(`Received seek request: ${tick}.`);
+            console.log(`Jelly-Party: Netflix Context: Received seek request: ${tick}.`);
         })
     }
 
@@ -84,59 +84,63 @@ if (typeof scriptAlreadyInjected === 'undefined') {
             this.connectToPartyHelper(partyId);
         }
         connectToPartyHelper(partyId = "") {
-            // Start a new party if no partyId is given, else join an existing party
-            var start = partyId ? false : true;
-            log.info(`Jelly-Party: ${start ? "Starting a new party." : "Joining a new party."}`);
-            if (this.partyState.isActive) {
-                log.error(`Jelly-Party: Error. Cannot ${start ? "start" : "join"} a party while still in an active party.`)
-            } else {
-                this.admin = Boolean(start);
-                this.partyState.isActive = true;
-                this.partyState.partyId = start ? generateRoomWithoutSeparator() : partyId;
-                // Set the magic link
-                if (websiteIsTested) {
-                    // This is a stable website for which magic links work. Let's generate one.
-                    // Reuse the website URL as magic link if we joined through it, else generate new magic link for other peers
-                    this.partyState.magicLink = partyIdFromURL ? websiteURL : (websiteURL + (websiteURL.includes("?") ? "&" : "?") + `jellyPartyId=${this.partyState.partyId}`);
-                }
-                this.ws = new WebSocket("wss://ws.jelly-party.com:8080");
-                var outerThis = this;
-                this.ws.onopen = function (event) {
-                    log.debug("Jelly-Party: Connected to Jelly-Party Websocket.");
-                    chrome.storage.sync.set({ lastPartyId: outerThis.partyState.partyId }, function () {
-                        log.debug(`Jelly-Party: Last Party Id set to ${outerThis.partyState.partyId}`);
-                    })
-                    outerThis.partyState.wsIsConnected = true;
-                    outerThis.ws.send(JSON.stringify({ type: "join", clientName: outerThis.localPeerName, partyId: outerThis.partyState.partyId, currentlyWatching: currentWebsite.match(/https:\/\/(.+?)\//)[1] }));
-                };
-                this.ws.onmessage = function (event) {
-                    var msg = JSON.parse(event.data);
-                    switch (msg.type) {
-                        case "videoUpdate":
-                            justReceivedVideoUpdateRequest = true;
-                            if (msg.data.variant === "play") {
-                                outerThis.playVideo();
-                            } else if (msg.data.variant === "pause") {
-                                outerThis.pauseVideo();
-                            }
-                            else if (msg.data.variant === "seek") {
-                                outerThis.seek(msg.data.tick);
-                            }
-                            break;
-                        case "partyStateUpdate":
-                            outerThis.partyState = { ...outerThis.partyState, ...msg.data.partyState };
-                            log.debug("Jelly-Party: Received party state update. New party state is:");
-                            log.debug(outerThis.partyState);
-                            break;
-                        default:
-                            log.debug(`Jelly-Party: Received unknown message: ${JSON.stringify(msg)}`)
+            const outerThis = this;
+            chrome.storage.sync.get(["options"], function (res) {
+                // Start a new party if no partyId is given, else join an existing party
+                var start = partyId ? false : true;
+                log.info(`Jelly-Party: ${start ? "Starting a new party." : "Joining a new party."}`);
+                // Let's fetch the latest client name from the chrome API
+                outerThis.localPeerName = res.options.name;
+                if (outerThis.partyState.isActive) {
+                    log.error(`Jelly-Party: Error. Cannot ${start ? "start" : "join"} a party while still in an active party.`)
+                } else {
+                    outerThis.admin = Boolean(start);
+                    outerThis.partyState.isActive = true;
+                    outerThis.partyState.partyId = start ? generateRoomWithoutSeparator() : partyId;
+                    // Set the magic link
+                    if (websiteIsTested) {
+                        // This is a stable website for which magic links work. Let's generate one.
+                        // Reuse the website URL as magic link if we joined through it, else generate new magic link for other peers
+                        outerThis.partyState.magicLink = partyIdFromURL ? websiteURL : (websiteURL + (websiteURL.includes("?") ? "&" : "?") + `jellyPartyId=${outerThis.partyState.partyId}`);
+                    }
+                    outerThis.ws = new WebSocket("wss://ws.jelly-party.com:8080");
+                    outerThis.ws.onopen = function (event) {
+                        log.debug("Jelly-Party: Connected to Jelly-Party Websocket.");
+                        chrome.storage.sync.set({ lastPartyId: outerThis.partyState.partyId }, function () {
+                            log.debug(`Jelly-Party: Last Party Id set to ${outerThis.partyState.partyId}`);
+                        })
+                        outerThis.partyState.wsIsConnected = true;
+                        outerThis.ws.send(JSON.stringify({ type: "join", clientName: outerThis.localPeerName, partyId: outerThis.partyState.partyId, currentlyWatching: currentWebsite.match(/https:\/\/(.+?)\//)[1] }));
+                    };
+                    outerThis.ws.onmessage = function (event) {
+                        var msg = JSON.parse(event.data);
+                        switch (msg.type) {
+                            case "videoUpdate":
+                                justReceivedVideoUpdateRequest = true;
+                                if (msg.data.variant === "play") {
+                                    outerThis.playVideo();
+                                } else if (msg.data.variant === "pause") {
+                                    outerThis.pauseVideo();
+                                }
+                                else if (msg.data.variant === "seek") {
+                                    outerThis.seek(msg.data.tick);
+                                }
+                                break;
+                            case "partyStateUpdate":
+                                outerThis.partyState = { ...outerThis.partyState, ...msg.data.partyState };
+                                log.debug("Jelly-Party: Received party state update. New party state is:");
+                                log.debug(outerThis.partyState);
+                                break;
+                            default:
+                                log.debug(`Jelly-Party: Received unknown message: ${JSON.stringify(msg)}`)
+                        }
+                    }
+                    outerThis.ws.onclose = function (event) {
+                        log.debug("Jelly-Party: Disconnected from WebSocket-Server.")
+                        outerThis.partyState.wsIsConnected = false;
                     }
                 }
-                this.ws.onclose = function (event) {
-                    log.debug("Jelly-Party: Disconnected from WebSocket-Server.")
-                    outerThis.partyState.wsIsConnected = false;
-                }
-            }
+            });
         }
 
         leaveParty() {
