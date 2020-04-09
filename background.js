@@ -1,9 +1,5 @@
 chrome.runtime.onInstalled.addListener(function () {
-  var options = { name: "guest", url: "www.example.com", s1: true, s2: true };
-  // For debuggin only!!
-  ///////////////////////////////////////////////////////////////////////////////
-  var options = { name: "guest", url: "media.eulenberg.de", s1: true, s2: true };
-  ///////////////////////////////////////////////////////////////////////////////
+  var options = { name: "guest" };
   chrome.storage.sync.set({ options: options }, function () {
     console.log('Options have been initialized.');
   });
