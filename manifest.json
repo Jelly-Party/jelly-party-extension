@@ -1,12 +1,11 @@
 {
   "name": "Jelly-Party",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "An extension that synchronizes video sessions!",
   "permissions": [
     "activeTab",
     "declarativeContent",
-    "storage",
-    "webNavigation"
+    "storage"
   ],
   "background": {
     "scripts": [
