@@ -13,22 +13,17 @@ function startParty() {
 }
 
 function joinParty(id) {
-    // Let's first validate the party id
-    if (id.length < 8) {
-        chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-            console.log("Jelly-Party: Trying to join an existing party.")
-            chrome.tabs.sendMessage(tabs[0].id, { command: "joinParty", data: { partyId: id } }, function (response) {
-                // getState will update peers once they have joined
-                getState()
-            })
+    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+        console.log("Jelly-Party: Trying to join an existing party.")
+        chrome.tabs.sendMessage(tabs[0].id, { command: "joinParty", data: { partyId: id } }, function (response) {
+            // getState will update peers once they have joined
+            getState()
         })
-    } else {
-        console.log("Jelly-Party: Invalid Id..")
-        this.leaveParty()
-    }
+    })
 }
 
 function rejoinParty() {
+    console.log("I'm here")
     if (store.state.lastPartyId) {
         console.log(`Rejoing last party with Party-Id: ${store.state.lastPartyId}`)
         console.log(`store.state.lastPartyId is ${store.state.lastPartyId}`)

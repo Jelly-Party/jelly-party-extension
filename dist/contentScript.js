@@ -11,7 +11,16 @@ if (typeof scriptAlreadyInjected === 'undefined') {
     // Create notyf object
     var notyf = new Notyf({
         duration: 2000,
-        position: { x: "center", y: "top" }
+        position: { x: "center", y: "top" },
+        types: [
+            {
+                type: 'success',
+                background: 'linear-gradient(to bottom right, #ff9494 0%, #ee64f6 100%)',
+                icon: {
+                    className: 'jelly-party-icon'
+                }
+            }
+        ]
     });
 
     notyf.success("Jelly-Party: Loaded successfully!");
@@ -134,10 +143,20 @@ if (typeof scriptAlreadyInjected === 'undefined') {
                                 }
                                 else if (msg.data.variant === "seek") {
                                     outerThis.seek(msg.data.tick);
-                                    notyf.success(`Jelly-Party: ${msg.data.peer} jumped in the video.`)
+                                    //notyf.success(`Jelly-Party: ${msg.data.peer} jumped in the video.`)
                                 }
                                 break;
                             case "partyStateUpdate":
+                                // See 2nd post https://stackoverflow.com/questions/1187518/how-to-get-the-difference-between-two-arrays-in-javascript
+                                if (outerThis.partyState.peers.length > msg.data.partyState.peers.length) {
+                                    // Somebody left the party
+                                    let peer = outerThis.partyState.peers.filter(x => !msg.data.partyState.peers.includes(x))[0];
+                                    notyf.success(`Jelly-Party: ${peer.clientName} left the party.`)
+                                } else if (outerThis.partyState.peers.length < msg.data.partyState.peers.length) {
+                                    // Somebody joined the party
+                                    let peer = msg.data.partyState.peers.filter(x => !outerThis.partyState.peers.includes(x))[0];
+                                    notyf.success(`Jelly-Party: ${peer.clientName} joined the party.`);
+                                }
                                 outerThis.partyState = { ...outerThis.partyState, ...msg.data.partyState };
                                 log.debug("Jelly-Party: Received party state update. New party state is:");
                                 log.debug(outerThis.partyState);
