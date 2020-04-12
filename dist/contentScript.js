@@ -23,7 +23,7 @@ if (typeof scriptAlreadyInjected === 'undefined') {
         ]
     });
 
-    notyf.success("Jelly-Party: Loaded successfully!");
+    notyf.success("Initialized successfully!");
 
     var justReceivedVideoUpdateRequest;
     // Stable Websites; other websites will likely work, but will receive the "experimental"-flag
@@ -122,7 +122,7 @@ if (typeof scriptAlreadyInjected === 'undefined') {
                     outerThis.ws = new WebSocket("wss://ws.jelly-party.com:8080");
                     outerThis.ws.onopen = function (event) {
                         log.debug("Jelly-Party: Connected to Jelly-Party Websocket.");
-                        notyf.success("Jelly-Party: Connected to server!");
+                        notyf.success("Connected to server!");
                         chrome.storage.sync.set({ lastPartyId: outerThis.partyState.partyId }, function () {
                             log.debug(`Jelly-Party: Last Party Id set to ${outerThis.partyState.partyId}`);
                         })
@@ -136,14 +136,14 @@ if (typeof scriptAlreadyInjected === 'undefined') {
                                 justReceivedVideoUpdateRequest = true;
                                 if (msg.data.variant === "play") {
                                     outerThis.playVideo();
-                                    notyf.success(`Jelly-Party: ${msg.data.peer} played the video.`);
+                                    notyf.success(`${msg.data.peer} played the video.`);
                                 } else if (msg.data.variant === "pause") {
                                     outerThis.pauseVideo();
-                                    notyf.success(`Jelly-Party: ${msg.data.peer} paused the video.`)
+                                    notyf.success(`${msg.data.peer} paused the video.`)
                                 }
                                 else if (msg.data.variant === "seek") {
                                     outerThis.seek(msg.data.tick);
-                                    //notyf.success(`Jelly-Party: ${msg.data.peer} jumped in the video.`)
+                                    //notyf.success(`${msg.data.peer} jumped in the video.`)
                                 }
                                 break;
                             case "partyStateUpdate":
@@ -151,11 +151,11 @@ if (typeof scriptAlreadyInjected === 'undefined') {
                                 if (outerThis.partyState.peers.length > msg.data.partyState.peers.length) {
                                     // Somebody left the party
                                     let peer = outerThis.partyState.peers.filter(x => !msg.data.partyState.peers.includes(x))[0];
-                                    notyf.success(`Jelly-Party: ${peer.clientName} left the party.`)
+                                    notyf.success(`${peer.clientName} left the party.`)
                                 } else if (outerThis.partyState.peers.length < msg.data.partyState.peers.length) {
                                     // Somebody joined the party
                                     let peer = msg.data.partyState.peers.filter(x => !outerThis.partyState.peers.includes(x))[0];
-                                    notyf.success(`Jelly-Party: ${peer.clientName} joined the party.`);
+                                    notyf.success(`${peer.clientName} joined the party.`);
                                 }
                                 outerThis.partyState = { ...outerThis.partyState, ...msg.data.partyState };
                                 log.debug("Jelly-Party: Received party state update. New party state is:");
@@ -177,7 +177,7 @@ if (typeof scriptAlreadyInjected === 'undefined') {
             log.info("Jelly-Party: Leaving current party.");
             this.ws.close();
             this.resetPartyState();
-            notyf.success("Jelly-Party: Left party!");
+            notyf.success("You left the party!");
         }
 
         filterPeer(skipPeer) {
