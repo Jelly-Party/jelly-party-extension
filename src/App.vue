@@ -18,6 +18,12 @@ export default {
   props: ["development"]
 };
 // Try to execute content scripts and dependencies
+chrome.tabs.insertCSS({
+  file: "js-libs/notyf.min.css"
+});
+chrome.tabs.executeScript({
+  file: "js-libs/notyf.min.js"
+});
 chrome.tabs.executeScript({
   file: "js-libs/loglevel.min.js"
 });

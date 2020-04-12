@@ -8,6 +8,13 @@ if (typeof scriptAlreadyInjected === 'undefined') {
     } else {
         log.setDefaultLevel("info");
     }
+    // Create notyf object
+    var notyf = new Notyf({
+        duration: 2000,
+        position: { x: "center", y: "top" }
+    });
+
+    notyf.success("Jelly-Party: Loaded successfully!");
 
     var justReceivedVideoUpdateRequest;
     // Stable Websites; other websites will likely work, but will receive the "experimental"-flag
@@ -106,6 +113,7 @@ if (typeof scriptAlreadyInjected === 'undefined') {
                     outerThis.ws = new WebSocket("wss://ws.jelly-party.com:8080");
                     outerThis.ws.onopen = function (event) {
                         log.debug("Jelly-Party: Connected to Jelly-Party Websocket.");
+                        notyf.success("Jelly-Party: Connected to server!");
                         chrome.storage.sync.set({ lastPartyId: outerThis.partyState.partyId }, function () {
                             log.debug(`Jelly-Party: Last Party Id set to ${outerThis.partyState.partyId}`);
                         })
@@ -119,11 +127,14 @@ if (typeof scriptAlreadyInjected === 'undefined') {
                                 justReceivedVideoUpdateRequest = true;
                                 if (msg.data.variant === "play") {
                                     outerThis.playVideo();
+                                    notyf.success(`Jelly-Party: ${msg.data.peer} played the video.`);
                                 } else if (msg.data.variant === "pause") {
                                     outerThis.pauseVideo();
+                                    notyf.success(`Jelly-Party: ${msg.data.peer} paused the video.`)
                                 }
                                 else if (msg.data.variant === "seek") {
                                     outerThis.seek(msg.data.tick);
+                                    notyf.success(`Jelly-Party: ${msg.data.peer} jumped in the video.`)
                                 }
                                 break;
                             case "partyStateUpdate":
@@ -147,6 +158,7 @@ if (typeof scriptAlreadyInjected === 'undefined') {
             log.info("Jelly-Party: Leaving current party.");
             this.ws.close();
             this.resetPartyState();
+            notyf.success("Jelly-Party: Left party!");
         }
 
         filterPeer(skipPeer) {
@@ -155,7 +167,7 @@ if (typeof scriptAlreadyInjected === 'undefined') {
 
         requestPeersToPlay() {
             if (this.partyState.isActive) {
-                var clientCommand = { type: "videoUpdate", data: { variant: "play", tick: this.video.currentTime } };
+                var clientCommand = { type: "videoUpdate", data: { variant: "play", tick: this.video.currentTime, peer: this.localPeerName } };
                 var serverCommand = { type: "forward", partyId: this.partyState.partyId, data: { commandToForward: clientCommand } };
                 this.ws.send(JSON.stringify(serverCommand));
             }
@@ -163,7 +175,7 @@ if (typeof scriptAlreadyInjected === 'undefined') {
 
         requestPeersToPause() {
             if (this.partyState.isActive) {
-                var clientCommand = { type: "videoUpdate", data: { variant: "pause", tick: this.video.currentTime } };
+                var clientCommand = { type: "videoUpdate", data: { variant: "pause", tick: this.video.currentTime, peer: this.localPeerName } };
                 var serverCommand = { type: "forward", partyId: this.partyState.partyId, data: { commandToForward: clientCommand } };
                 this.ws.send(JSON.stringify(serverCommand));
             }
@@ -171,7 +183,7 @@ if (typeof scriptAlreadyInjected === 'undefined') {
 
         requestPeersToSeek() {
             if (this.partyState.isActive) {
-                var clientCommand = { type: "videoUpdate", data: { variant: "seek", tick: this.video.currentTime } };
+                var clientCommand = { type: "videoUpdate", data: { variant: "seek", tick: this.video.currentTime, peer: this.localPeerName } };
                 var serverCommand = { type: "forward", partyId: this.partyState.partyId, data: { commandToForward: clientCommand } };
                 this.ws.send(JSON.stringify(serverCommand));
             }

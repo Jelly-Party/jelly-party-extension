@@ -56,6 +56,8 @@ function getState(navigate = false) {
     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
         chrome.tabs.sendMessage(tabs[0].id, { command: "getState" }, function (response) {
             store.updateState(response.data)
+            console.log("New state is")
+            console.log(store.state)
             if (navigate) {
                 // Route to Party Screen based on current state
                 if (response.data.isActive) {

@@ -9,7 +9,8 @@ Vue.use(VueClipboard)
 // Install BootstrapVue & BootstrapVue icon components
 Vue.use(BootstrapVue)
 Vue.use(IconsPlugin)
-Vue.config.productionTip = false;
+//Vue.config.productionTip = false;
+Vue.config.devtools = true;
 
 new Vue({
   router,

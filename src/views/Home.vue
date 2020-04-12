@@ -38,7 +38,7 @@
 <script>
 // @ is an alias to /src
 import store from "@/store.js";
-import { startParty, joinParty, rejoinParty} from "@/messaging.js"
+import { startParty, joinParty, rejoinParty } from "@/messaging.js";
 
 export default {
   name: "Home",
@@ -47,16 +47,16 @@ export default {
   },
   methods: {
     handleStartParty() {
-      startParty()
-      this.$router.replace({ path: 'party' })
+      startParty();
+      this.$router.replace({ path: "party" });
     },
     handleJoinParty() {
-      joinParty()
-      this.$router.replace({ path: 'party' })
+      joinParty();
+      this.$router.replace({ path: "party" });
     },
     handleRejoinParty() {
-      rejoinParty()
-      this.$router.replace({ path: 'party' })
+      rejoinParty();
+      this.$router.replace({ path: "party" });
     },
     showRejoinModal() {
       if (this.sharedState.previousPartyId) {
