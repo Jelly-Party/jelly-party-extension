@@ -18,7 +18,15 @@
         <b-button v-clipboard:copy="sharedState.partyId" variant="secondary">Copy</b-button>
       </b-input-group-append>
     </b-input-group>
-    <b-table dark striped hover :items="listData"></b-table>
+    <b-table class="mb-5" dark striped hover :items="listData"></b-table>
+    <div class="websiteStatus">
+      <b-icon-circle-fill v-bind:color="websiteStatusFillColor"></b-icon-circle-fill>
+      {{ sharedState.websiteIsTested ? "Website tested" : "Website experimental"}}
+    </div>
+    <div class="connectionStatus">
+      {{ sharedState.wsIsConnected ? "Connected" : "Connection error"}}
+      <b-icon-circle-fill v-bind:color="connectionStatusFillColor"></b-icon-circle-fill>
+    </div>
     <b-modal
       id="modal-leave-party"
       title="Leave current party"
@@ -27,10 +35,26 @@
     >
       <p class="my-4">Are you sure you want to leave your current party?</p>
     </b-modal>
-    <!-- Tooltip title specified via prop title -->
     <b-tooltip target="questionmark" title="Share this Party Id and let people join your party!"></b-tooltip>
   </div>
 </template>
+
+<style scoped>
+.connectionStatus {
+  position: absolute;
+  bottom: 1em;
+  right: 1em;
+  font-size: 0.7em;
+}
+
+
+.websiteStatus {
+  position: absolute;
+  bottom: 1em;
+  left: 1em;
+  font-size: 0.7em;
+}
+</style>
 
 <script>
 import store from "@/store.js";
@@ -56,6 +80,12 @@ export default {
             currentlyWatching: peer.currentlyWatching
           }))
         : [];
+    },
+    connectionStatusFillColor: function() {
+      return this.sharedState.wsIsConnected ? "green" : "red";
+    },
+    websiteStatusFillColor: function() {
+      return this.sharedState.websiteIsTested ? "green" : "#FFC107";
     }
   }
 };

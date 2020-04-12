@@ -66,7 +66,7 @@ function getState(navigate = false) {
 }
 
 function setOptions(name) {
-    var options = { name: (name.value) ? name.value : "guest" }
+    var options = { name: name ? name : "Somebody" }
     chrome.storage.sync.set({ options: options }, function () {
         console.log('Options have been set:')
         console.log(options)
@@ -75,7 +75,7 @@ function setOptions(name) {
 
 function getOptions() {
     chrome.storage.sync.get(["options"], function (res) {
-        store.state.name = res.options.name ? res.options.name : "guest"
+        store.state.name = res.options.name ? res.options.name : "Somebody"
     })
 }
 

@@ -9,6 +9,11 @@
         <b-button size="lg" variant="secondary" v-b-modal="'modal-join'">Join Party</b-button>
       </b-input-group-append>
     </b-input-group>
+    <div class="settingsIcon">
+      <b-button @click="goToSettings" size="sm" title="Settings">
+          <b-icon icon="gear-fill" aria-hidden="true"></b-icon>
+        </b-button>
+    </div>
     <b-modal
       id="modal-start"
       title="Start a new party"
@@ -41,6 +46,14 @@
   </div>
 </template>
 
+<style scoped>
+  .settingsIcon {
+    position: absolute;
+    bottom: 1em;
+    right: 1em;
+  }
+</style>
+
 <script>
 // @ is an alias to /src
 import store from "@/store.js";
@@ -70,6 +83,9 @@ export default {
       } else {
         this.$refs["modal-rejoin-no-party-found"].show();
       }
+    },
+    goToSettings() {
+      this.$router.replace({ path: "settings" });
     }
   }
 };
