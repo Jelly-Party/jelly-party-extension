@@ -2,10 +2,6 @@
   <div id="app">
     <Navbar />
     <div class="p-3">
-      <!-- <div id="nav">
-        <router-link to="/">Home</router-link>|
-        <router-link to="/about">About</router-link>
-      </div>-->
       <router-view />
     </div>
   </div>
