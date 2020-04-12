@@ -10,7 +10,7 @@ if (typeof scriptAlreadyInjected === 'undefined') {
     }
     // Create notyf object
     var notyf = new Notyf({
-        duration: 2000,
+        duration: 3000,
         position: { x: "center", y: "top" },
         types: [
             {
