@@ -13,9 +13,9 @@
       </span>
     </h3>
     <b-input-group class="mt-3">
-      <b-form-input readonly v-bind:value="sharedState.state.partyId"></b-form-input>
+      <b-form-input readonly v-bind:value="sharedState.partyId"></b-form-input>
       <b-input-group-append>
-        <b-button variant="secondary">Copy</b-button>
+        <b-button v-clipboard:copy="sharedState.partyId" variant="secondary">Copy</b-button>
       </b-input-group-append>
     </b-input-group>
     <b-table class="mt-2" dark striped hover :items="listData"></b-table>
@@ -39,7 +39,7 @@ import { leaveParty } from "@/messaging.js";
 export default {
   name: "Party",
   data: function() {
-    return { sharedState: store };
+    return { sharedState: store.state };
   },
   methods: {
     handleLeaveParty: function() {
@@ -49,7 +49,7 @@ export default {
   },
   computed: {
     listData: function() {
-      return this.sharedState.state.peers.map((peer, index) => ({
+      return this.sharedState.peers.map((peer, index) => ({
         "#": index+1,
         "Name": peer.clientName,
         currentlyWatching: peer.currentlyWatching
