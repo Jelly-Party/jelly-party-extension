@@ -13,9 +13,9 @@
       </span>
     </h3>
     <b-input-group class="mt-3">
-      <b-form-input readonly v-bind:value="sharedState.partyId"></b-form-input>
+      <b-form-input readonly v-bind:value="sharedState.magicLink"></b-form-input>
       <b-input-group-append>
-        <b-button v-clipboard:copy="sharedState.partyId" variant="secondary">Copy</b-button>
+        <b-button v-clipboard:copy="sharedState.magicLink" variant="secondary">Copy</b-button>
       </b-input-group-append>
     </b-input-group>
     <b-table class="mb-5" dark striped hover :items="listData"></b-table>
@@ -86,6 +86,9 @@ export default {
     },
     websiteStatusFillColor: function() {
       return this.sharedState.websiteIsTested ? "green" : "#FFC107";
+    },
+    tooltipText: function() {
+      return this.sharedState.websiteIsTested ? "Share this magic link and let people join your party. Upon opening the link, members have to click on the Jelly-Party logo to initialize the session." : "Share this Id and send it to people. People can then join by Id."
     }
   }
 };
