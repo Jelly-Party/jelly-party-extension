@@ -1,5 +1,5 @@
 chrome.runtime.onInstalled.addListener(function() {
-  var options = { name: "guest" };
+  var options = { localPeerName: "Somebody" };
   chrome.storage.sync.set({ options: options }, function() {
     console.log("Options have been initialized.");
   });

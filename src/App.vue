@@ -30,6 +30,9 @@ chrome.tabs.executeScript({
   file: "libs/js/randomName.js"
 });
 chrome.tabs.executeScript({
+  file: "libs/js/lodash.js"
+});
+chrome.tabs.executeScript({
   file: "contentScript.js"
 });
 // Initially poll the state once and navigate accordingly

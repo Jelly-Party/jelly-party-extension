@@ -2,13 +2,13 @@ if (typeof scriptAlreadyInjected === "undefined") {
   // scriptAlreadyInjected is undefined, therefore let's load everything
   var scriptAlreadyInjected = true;
   var DEBUG = true;
-  // Eslint-hack to disable (no-undef) errors in this file without having to add globals
+  // Eslint-hack to disable-(no-undef) errors in this file without having to add globals
   // eslint-disable-next-line
-  var log = log
+  var log = log;
   // eslint-disable-next-line
-  var generateRoomWithoutSeparator = generateRoomWithoutSeparator
+  var generateRoomWithoutSeparator = generateRoomWithoutSeparator;
   // eslint-disable-next-line
-  var Notyf = Notyf
+  var Notyf = Notyf;
 
   if (DEBUG) {
     log.log("Jelly-Party: Injecting Content Script!");
@@ -137,7 +137,7 @@ if (typeof scriptAlreadyInjected === "undefined") {
           }`
         );
         // Let's fetch the latest client name from the chrome API
-        outerThis.localPeerName = res.options.name;
+        outerThis.localPeerName = res.options.localPeerName;
         if (outerThis.partyState.isActive) {
           log.error(
             `Jelly-Party: Error. Cannot ${
@@ -151,15 +151,12 @@ if (typeof scriptAlreadyInjected === "undefined") {
             ? generateRoomWithoutSeparator()
             : partyId;
           // Set the magic link
-          if (websiteIsTested) {
-            // This is a stable website for which magic links work. Let's generate one.
-            // Reuse the website URL as magic link if we joined through it, else generate new magic link for other peers
-            outerThis.partyState.magicLink = partyIdFromURL
-              ? websiteURL
-              : websiteURL +
-                (websiteURL.includes("?") ? "&" : "?") +
-                `jellyPartyId=${outerThis.partyState.partyId}`;
-          }
+          outerThis.partyState.magicLink = partyIdFromURL
+            ? websiteURL
+            : websiteURL +
+              (websiteURL.includes("?") ? "&" : "?") +
+              `jellyPartyId=${outerThis.partyState.partyId}`;
+
           outerThis.ws = new WebSocket("wss://ws.jelly-party.com:8080");
           outerThis.ws.onopen = function() {
             log.debug("Jelly-Party: Connected to Jelly-Party Websocket.");
@@ -199,25 +196,54 @@ if (typeof scriptAlreadyInjected === "undefined") {
                 }
                 break;
               case "partyStateUpdate":
-                // See 2nd post https://stackoverflow.com/questions/1187518/how-to-get-the-difference-between-two-arrays-in-javascript
                 if (
                   outerThis.partyState.peers.length >
                   msg.data.partyState.peers.length
                 ) {
-                  // Somebody left the party
-                  let peer = outerThis.partyState.peers.filter(
-                    x => !msg.data.partyState.peers.includes(x)
+                  // Somebody left the party; Let's find out who
+                  let previousUUIDs = outerThis.partyState.peers.map(
+                    peer => peer.uuid
+                  );
+                  let newUUIDs = msg.data.partyState.peers.map(
+                    peer => peer.uuid
+                  );
+                  let peerWhoLeft = outerThis.partyState.peers.filter(
+                    peer =>
+                      peer.uuid === _.difference(previousUUIDs, newUUIDs)[0]
                   )[0];
-                  notyf.success(`${peer.clientName} left the party.`);
+                  if (peerWhoLeft) {
+                    notyf.success(`${peerWhoLeft.clientName} left the party.`);
+                  }
                 } else if (
                   outerThis.partyState.peers.length <
                   msg.data.partyState.peers.length
                 ) {
                   // Somebody joined the party
-                  let peer = msg.data.partyState.peers.filter(
-                    x => !outerThis.partyState.peers.includes(x)
-                  )[0];
-                  notyf.success(`${peer.clientName} joined the party.`);
+                  let previousUUIDs = outerThis.partyState.peers.map(
+                    peer => peer.uuid
+                  );
+                  let newUUIDs = msg.data.partyState.peers.map(
+                    peer => peer.uuid
+                  );
+                  console.log(previousUUIDs);
+                  console.log(newUUIDs);
+                  if (previousUUIDs.length === 0) {
+                    // Let's show all peers in the party
+                    for (const peer of msg.data.partyState.peers) {
+                      notyf.success(`${peer.clientName} joined the party.`);
+                    }
+                  } else {
+                    let peerWhoJoined = msg.data.partyState.peers.filter(
+                      peer =>
+                        peer.uuid === _.difference(newUUIDs, previousUUIDs)[0]
+                    )[0];
+                    console.log(peerWhoJoined);
+                    if (peerWhoJoined) {
+                      notyf.success(
+                        `${peerWhoJoined.clientName} joined the party.`
+                      );
+                    }
+                  }
                 }
                 outerThis.partyState = {
                   ...outerThis.partyState,
@@ -367,7 +393,7 @@ if (typeof scriptAlreadyInjected === "undefined") {
   // Define global variables
   var video, party, videoHelper, findVideoInterval;
   chrome.storage.sync.get(["options"], function(result) {
-    party = new JellyParty(result.options.name, video);
+    party = new JellyParty(result.options.localPeerName, video);
     chrome.runtime.onMessage.addListener(function(
       request,
       sender,
@@ -471,6 +497,6 @@ if (typeof scriptAlreadyInjected === "undefined") {
   );
   // We must still refresh the user options
   chrome.storage.sync.get(["options"], function(result) {
-    party.localPeerName = result.options.name;
+    party.localPeerName = result.options.localPeerName;
   });
 }

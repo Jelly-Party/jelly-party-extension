@@ -104,7 +104,7 @@ export default {
     tooltipText: function() {
       return this.sharedState.websiteIsTested
         ? "Share this magic link and let people join your party. Upon opening the link, members have to click on the Jelly-Party logo to initialize the session."
-        : "Share this Id and send it to people. People can then join by Id.";
+        : "Share this Id and send it to people. People can then join your party by Id.";
     }
   }
 };

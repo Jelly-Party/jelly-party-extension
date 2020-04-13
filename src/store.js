@@ -7,8 +7,8 @@ export default {
     wsIsConnected: false,
     lastPartyId: "",
     websiteIsTested: false,
-    name: "Someone",
-    magicLink: ""
+    magicLink: "",
+    localPeerName: ""
   },
   updateState: function(newState) {
     this.state.isActive = newState.isActive;

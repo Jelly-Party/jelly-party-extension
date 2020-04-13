@@ -1,5 +1,5 @@
 {
-  "name": "rewrite",
+  "name": "jelly-party-extension",
   "version": "1.1.1",
   "private": true,
   "scripts": {
@@ -11,6 +11,7 @@
     "bootstrap": "^4.4.1",
     "bootstrap-vue": "^2.11.0",
     "core-js": "^3.6.4",
+    "lodash": "^4.17.15",
     "notyf": "^3.6.0",
     "vue": "^2.6.11",
     "vue-clipboard2": "^0.3.1",

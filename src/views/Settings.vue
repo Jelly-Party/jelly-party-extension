@@ -2,7 +2,7 @@
   <div class="settings">
     <h3>Settings</h3>
     <b-input-group prepend="Name" class="mt-3">
-      <b-form-input size="lg" v-model="sharedState.name"></b-form-input>
+      <b-form-input size="lg" v-model="sharedState.localPeerName"></b-form-input>
     </b-input-group>
     <b-button
       block
@@ -41,7 +41,7 @@ export default {
       this.$router.replace({ path: "/" });
     },
     saveOptions: function() {
-      setOptions(this.sharedState.name);
+      setOptions(this.sharedState.localPeerName);
       this.$root.$emit("bv::toggle::collapse", "collapse-success");
       window.setTimeout(() => {
         this.$root.$emit("bv::toggle::collapse", "collapse-success");
