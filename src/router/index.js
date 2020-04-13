@@ -1,7 +1,7 @@
 import Vue from "vue";
 import VueRouter from "vue-router";
 import Home from "../views/Home.vue";
-import Party from "../views/Party.vue"
+import Party from "../views/Party.vue";
 
 Vue.use(VueRouter);
 

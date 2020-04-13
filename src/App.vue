@@ -14,21 +14,20 @@ import { getState } from "@/messaging.js";
 export default {
   components: {
     Navbar
-  },
-  props: ["development"]
+  }
 };
 // Try to execute content scripts and dependencies
 chrome.tabs.insertCSS({
-  file: "js-libs/notyf.min.css"
+  file: "libs/css/notyf.min.css"
 });
 chrome.tabs.executeScript({
-  file: "js-libs/notyf.min.js"
+  file: "libs/js/notyf.min.js"
 });
 chrome.tabs.executeScript({
-  file: "js-libs/loglevel.min.js"
+  file: "libs/js/loglevel.min.js"
 });
 chrome.tabs.executeScript({
-  file: "js-libs/randomName.js"
+  file: "libs/js/randomName.js"
 });
 chrome.tabs.executeScript({
   file: "contentScript.js"
@@ -37,7 +36,7 @@ chrome.tabs.executeScript({
 getState(true);
 // Periodically poll the content script for the new state
 window.setInterval(() => {
-  console.log("Querying party state")
+  console.log("Querying party state");
   getState();
 }, 1000);
 </script>

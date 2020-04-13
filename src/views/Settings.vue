@@ -4,8 +4,22 @@
     <b-input-group prepend="Name" class="mt-3">
       <b-form-input size="lg" v-model="sharedState.name"></b-form-input>
     </b-input-group>
-    <b-button block size="lg" class="mt-2" @click="saveOptions" variant="secondary">Update</b-button>
-    <b-button block size="lg" class="mt-2" @click="handleGoBack" variant="secondary">Go back</b-button>
+    <b-button
+      block
+      size="lg"
+      class="mt-2"
+      @click="saveOptions"
+      variant="secondary"
+      >Update</b-button
+    >
+    <b-button
+      block
+      size="lg"
+      class="mt-2"
+      @click="handleGoBack"
+      variant="secondary"
+      >Go back</b-button
+    >
     <b-collapse id="collapse-success" class="mt-2">
       <b-card>
         <p class="card-text">Your changes have been saved.</p>

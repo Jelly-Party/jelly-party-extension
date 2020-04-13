@@ -1,5 +1,7 @@
 <template>
-  <h3 class="text-white mt-0 p-4 text-center font-weight-bold brand-header">Jelly Party</h3>
+  <h3 class="text-white mt-0 p-4 text-center font-weight-bold brand-header">
+    Jelly Party
+  </h3>
 </template>
 
 <style scoped>
