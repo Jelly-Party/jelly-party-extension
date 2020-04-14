@@ -361,7 +361,7 @@ if (typeof scriptAlreadyInjected === "undefined") {
       }
     }
 
-    pauseVideo() {
+    pauseVideo(tick) {
       if (!this.video) {
         log.warn(
           "Jelly-Party: No video defined. I shouldn't be receiving commands.."
