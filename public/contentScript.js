@@ -34,7 +34,8 @@ if (typeof scriptAlreadyInjected === "undefined") {
 
   notyf.success("Initialized successfully!");
 
-  var justReceivedVideoUpdateRequest;
+  // Needed to disable event forwarding for some time
+  var eventsToProcess;
   // Stable Websites; other websites will likely work, but will receive the "experimental"-flag
   const stableWebsites = [
     "https://www.netflix.com",
@@ -183,15 +184,18 @@ if (typeof scriptAlreadyInjected === "undefined") {
             var msg = JSON.parse(event.data);
             switch (msg.type) {
               case "videoUpdate":
-                justReceivedVideoUpdateRequest = true;
+                // Reset event counter, based on the command we receive. We will not forward
+                // events until we have dealt with the command to prevent infinite loops.
+                eventsToProcess = 0;
                 if (msg.data.variant === "play") {
-                  outerThis.playVideo();
+                  outerThis.playVideo(msg.data.tick);
                   notyf.success(`${msg.data.peer} played the video.`);
                 } else if (msg.data.variant === "pause") {
-                  outerThis.pauseVideo();
+                  outerThis.pauseVideo(msg.data.tick);
                   notyf.success(`${msg.data.peer} paused the video.`);
                 } else if (msg.data.variant === "seek") {
                   outerThis.seek(msg.data.tick);
+                  notyf.success(`${msg.data.peer} jumped to another location.`);
                 }
                 break;
               case "partyStateUpdate":
@@ -337,13 +341,17 @@ if (typeof scriptAlreadyInjected === "undefined") {
       }
     }
 
-    playVideo() {
+    playVideo(tick) {
       if (!this.video) {
         log.warn(
           "Jelly-Party: No video defined. I shouldn't be receiving commands.."
         );
       } else {
         if (this.video.paused) {
+          // At the least, disable forwarding for the play event.
+          // The seek event will handle itself.
+          eventsToProcess += 1;
+          this.seek(tick);
           this.video.play();
         } else {
           log.debug(
@@ -364,6 +372,10 @@ if (typeof scriptAlreadyInjected === "undefined") {
             "Jelly-Party: Trying to pause video, but video is already paused."
           );
         } else {
+          // At the least, disable forwarding for the pause event.
+          // The seek event will handle itself.
+          eventsToProcess += 1;
+          this.seek(tick);
           this.video.pause();
         }
       }
@@ -375,17 +387,27 @@ if (typeof scriptAlreadyInjected === "undefined") {
           "Jelly-Party: No video defined. I shouldn't be receiving commands.."
         );
       } else {
-        if (window.location.href.includes("https://www.netflix.com")) {
-          log.debug("Using netflix hack to seek..");
-          if (!netflixHackInjected) {
-            injectScript(netflixHack);
-            netflixHackInjected = true;
+        const timeDelta = Math.abs(tick - video.currentTime);
+        if (timeDelta > 0.5) {
+          // Seeking is actually worth it. We're off by more than half a second.
+          // Disable forwarding for the upcoming seek event.
+          eventsToProcess += 1;
+          if (window.location.href.includes("https://www.netflix.com")) {
+            log.debug("Using netflix hack to seek..");
+            if (!netflixHackInjected) {
+              injectScript(netflixHack);
+              netflixHackInjected = true;
+            }
+            window.dispatchEvent(
+              new CustomEvent("seekRequest", { detail: tick })
+            );
+          } else {
+            this.video.currentTime = tick;
           }
-          window.dispatchEvent(
-            new CustomEvent("seekRequest", { detail: tick })
-          );
         } else {
-          this.video.currentTime = tick;
+          log.debug(
+            "Jelly-Party: Not actually seeking. Almost at same time already."
+          );
         }
       }
     }
@@ -426,7 +448,7 @@ if (typeof scriptAlreadyInjected === "undefined") {
 
     playListener = function() {
       log.debug({ type: "play", tick: video.currentTime });
-      if (justReceivedVideoUpdateRequest) {
+      if (eventsToProcess > 0) {
         // Somebody else is asking us to play
         // We must not forward the event, otherwise we'll end up in an infinite "play now" loop
         log.debug(
@@ -434,16 +456,15 @@ if (typeof scriptAlreadyInjected === "undefined") {
         );
       } else {
         // We triggered the PlayPause button, so forward it to everybody
-        // Sync, then trigger playPause
-        party.requestPeersToSeek();
+        // Trigger play (will sync as well)
         party.requestPeersToPlay();
       }
-      justReceivedVideoUpdateRequest = false;
+      eventsToProcess -= 1;
     };
 
     pauseListener = function() {
       log.debug({ type: "pause", tick: video.currentTime });
-      if (justReceivedVideoUpdateRequest) {
+      if (eventsToProcess > 0) {
         // Somebody else is asking us to pause
         // We must not forward the event, otherwise we'll end up in an infinite "pause now" loop
         log.debug(
@@ -451,16 +472,15 @@ if (typeof scriptAlreadyInjected === "undefined") {
         );
       } else {
         // We triggered the PlayPause button, so forward it to everybody
-        // Sync, then trigger playPause
-        party.requestPeersToSeek();
+        // Trigger pause (will sync as well)
         party.requestPeersToPause();
       }
-      justReceivedVideoUpdateRequest = false;
+      eventsToProcess -= 1;
     };
 
     seekingListener = function() {
       log.debug({ type: "seek", tick: video.currentTime });
-      if (justReceivedVideoUpdateRequest) {
+      if (eventsToProcess > 0) {
         // Somebody else is asking us to seek
         // We must not forward the event, otherwise we'll end up in an infinite seek loop
         log.debug(
@@ -470,7 +490,7 @@ if (typeof scriptAlreadyInjected === "undefined") {
         // We triggered the seek, so forward it to everybody
         party.requestPeersToSeek();
       }
-      justReceivedVideoUpdateRequest = false;
+      eventsToProcess -= 1;
     };
 
     emptiedListener = () => {
