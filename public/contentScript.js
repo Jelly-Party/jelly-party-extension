@@ -192,7 +192,6 @@ if (typeof scriptAlreadyInjected === "undefined") {
                   notyf.success(`${msg.data.peer} paused the video.`);
                 } else if (msg.data.variant === "seek") {
                   outerThis.seek(msg.data.tick);
-                  //notyf.success(`${msg.data.peer} jumped in the video.`)
                 }
                 break;
               case "partyStateUpdate":
@@ -286,7 +285,9 @@ if (typeof scriptAlreadyInjected === "undefined") {
         var clientCommand = {
           type: "videoUpdate",
           data: {
-            // eslint-disable-next-line
+            variant: "play",
+            tick: this.video.currentTime,
+            peer: this.localPeerName
           }
         };
         var serverCommand = {
@@ -391,7 +392,8 @@ if (typeof scriptAlreadyInjected === "undefined") {
   }
 
   // Define global variables
-  var video, party, videoHelper, findVideoInterval;
+  var video, party, findVideoAndAttach, findVideoInterval;
+  var playListener, pauseListener, seekingListener, emptiedListener;
   chrome.storage.sync.get(["options"], function(result) {
     party = new JellyParty(result.options.localPeerName, video);
     chrome.runtime.onMessage.addListener(function(
@@ -422,74 +424,86 @@ if (typeof scriptAlreadyInjected === "undefined") {
       }
     });
 
-    videoHelper = () => {
+    playListener = function() {
+      log.debug({ type: "play", tick: video.currentTime });
+      if (justReceivedVideoUpdateRequest) {
+        // Somebody else is asking us to play
+        // We must not forward the event, otherwise we'll end up in an infinite "play now" loop
+        log.debug(
+          "Jelly-Party: Not asking party to act - we did not generate the event. Event was caused by a peer."
+        );
+      } else {
+        // We triggered the PlayPause button, so forward it to everybody
+        // Sync, then trigger playPause
+        party.requestPeersToSeek();
+        party.requestPeersToPlay();
+      }
+      justReceivedVideoUpdateRequest = false;
+    };
+
+    pauseListener = function() {
+      log.debug({ type: "pause", tick: video.currentTime });
+      if (justReceivedVideoUpdateRequest) {
+        // Somebody else is asking us to pause
+        // We must not forward the event, otherwise we'll end up in an infinite "pause now" loop
+        log.debug(
+          "Jelly-Party: Not asking party to act - we did not generate the event. Event was caused by a peer."
+        );
+      } else {
+        // We triggered the PlayPause button, so forward it to everybody
+        // Sync, then trigger playPause
+        party.requestPeersToSeek();
+        party.requestPeersToPause();
+      }
+      justReceivedVideoUpdateRequest = false;
+    };
+
+    seekingListener = function() {
+      log.debug({ type: "seek", tick: video.currentTime });
+      if (justReceivedVideoUpdateRequest) {
+        // Somebody else is asking us to seek
+        // We must not forward the event, otherwise we'll end up in an infinite seek loop
+        log.debug(
+          "Jelly-Party: Not asking party to act - we did not generate the event. Event was caused by a peer."
+        );
+      } else {
+        // We triggered the seek, so forward it to everybody
+        party.requestPeersToSeek();
+      }
+      justReceivedVideoUpdateRequest = false;
+    };
+
+    emptiedListener = () => {
+      notyf.success("Video lost! Rescanning for video..");
+      // Remove open event listeners
+      video.removeEventListener("play", playListener);
+      video.removeEventListener("pause", pauseListener);
+      video.removeEventListener("seeked", seekingListener);
+      video.removeEventListener("emptied", emptiedListener);
+      video = null;
+      findVideoInterval = setInterval(findVideoAndAttach, 1000);
+    };
+
+    findVideoAndAttach = () => {
       if (!video) {
         log.debug("Jelly-Party: Scanning for video to attach to.");
         video = document.querySelector("video");
         if (video) {
-          party.video = video;
           clearInterval(findVideoInterval);
+          party.video = video;
           log.info("Jelly-Party: Found video. Attaching to video..");
-          video.addEventListener("pause", () => {
-            log.debug({ type: "pause", tick: video.currentTime });
-            if (justReceivedVideoUpdateRequest) {
-              // Somebody else is asking us to pause
-              // We must not forward the event, otherwise we'll end up in an infinite "pause now" loop
-              log.debug(
-                "Jelly-Party: Not asking party to act - we did not generate the event. Event was caused by a peer."
-              );
-            } else {
-              // We triggered the PlayPause button, so forward it to everybody
-              // Sync, then trigger playPause
-              party.requestPeersToSeek();
-              party.requestPeersToPause();
-            }
-            justReceivedVideoUpdateRequest = false;
-          });
-          video.addEventListener("play", () => {
-            log.debug({ type: "play", tick: video.currentTime });
-            if (justReceivedVideoUpdateRequest) {
-              // Somebody else is asking us to play
-              // We must not forward the event, otherwise we'll end up in an infinite "play now" loop
-              log.debug(
-                "Jelly-Party: Not asking party to act - we did not generate the event. Event was caused by a peer."
-              );
-            } else {
-              // We triggered the PlayPause button, so forward it to everybody
-              // Sync, then trigger playPause
-              party.requestPeersToSeek();
-              party.requestPeersToPlay();
-            }
-            justReceivedVideoUpdateRequest = false;
-          });
-          video.addEventListener("seeking", () => {
-            log.debug({ type: "seek", tick: video.currentTime });
-            if (justReceivedVideoUpdateRequest) {
-              // Somebody else is asking us to seek
-              // We must not forward the event, otherwise we'll end up in an infinite seek loop
-              log.debug(
-                "Jelly-Party: Not asking party to act - we did not generate the event. Event was caused by a peer."
-              );
-            } else {
-              // We triggered the seek, so forward it to everybody
-              party.requestPeersToSeek();
-            }
-            justReceivedVideoUpdateRequest = false;
-          });
+          notyf.success("Video detected!");
+          video.addEventListener("play", playListener);
+          video.addEventListener("pause", pauseListener);
+          video.addEventListener("seeking", seekingListener);
+          video.addEventListener("emptied", emptiedListener);
         }
       } else {
         log.debug("Jelly-Party: Checking if video source has changed..");
       }
     };
-    findVideoInterval = setInterval(videoHelper, 1000);
+    findVideoInterval = setInterval(findVideoAndAttach, 1000);
   });
-
-  window.onhashchange = () => {
-    log.debug("Jelly-Party: Hashchange detected. Rescanning for video");
-    video = undefined;
-    clearInterval(findVideoInterval);
-    findVideoInterval = setInterval(videoHelper, 1000);
-  };
 } else {
   // scriptAlreadyInject in window range -> let's skip injecting script again.
   log.debug(
