@@ -53,12 +53,6 @@ if (typeof scriptAlreadyInjected === "undefined") {
     }
     return false;
   })();
-  const websiteURL = window.location.href;
-  var partyIdFromURL = window.location.search.match(/jellyPartyId=(.+)/);
-  if (partyIdFromURL) {
-    partyIdFromURL = partyIdFromURL[1];
-  }
-  log.debug(`partyIdFromURL is ${partyIdFromURL}`);
 
   // Required for Netflix hack
   const injectScript = function(func) {
@@ -96,6 +90,11 @@ if (typeof scriptAlreadyInjected === "undefined") {
       this.localPeerName = localPeerName;
       this.video = video;
       this.magicLinkUsed = false;
+      this.partyIdFromURL = window.location.search.match(/jellyPartyId=(.+)/);
+      if (this.partyIdFromURL) {
+        this.partyIdFromURL = this.partyIdFromURL[1];
+        log.debug(`partyIdFromURL is ${this.partyIdFromURL}`);
+      }
       this.resetPartyState();
       log.debug("Jelly-Party: Global JellyParty Object");
       log.debug(this);
@@ -112,12 +111,25 @@ if (typeof scriptAlreadyInjected === "undefined") {
           lastPartyId: result.lastPartyId,
           websiteIsTested: websiteIsTested,
         };
-        if (partyIdFromURL && !outerThis.magicLinkUsed) {
+        if (outerThis.partyIdFromURL && !outerThis.magicLinkUsed) {
           log.debug("Joining party once via magic link.");
           outerThis.magicLinkUsed = true;
-          outerThis.joinParty(partyIdFromURL);
+          outerThis.joinParty(outerThis.partyIdFromURL);
         }
       });
+    }
+
+    updateMagicLink() {
+      // Get "clean" wesite URL without jellyPartyId=..
+      var websiteURL = window.location.href.replace(
+        /[\?&]jellyPartyId=.+/g,
+        ""
+      );
+      // Set the magic link
+      this.partyState.magicLink =
+        websiteURL +
+        (websiteURL.includes("?") ? "&" : "?") +
+        `jellyPartyId=${this.partyState.partyId}`;
     }
 
     startParty() {
@@ -152,12 +164,7 @@ if (typeof scriptAlreadyInjected === "undefined") {
             ? generateRoomWithoutSeparator()
             : partyId;
           // Set the magic link
-          outerThis.partyState.magicLink = partyIdFromURL
-            ? websiteURL
-            : websiteURL +
-              (websiteURL.includes("?") ? "&" : "?") +
-              `jellyPartyId=${outerThis.partyState.partyId}`;
-
+          outerThis.updateMagicLink();
           outerThis.ws = new WebSocket("wss://ws.jelly-party.com:8080");
           outerThis.ws.onopen = function() {
             log.debug("Jelly-Party: Connected to Jelly-Party Websocket.");
@@ -511,6 +518,7 @@ if (typeof scriptAlreadyInjected === "undefined") {
         if (video) {
           clearInterval(findVideoInterval);
           party.video = video;
+          party.updateMagicLink();
           log.info("Jelly-Party: Found video. Attaching to video..");
           notyf.success("Video detected!");
           video.addEventListener("play", playListener);
