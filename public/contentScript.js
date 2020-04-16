@@ -26,10 +26,10 @@ if (typeof scriptAlreadyInjected === "undefined") {
         background:
           "linear-gradient(to bottom right, #ff9494 0%, #ee64f6 100%)",
         icon: {
-          className: "jelly-party-icon"
-        }
-      }
-    ]
+          className: "jelly-party-icon",
+        },
+      },
+    ],
   });
 
   notyf.success("Initialized successfully!");
@@ -42,7 +42,7 @@ if (typeof scriptAlreadyInjected === "undefined") {
     "https://www.amazon",
     "https://www.youtube.com",
     "https://vimeo.com",
-    "https://www.disneyplus.com"
+    "https://www.disneyplus.com",
   ];
   const currentWebsite = window.location.href;
   const websiteIsTested = (() => {
@@ -110,7 +110,7 @@ if (typeof scriptAlreadyInjected === "undefined") {
           peers: [],
           wsIsConnected: false,
           lastPartyId: result.lastPartyId,
-          websiteIsTested: websiteIsTested
+          websiteIsTested: websiteIsTested,
         };
         if (partyIdFromURL && !outerThis.magicLinkUsed) {
           log.debug("Joining party once via magic link.");
@@ -176,7 +176,7 @@ if (typeof scriptAlreadyInjected === "undefined") {
                 type: "join",
                 clientName: outerThis.localPeerName,
                 partyId: outerThis.partyState.partyId,
-                currentlyWatching: currentWebsite.match(/https:\/\/(.+?)\//)[1]
+                currentlyWatching: currentWebsite.match(/https:\/\/(.+?)\//)[1],
               })
             );
           };
@@ -205,13 +205,13 @@ if (typeof scriptAlreadyInjected === "undefined") {
                 ) {
                   // Somebody left the party; Let's find out who
                   let previousUUIDs = outerThis.partyState.peers.map(
-                    peer => peer.uuid
+                    (peer) => peer.uuid
                   );
                   let newUUIDs = msg.data.partyState.peers.map(
-                    peer => peer.uuid
+                    (peer) => peer.uuid
                   );
                   let peerWhoLeft = outerThis.partyState.peers.filter(
-                    peer =>
+                    (peer) =>
                       peer.uuid === _.difference(previousUUIDs, newUUIDs)[0]
                   )[0];
                   if (peerWhoLeft) {
@@ -223,10 +223,10 @@ if (typeof scriptAlreadyInjected === "undefined") {
                 ) {
                   // Somebody joined the party
                   let previousUUIDs = outerThis.partyState.peers.map(
-                    peer => peer.uuid
+                    (peer) => peer.uuid
                   );
                   let newUUIDs = msg.data.partyState.peers.map(
-                    peer => peer.uuid
+                    (peer) => peer.uuid
                   );
                   console.log(previousUUIDs);
                   console.log(newUUIDs);
@@ -237,7 +237,7 @@ if (typeof scriptAlreadyInjected === "undefined") {
                     }
                   } else {
                     let peerWhoJoined = msg.data.partyState.peers.filter(
-                      peer =>
+                      (peer) =>
                         peer.uuid === _.difference(newUUIDs, previousUUIDs)[0]
                     )[0];
                     console.log(peerWhoJoined);
@@ -250,7 +250,7 @@ if (typeof scriptAlreadyInjected === "undefined") {
                 }
                 outerThis.partyState = {
                   ...outerThis.partyState,
-                  ...msg.data.partyState
+                  ...msg.data.partyState,
                 };
                 log.debug(
                   "Jelly-Party: Received party state update. New party state is:"
@@ -281,7 +281,7 @@ if (typeof scriptAlreadyInjected === "undefined") {
     }
 
     filterPeer(skipPeer) {
-      return this.remotePeers.filter(e => e.connection.peer != skipPeer);
+      return this.remotePeers.filter((e) => e.connection.peer != skipPeer);
     }
 
     requestPeersToPlay() {
@@ -291,13 +291,13 @@ if (typeof scriptAlreadyInjected === "undefined") {
           data: {
             variant: "play",
             tick: this.video.currentTime,
-            peer: this.localPeerName
-          }
+            peer: this.localPeerName,
+          },
         };
         var serverCommand = {
           type: "forward",
           partyId: this.partyState.partyId,
-          data: { commandToForward: clientCommand }
+          data: { commandToForward: clientCommand },
         };
         this.ws.send(JSON.stringify(serverCommand));
       }
@@ -310,13 +310,13 @@ if (typeof scriptAlreadyInjected === "undefined") {
           data: {
             variant: "pause",
             tick: this.video.currentTime,
-            peer: this.localPeerName
-          }
+            peer: this.localPeerName,
+          },
         };
         var serverCommand = {
           type: "forward",
           partyId: this.partyState.partyId,
-          data: { commandToForward: clientCommand }
+          data: { commandToForward: clientCommand },
         };
         this.ws.send(JSON.stringify(serverCommand));
       }
@@ -329,13 +329,13 @@ if (typeof scriptAlreadyInjected === "undefined") {
           data: {
             variant: "seek",
             tick: this.video.currentTime,
-            peer: this.localPeerName
-          }
+            peer: this.localPeerName,
+          },
         };
         var serverCommand = {
           type: "forward",
           partyId: this.partyState.partyId,
-          data: { commandToForward: clientCommand }
+          data: { commandToForward: clientCommand },
         };
         this.ws.send(JSON.stringify(serverCommand));
       }
