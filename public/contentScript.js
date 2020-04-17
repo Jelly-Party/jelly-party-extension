@@ -1,14 +1,19 @@
+/* global log, Notyf, _ */
 if (typeof scriptAlreadyInjected === "undefined") {
   // scriptAlreadyInjected is undefined, therefore let's load everything
   var scriptAlreadyInjected = true;
-  var DEBUG = true;
-  // Eslint-hack to disable-(no-undef) errors in this file without having to add globals
-  // eslint-disable-next-line
-  var log = log;
-  // eslint-disable-next-line
-  var generateRoomWithoutSeparator = generateRoomWithoutSeparator;
-  // eslint-disable-next-line
-  var Notyf = Notyf;
+  var DEBUG;
+  switch (window.mode) {
+    case 'production':
+      DEBUG = false;
+      break;
+    case 'staging':
+      DEBUG = true;
+      break;
+    case 'development':
+      DEBUG = true;
+      break;
+  }
 
   if (DEBUG) {
     log.log("Jelly-Party: Injecting Content Script!");
@@ -16,6 +21,7 @@ if (typeof scriptAlreadyInjected === "undefined") {
   } else {
     log.setDefaultLevel("info");
   }
+  log.info(`Jelly-Party: Debug logging is ${DEBUG ? "enabled" : "disabled"}.`)
   // Create notyf object
   var notyf = new Notyf({
     duration: 3000,
@@ -165,7 +171,16 @@ if (typeof scriptAlreadyInjected === "undefined") {
             : partyId;
           // Set the magic link
           outerThis.updateMagicLink();
-          outerThis.ws = new WebSocket("wss://ws.jelly-party.com:8080");
+          var wsAddress = "";
+          switch (window.mode) {
+            case "staging":
+              wsAddress = "wss://staging.jelly-party.com:8080";
+              break;
+            default:
+              wsAddress = "wss://ws.jelly-party.com:8080";
+          }
+          log.debug(`Connecting to ${wsAddress}`)
+          outerThis.ws = new WebSocket(wsAddress);
           outerThis.ws.onopen = function() {
             log.debug("Jelly-Party: Connected to Jelly-Party Websocket.");
             notyf.success("Connected to server!");

@@ -32,6 +32,21 @@ chrome.tabs.executeScript({
 chrome.tabs.executeScript({
   file: "libs/js/lodash.js"
 });
+var scriptToInject = "";
+switch (process.env.VUE_APP_MODE) {
+  case "production":
+    scriptToInject = "window.mode='production'";
+    break;
+  case "development":
+    scriptToInject = "window.mode='development'";
+    break;
+  case "staging":
+    scriptToInject = "window.mode='staging'";
+    break;
+  default:
+    break;
+}
+chrome.tabs.executeScript({ code: scriptToInject });
 chrome.tabs.executeScript({
   file: "contentScript.js"
 });

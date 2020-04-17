@@ -12,7 +12,7 @@
 <script>
 export default {
   data: function() {
-    return { title: process.env.VUE_APP_TITLE }
+    return { title: process.env.VUE_APP_TITLE };
   }
-}
+};
 </script>
