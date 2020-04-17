@@ -6,6 +6,7 @@ import "bootstrap/dist/css/bootstrap.css";
 import "bootstrap-vue/dist/bootstrap-vue.css";
 import VueClipboard from "vue-clipboard2";
 import _ from "lodash";
+
 Object.defineProperty(Vue.prototype, "$_", { value: _ });
 Vue.use(VueClipboard);
 // Install BootstrapVue & BootstrapVue icon components

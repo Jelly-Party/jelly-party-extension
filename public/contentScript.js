@@ -116,6 +116,7 @@ if (typeof scriptAlreadyInjected === "undefined") {
           wsIsConnected: false,
           lastPartyId: result.lastPartyId,
           websiteIsTested: websiteIsTested,
+          favicon: document.querySelector("link[rel=icon]").href
         };
         if (outerThis.partyIdFromURL && !outerThis.magicLinkUsed) {
           log.debug("Joining party once via magic link.");
@@ -268,8 +269,6 @@ if (typeof scriptAlreadyInjected === "undefined") {
                   let newUUIDs = msg.data.partyState.peers.map(
                     (peer) => peer.uuid
                   );
-                  console.log(previousUUIDs);
-                  console.log(newUUIDs);
                   if (previousUUIDs.length === 0) {
                     // Let's show all peers in the party
                     for (const peer of msg.data.partyState.peers) {
@@ -280,7 +279,6 @@ if (typeof scriptAlreadyInjected === "undefined") {
                       (peer) =>
                         peer.uuid === _.difference(newUUIDs, previousUUIDs)[0]
                     )[0];
-                    console.log(peerWhoJoined);
                     if (peerWhoJoined) {
                       notyf.success(
                         `${peerWhoJoined.clientName} joined the party.`

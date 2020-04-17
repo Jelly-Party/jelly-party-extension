@@ -8,7 +8,8 @@ export default {
     lastPartyId: "",
     websiteIsTested: false,
     magicLink: "",
-    localPeerName: ""
+    localPeerName: "",
+    favicon: ""
   },
   updateState: function(newState) {
     this.state.isActive = newState.isActive;
@@ -18,5 +19,6 @@ export default {
     this.state.lastPartyId = newState.lastPartyId;
     this.state.websiteIsTested = newState.websiteIsTested;
     this.state.magicLink = newState.magicLink;
+    this.state.favicon = newState.favicon;
   }
 };

@@ -24,7 +24,18 @@
         >
       </b-input-group-append>
     </b-input-group>
-    <b-table class="mb-5" dark striped hover :items="listData"></b-table>
+    <b-table class="mb-5" dark striped hover :items="listData">
+      <!-- <template v-slot:cell(currentlyWatching)="data"> -->
+      <template v-slot:cell(currentlyWatching)>
+        <b-img
+          v-bind:src="sharedState.favicon"
+          alt="Favicon"
+          style="height:1em; width: 1em;"
+          class="mr-2"
+        ></b-img>
+        <!-- <b-link v-bind:href="data.value.currentlyWatching" target="_blank">Go</b-link> -->
+      </template>
+    </b-table>
     <div class="websiteStatus">
       <b-icon-circle-fill
         v-bind:color="websiteStatusFillColor"
@@ -91,7 +102,7 @@ export default {
         ? this.sharedState.peers.map((peer, index) => ({
             "#": index + 1,
             Name: peer.clientName,
-            currentlyWatching: peer.currentlyWatching
+            currentlyWatching: peer
           }))
         : [];
     },
