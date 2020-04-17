@@ -74,7 +74,7 @@ function getState(navigate = false) {
 }
 
 function setOptions(localPeerName) {
-  var options = { localPeerName: localPeerName ? localPeerName : "Somebody" };
+  var options = { localPeerName: localPeerName ? localPeerName : "guest" };
   chrome.storage.sync.set({ options: options }, function() {
     console.log("Options have been set:");
     console.log(options);
@@ -85,7 +85,7 @@ function getOptions() {
   chrome.storage.sync.get(["options"], function(res) {
     store.state.localPeerName = res.options.localPeerName
       ? res.options.localPeerName
-      : "Somebody";
+      : "guest";
   });
 }
 

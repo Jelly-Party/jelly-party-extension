@@ -4,13 +4,13 @@ if (typeof scriptAlreadyInjected === "undefined") {
   var scriptAlreadyInjected = true;
   var DEBUG;
   switch (window.mode) {
-    case 'production':
+    case "production":
       DEBUG = false;
       break;
-    case 'staging':
+    case "staging":
       DEBUG = true;
       break;
-    case 'development':
+    case "development":
       DEBUG = true;
       break;
   }
@@ -21,7 +21,7 @@ if (typeof scriptAlreadyInjected === "undefined") {
   } else {
     log.setDefaultLevel("info");
   }
-  log.info(`Jelly-Party: Debug logging is ${DEBUG ? "enabled" : "disabled"}.`)
+  log.info(`Jelly-Party: Debug logging is ${DEBUG ? "enabled" : "disabled"}.`);
   // Create notyf object
   var notyf = new Notyf({
     duration: 3000,
@@ -138,6 +138,19 @@ if (typeof scriptAlreadyInjected === "undefined") {
         `jellyPartyId=${this.partyState.partyId}`;
     }
 
+    updateCurrentlyWatching() {
+      // Inform the server what URL we're currently on
+      var serverCommand = {
+        type: "clientUpdate",
+        data: {
+          newClientState: {
+            currentlyWatching: this.partyState.magicLink,
+          },
+        },
+      };
+      this.ws.send(JSON.stringify(serverCommand));
+    }
+
     startParty() {
       this.connectToPartyHelper();
     }
@@ -179,7 +192,7 @@ if (typeof scriptAlreadyInjected === "undefined") {
             default:
               wsAddress = "wss://ws.jelly-party.com:8080";
           }
-          log.debug(`Connecting to ${wsAddress}`)
+          log.debug(`Connecting to ${wsAddress}`);
           outerThis.ws = new WebSocket(wsAddress);
           outerThis.ws.onopen = function() {
             log.debug("Jelly-Party: Connected to Jelly-Party Websocket.");
@@ -196,9 +209,14 @@ if (typeof scriptAlreadyInjected === "undefined") {
             outerThis.ws.send(
               JSON.stringify({
                 type: "join",
-                clientName: outerThis.localPeerName,
-                partyId: outerThis.partyState.partyId,
-                currentlyWatching: currentWebsite.match(/https:\/\/(.+?)\//)[1],
+                data: {
+                  guid: res.options.guid,
+                  partyId: outerThis.partyState.partyId,
+                  clientState: {
+                    clientName: outerThis.localPeerName,
+                    currentlyWatching: outerThis.partyState.magicLink,
+                  },
+                },
               })
             );
           };
@@ -313,12 +331,10 @@ if (typeof scriptAlreadyInjected === "undefined") {
           data: {
             variant: "play",
             tick: this.video.currentTime,
-            peer: this.localPeerName,
           },
         };
         var serverCommand = {
           type: "forward",
-          partyId: this.partyState.partyId,
           data: { commandToForward: clientCommand },
         };
         this.ws.send(JSON.stringify(serverCommand));
@@ -533,7 +549,10 @@ if (typeof scriptAlreadyInjected === "undefined") {
         if (video) {
           clearInterval(findVideoInterval);
           party.video = video;
-          party.updateMagicLink();
+          if (party.ws?.readyState === 1) {
+            party.updateMagicLink();
+            party.updateCurrentlyWatching();
+          }
           log.info("Jelly-Party: Found video. Attaching to video..");
           notyf.success("Video detected!");
           video.addEventListener("play", playListener);
