@@ -10,7 +10,7 @@
     <h3 class="mt-3">
       Current party
       <span style="font-size: 1em">
-        <b-icon-question-square-fill id="questionmark" />
+        <b-icon-question-circle-fill id="questionmark" />
       </span>
     </h3>
     <b-input-group class="mt-3">
@@ -25,15 +25,9 @@
       </b-input-group-append>
     </b-input-group>
     <b-table class="mb-5" dark striped hover :items="listData">
-      <!-- <template v-slot:cell(currentlyWatching)="data"> -->
-      <template v-slot:cell(currentlyWatching)>
-        <b-img
-          v-bind:src="sharedState.favicon"
-          alt="Favicon"
-          style="height:1em; width: 1em;"
-          class="mr-2"
-        ></b-img>
-        <!-- <b-link v-bind:href="data.value.currentlyWatching" target="_blank">Go</b-link> -->
+      <template v-slot:cell(peer)="data">
+        <!-- Purify html to mitigate XSS attack vector -->
+        <div v-dompurify-html="data.item.peer"></div>
       </template>
     </b-table>
     <div class="websiteStatus">
@@ -102,7 +96,7 @@ export default {
         ? this.sharedState.peers.map((peer, index) => ({
             "#": index + 1,
             Name: peer.clientName,
-            currentlyWatching: peer
+            peer: `<img src="${peer.favicon}" alt="Favicon" style="height:1em; width: 1em;" class="mr-2"></img>`
           }))
         : [];
     },

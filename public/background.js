@@ -14,15 +14,27 @@ chrome.runtime.onInstalled.addListener(function() {
   });
 });
 
-chrome.declarativeContent.onPageChanged.removeRules(undefined, function() {
-  chrome.declarativeContent.onPageChanged.addRules([
-    {
-      conditions: [
-        new chrome.declarativeContent.PageStateMatcher({
-          css: ["video"],
-        }),
-      ],
-      actions: [new chrome.declarativeContent.ShowPageAction()],
-    },
-  ]);
+chrome.webNavigation.onCompleted.addListener(function(e) {
+  console.log(e);
+  if (e.url.includes("jellyPartyId=")) {
+    console.log("Jelly-Party should start!!!");
+    chrome.tabs.insertCSS(e.tabId, {
+      file: "libs/css/notyf.min.css",
+    });
+    chrome.tabs.executeScript(e.tabId, {
+      file: "libs/js/notyf.min.js",
+    });
+    chrome.tabs.executeScript(e.tabId, {
+      file: "libs/js/loglevel.min.js",
+    });
+    chrome.tabs.executeScript(e.tabId, {
+      file: "libs/js/randomName.js",
+    });
+    chrome.tabs.executeScript(e.tabId, {
+      file: "libs/js/lodash.js",
+    });
+    chrome.tabs.executeScript(e.tabId, {
+      file: "contentScript.js",
+    });
+  }
 });

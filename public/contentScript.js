@@ -13,6 +13,8 @@ if (typeof scriptAlreadyInjected === "undefined") {
     case "development":
       DEBUG = true;
       break;
+    default:
+      DEBUG = true;
   }
 
   if (DEBUG) {
@@ -91,6 +93,25 @@ if (typeof scriptAlreadyInjected === "undefined") {
     });
   };
 
+  const loadChat = () => {
+    function setupPage () { 
+      // create a new div element
+      var bodyDiv = document.createElement("div");
+      var chatDiv = document.createElement("div");
+      var chatContent = document.createTextNode("Hi there and greetings!"); 
+      // add the text node to the newly created div
+      newDiv.appendChild(newContent);  
+      document.body.insertBefore(newDiv, null); 
+    }
+    
+    
+    while (oldParent.firstChild) newParent.appendChild(oldParent.firstChild);
+    
+    
+    elt.style.cssText = "color: blue; border: 1px solid black"; 
+    
+  }
+
   class JellyParty {
     constructor(localPeerName, video) {
       this.localPeerName = localPeerName;
@@ -116,7 +137,7 @@ if (typeof scriptAlreadyInjected === "undefined") {
           wsIsConnected: false,
           lastPartyId: result.lastPartyId,
           websiteIsTested: websiteIsTested,
-          favicon: document.querySelector("link[rel=icon]").href
+          favicon: document.querySelector("link[rel=icon]")?.href,
         };
         if (outerThis.partyIdFromURL && !outerThis.magicLinkUsed) {
           log.debug("Joining party once via magic link.");
@@ -216,6 +237,7 @@ if (typeof scriptAlreadyInjected === "undefined") {
                   clientState: {
                     clientName: outerThis.localPeerName,
                     currentlyWatching: outerThis.partyState.magicLink,
+                    favicon: outerThis.partyState.favicon,
                   },
                 },
               })
@@ -537,6 +559,7 @@ if (typeof scriptAlreadyInjected === "undefined") {
       video.removeEventListener("seeked", seekingListener);
       video.removeEventListener("emptied", emptiedListener);
       video = null;
+      party.partyState.video = false;
       findVideoInterval = setInterval(findVideoAndAttach, 1000);
     };
 
@@ -547,6 +570,7 @@ if (typeof scriptAlreadyInjected === "undefined") {
         if (video) {
           clearInterval(findVideoInterval);
           party.video = video;
+          party.partyState.video = true;
           if (party.ws?.readyState === 1) {
             party.updateMagicLink();
             party.updateCurrentlyWatching();

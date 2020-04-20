@@ -4,16 +4,16 @@
   "description": "An extension that synchronizes video sessions!",
   "permissions": [
     "activeTab",
-    "declarativeContent",
-    "storage"
+    "storage",
+    "webNavigation",
+    "http://*/",
+    "https://*/"
   ],
   "background": {
-    "scripts": [
-      "background.js"
-    ],
+    "scripts": ["js/background.js"],
     "persistent": false
   },
-  "page_action": {
+  "browser_action": {
     "default_popup": "index.html",
     "default_icon": {
       "16": "images/logo/16x16.png",

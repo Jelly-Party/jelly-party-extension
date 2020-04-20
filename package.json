@@ -15,6 +15,7 @@
     "lodash": "^4.17.15",
     "vue": "^2.6.11",
     "vue-clipboard2": "^0.3.1",
+    "vue-dompurify-html": "^2.1.1",
     "vue-router": "^3.1.6"
   },
   "devDependencies": {

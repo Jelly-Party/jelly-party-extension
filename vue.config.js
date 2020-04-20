@@ -9,5 +9,17 @@ module.exports = {
       filename: "index.html",
       title: "Jelly-Party App"
     }
+  },
+  // background: {
+  //   entry: "src/browser/background.js",
+  //   filename: "background.js"
+  // }
+  configureWebpack: {
+    entry: {
+      background: "./src/browser/background.js"
+    }
+  },
+  chainWebpack: config => {
+    config.optimization.splitChunks(false);
   }
 };

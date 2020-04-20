@@ -6,7 +6,19 @@ import "bootstrap/dist/css/bootstrap.css";
 import "bootstrap-vue/dist/bootstrap-vue.css";
 import VueClipboard from "vue-clipboard2";
 import _ from "lodash";
+import VueDOMPurifyHTML from "vue-dompurify-html";
 
+// VueDOMPurifyHTML.addHook("afterSanitizeAttributes", function(node) {
+//   // set all elements owning target to target=_blank
+//   if ("target" in node) {
+//     node.setAttribute("target", "_blank");
+//     // prevent https://www.owasp.org/index.php/Reverse_Tabnabbing
+//     node.setAttribute("rel", "noopener noreferrer");
+//   }
+// });
+
+Vue.use(VueDOMPurifyHTML);
+console.log(VueDOMPurifyHTML);
 Object.defineProperty(Vue.prototype, "$_", { value: _ });
 Vue.use(VueClipboard);
 // Install BootstrapVue & BootstrapVue icon components

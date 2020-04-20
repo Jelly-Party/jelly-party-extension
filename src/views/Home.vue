@@ -1,12 +1,26 @@
 <template>
   <div id="home">
-    <b-button block size="lg" variant="secondary" v-b-modal="'modal-start'"
-      >Start a new party</b-button
-    >
-    <b-button block size="lg" variant="secondary" @click="showRejoinModal"
-      >Rejoin last party</b-button
-    >
-    <p class="mt-4 mb-4">or join a party by Id</p>
+    <div v-if="sharedState.video">
+      <b-button block size="lg" variant="secondary" v-b-modal="'modal-start'"
+        >Start a new party</b-button
+      >
+      <b-button block size="lg" variant="secondary" @click="showRejoinModal"
+        >Rejoin last party</b-button
+      >
+      <p class="mt-4 mb-4">or join a party by Id</p>
+    </div>
+    <div v-if="!sharedState.video">
+      <h1>
+        Join party
+        <span style="font-size: 0.7em">
+          <b-icon-question-circle-fill id="questionmark" />
+        </span>
+      </h1>
+      <b-tooltip
+        target="questionmark"
+        title="You cannot currently create a party, because Jelly Party has not detected a video on this Website. You can still join somebody else's party by Id. The party will then open in a new tab."
+      ></b-tooltip>
+    </div>
     <b-input-group class="mt-3">
       <b-form-input
         size="lg"
