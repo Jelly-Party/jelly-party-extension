@@ -48,7 +48,7 @@ switch (process.env.VUE_APP_MODE) {
 }
 chrome.tabs.executeScript({ code: scriptToInject });
 chrome.tabs.executeScript({
-  file: "contentScript.js"
+  file: "js/contentScript.js"
 });
 // Initially poll the state once and navigate accordingly
 getState(true);

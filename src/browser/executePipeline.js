@@ -30,7 +30,7 @@ const executePipeline = tabId => {
   }
   chrome.tabs.executeScript({ code: scriptToInject });
   chrome.tabs.executeScript(tabId, {
-    file: "contentScript.js"
+    file: "js/contentScript.js"
   });
 };
 

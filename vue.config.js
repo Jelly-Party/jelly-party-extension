@@ -16,7 +16,8 @@ module.exports = {
   // }
   configureWebpack: {
     entry: {
-      background: "./src/browser/background.js"
+      background: "./src/browser/background.js",
+      contentScript: "./src/browser/contentScript.js"
     }
   },
   chainWebpack: config => {

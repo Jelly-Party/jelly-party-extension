@@ -1,4 +1,4 @@
-/* global log, Notyf, _ */
+/* global log, Notyf, _, generateRoomWithoutSeparator */
 if (typeof scriptAlreadyInjected === "undefined") {
   // scriptAlreadyInjected is undefined, therefore let's load everything
   var scriptAlreadyInjected = true;
@@ -34,10 +34,10 @@ if (typeof scriptAlreadyInjected === "undefined") {
         background:
           "linear-gradient(to bottom right, #ff9494 0%, #ee64f6 100%)",
         icon: {
-          className: "jelly-party-icon",
-        },
-      },
-    ],
+          className: "jelly-party-icon"
+        }
+      }
+    ]
   });
 
   notyf.success("Initialized successfully!");
@@ -50,7 +50,7 @@ if (typeof scriptAlreadyInjected === "undefined") {
     "https://www.amazon",
     "https://www.youtube.com",
     "https://vimeo.com",
-    "https://www.disneyplus.com",
+    "https://www.disneyplus.com"
   ];
   const currentWebsite = window.location.href;
   const websiteIsTested = (() => {
@@ -93,24 +93,22 @@ if (typeof scriptAlreadyInjected === "undefined") {
     });
   };
 
-  const loadChat = () => {
-    function setupPage () { 
-      // create a new div element
-      var bodyDiv = document.createElement("div");
-      var chatDiv = document.createElement("div");
-      var chatContent = document.createTextNode("Hi there and greetings!"); 
-      // add the text node to the newly created div
-      newDiv.appendChild(newContent);  
-      document.body.insertBefore(newDiv, null); 
-    }
-    
-    
-    while (oldParent.firstChild) newParent.appendChild(oldParent.firstChild);
-    
-    
-    elt.style.cssText = "color: blue; border: 1px solid black"; 
-    
-  }
+  // const loadChat = () => {
+  //   function setupPage () {
+  //     // create a new div element
+  //     var bodyDiv = document.createElement("div");
+  //     var chatDiv = document.createElement("div");
+  //     var chatContent = document.createTextNode("Hi there and greetings!");
+  //     // add the text node to the newly created div
+  //     newDiv.appendChild(newContent);
+  //     document.body.insertBefore(newDiv, null);
+  //   }
+
+  //   while (oldParent.firstChild) newParent.appendChild(oldParent.firstChild);
+
+  //   elt.style.cssText = "color: blue; border: 1px solid black";
+
+  // }
 
   class JellyParty {
     constructor(localPeerName, video) {
@@ -137,7 +135,7 @@ if (typeof scriptAlreadyInjected === "undefined") {
           wsIsConnected: false,
           lastPartyId: result.lastPartyId,
           websiteIsTested: websiteIsTested,
-          favicon: document.querySelector("link[rel=icon]")?.href,
+          favicon: document.querySelector("link[rel=icon]")?.href
         };
         if (outerThis.partyIdFromURL && !outerThis.magicLinkUsed) {
           log.debug("Joining party once via magic link.");
@@ -149,10 +147,7 @@ if (typeof scriptAlreadyInjected === "undefined") {
 
     updateMagicLink() {
       // Get "clean" wesite URL without jellyPartyId=..
-      var websiteURL = window.location.href.replace(
-        /[\?&]jellyPartyId=.+/g,
-        ""
-      );
+      var websiteURL = window.location.href.replace(/[?&]jellyPartyId=.+/g, "");
       // Set the magic link
       this.partyState.magicLink =
         websiteURL +
@@ -166,9 +161,9 @@ if (typeof scriptAlreadyInjected === "undefined") {
         type: "clientUpdate",
         data: {
           newClientState: {
-            currentlyWatching: this.partyState.magicLink,
-          },
-        },
+            currentlyWatching: this.partyState.magicLink
+          }
+        }
       };
       this.ws.send(JSON.stringify(serverCommand));
     }
@@ -237,9 +232,9 @@ if (typeof scriptAlreadyInjected === "undefined") {
                   clientState: {
                     clientName: outerThis.localPeerName,
                     currentlyWatching: outerThis.partyState.magicLink,
-                    favicon: outerThis.partyState.favicon,
-                  },
-                },
+                    favicon: outerThis.partyState.favicon
+                  }
+                }
               })
             );
           };
@@ -268,13 +263,13 @@ if (typeof scriptAlreadyInjected === "undefined") {
                 ) {
                   // Somebody left the party; Let's find out who
                   let previousUUIDs = outerThis.partyState.peers.map(
-                    (peer) => peer.uuid
+                    peer => peer.uuid
                   );
                   let newUUIDs = msg.data.partyState.peers.map(
-                    (peer) => peer.uuid
+                    peer => peer.uuid
                   );
                   let peerWhoLeft = outerThis.partyState.peers.filter(
-                    (peer) =>
+                    peer =>
                       peer.uuid === _.difference(previousUUIDs, newUUIDs)[0]
                   )[0];
                   if (peerWhoLeft) {
@@ -286,10 +281,10 @@ if (typeof scriptAlreadyInjected === "undefined") {
                 ) {
                   // Somebody joined the party
                   let previousUUIDs = outerThis.partyState.peers.map(
-                    (peer) => peer.uuid
+                    peer => peer.uuid
                   );
                   let newUUIDs = msg.data.partyState.peers.map(
-                    (peer) => peer.uuid
+                    peer => peer.uuid
                   );
                   if (previousUUIDs.length === 0) {
                     // Let's show all peers in the party
@@ -298,7 +293,7 @@ if (typeof scriptAlreadyInjected === "undefined") {
                     }
                   } else {
                     let peerWhoJoined = msg.data.partyState.peers.filter(
-                      (peer) =>
+                      peer =>
                         peer.uuid === _.difference(newUUIDs, previousUUIDs)[0]
                     )[0];
                     if (peerWhoJoined) {
@@ -310,7 +305,7 @@ if (typeof scriptAlreadyInjected === "undefined") {
                 }
                 outerThis.partyState = {
                   ...outerThis.partyState,
-                  ...msg.data.partyState,
+                  ...msg.data.partyState
                 };
                 log.debug(
                   "Jelly-Party: Received party state update. New party state is:"
@@ -341,7 +336,7 @@ if (typeof scriptAlreadyInjected === "undefined") {
     }
 
     filterPeer(skipPeer) {
-      return this.remotePeers.filter((e) => e.connection.peer != skipPeer);
+      return this.remotePeers.filter(e => e.connection.peer != skipPeer);
     }
 
     requestPeersToPlay() {
@@ -350,12 +345,12 @@ if (typeof scriptAlreadyInjected === "undefined") {
           type: "videoUpdate",
           data: {
             variant: "play",
-            tick: this.video.currentTime,
-          },
+            tick: this.video.currentTime
+          }
         };
         var serverCommand = {
           type: "forward",
-          data: { commandToForward: clientCommand },
+          data: { commandToForward: clientCommand }
         };
         this.ws.send(JSON.stringify(serverCommand));
       }
@@ -368,13 +363,13 @@ if (typeof scriptAlreadyInjected === "undefined") {
           data: {
             variant: "pause",
             tick: this.video.currentTime,
-            peer: this.localPeerName,
-          },
+            peer: this.localPeerName
+          }
         };
         var serverCommand = {
           type: "forward",
           partyId: this.partyState.partyId,
-          data: { commandToForward: clientCommand },
+          data: { commandToForward: clientCommand }
         };
         this.ws.send(JSON.stringify(serverCommand));
       }
@@ -387,13 +382,13 @@ if (typeof scriptAlreadyInjected === "undefined") {
           data: {
             variant: "seek",
             tick: this.video.currentTime,
-            peer: this.localPeerName,
-          },
+            peer: this.localPeerName
+          }
         };
         var serverCommand = {
           type: "forward",
           partyId: this.partyState.partyId,
-          data: { commandToForward: clientCommand },
+          data: { commandToForward: clientCommand }
         };
         this.ws.send(JSON.stringify(serverCommand));
       }
