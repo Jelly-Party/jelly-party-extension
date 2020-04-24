@@ -1,7 +1,7 @@
 /* global log, Notyf, _, generateRoomWithoutSeparator */
-if (typeof scriptAlreadyInjected === "undefined") {
+if (!window.contentScriptInjected) {
   // scriptAlreadyInjected is undefined, therefore let's load everything
-  var scriptAlreadyInjected = true;
+  window.contentScriptInjected = true;
   var DEBUG;
   switch (window.mode) {
     case "production":
@@ -94,21 +94,26 @@ if (typeof scriptAlreadyInjected === "undefined") {
   };
 
   // const loadChat = () => {
-  //   function setupPage () {
-  //     // create a new div element
-  //     var bodyDiv = document.createElement("div");
+  //   function setupPage() {
   //     var chatDiv = document.createElement("div");
-  //     var chatContent = document.createTextNode("Hi there and greetings!");
-  //     // add the text node to the newly created div
-  //     newDiv.appendChild(newContent);
-  //     document.body.insertBefore(newDiv, null);
+  //     chatDiv.id = "chatDiv";
+  //     var chatButton = document.createElement("img");
+  //     chatButton.id = "chatButton";
+  //     chatButton.src =
+  //       "data:image/png;base64,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";
+  //     chatDiv.appendChild(chatButton);
+  //     document.body.insertBefore(chatDiv, null);
+  //     document
+  //       .querySelector("#chatButton")
+  //       .setAttribute("style", "width: 100%");
+  //     document
+  //       .querySelector("#chatDiv")
+  //       .setAttribute(
+  //         "style",
+  //         "position: fixed; bottom: 20vh; right: 3em; height: 70px; width: 70px; z-index: 1000"
+  //       );
   //   }
-
-  //   while (oldParent.firstChild) newParent.appendChild(oldParent.firstChild);
-
-  //   elt.style.cssText = "color: blue; border: 1px solid black";
-
-  // }
+  // };
 
   class JellyParty {
     constructor(localPeerName, video) {
@@ -120,6 +125,7 @@ if (typeof scriptAlreadyInjected === "undefined") {
         this.partyIdFromURL = this.partyIdFromURL[1];
         log.debug(`partyIdFromURL is ${this.partyIdFromURL}`);
       }
+      this.updateClientStateInterval = null;
       this.resetPartyState();
       log.debug("Jelly-Party: Global JellyParty Object");
       log.debug(this);
@@ -135,7 +141,8 @@ if (typeof scriptAlreadyInjected === "undefined") {
           wsIsConnected: false,
           lastPartyId: result.lastPartyId,
           websiteIsTested: websiteIsTested,
-          favicon: document.querySelector("link[rel=icon]")?.href
+          favicon: document.querySelector("link[rel=icon]")?.href,
+          video: outerThis.partyState ? outerThis.partyState : false
         };
         if (outerThis.partyIdFromURL && !outerThis.magicLinkUsed) {
           log.debug("Joining party once via magic link.");
@@ -155,17 +162,29 @@ if (typeof scriptAlreadyInjected === "undefined") {
         `jellyPartyId=${this.partyState.partyId}`;
     }
 
-    updateCurrentlyWatching() {
-      // Inform the server what URL we're currently on
-      var serverCommand = {
-        type: "clientUpdate",
-        data: {
-          newClientState: {
-            currentlyWatching: this.partyState.magicLink
+    updateClientState() {
+      // Request a client state update
+      // this is bound to window, see 'The "this" problem' @ https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/setInterval
+      try {
+        // We craft a command to let the server know about our new client state
+        var serverCommand = {
+          type: "clientUpdate",
+          data: {
+            newClientState: {
+              currentlyWatching: party.partyState.magicLink,
+              favicon: party.partyState.favicon,
+              videoState: {
+                paused: party.video.paused,
+                currentTime: party.video.currentTime
+              }
+            }
           }
-        }
-      };
-      this.ws.send(JSON.stringify(serverCommand));
+        };
+        party.ws.send(JSON.stringify(serverCommand));
+      } catch (error) {
+        log.debug("Jelly-Party: Error updating client state..");
+        log.error(error);
+      }
     }
 
     startParty() {
@@ -232,10 +251,18 @@ if (typeof scriptAlreadyInjected === "undefined") {
                   clientState: {
                     clientName: outerThis.localPeerName,
                     currentlyWatching: outerThis.partyState.magicLink,
-                    favicon: outerThis.partyState.favicon
+                    favicon: outerThis.partyState.favicon,
+                    videoState: {
+                      paused: true,
+                      currentTime: 0
+                    }
                   }
                 }
               })
+            );
+            outerThis.updateClientStateInterval = setInterval(
+              outerThis.updateClientState,
+              5000
             );
           };
           outerThis.ws.onmessage = function(event) {
@@ -307,10 +334,9 @@ if (typeof scriptAlreadyInjected === "undefined") {
                   ...outerThis.partyState,
                   ...msg.data.partyState
                 };
-                log.debug(
-                  "Jelly-Party: Received party state update. New party state is:"
-                );
-                log.debug(outerThis.partyState);
+                break;
+              case "setUUID":
+                outerThis.uuid = msg.data.uuid;
                 break;
               default:
                 log.debug(
@@ -322,6 +348,7 @@ if (typeof scriptAlreadyInjected === "undefined") {
           };
           outerThis.ws.onclose = function() {
             log.debug("Jelly-Party: Disconnected from WebSocket-Server.");
+            clearInterval(outerThis.updateClientStateInterval);
             outerThis.partyState.wsIsConnected = false;
           };
         }
@@ -471,6 +498,7 @@ if (typeof scriptAlreadyInjected === "undefined") {
   var playListener, pauseListener, seekingListener, emptiedListener;
   chrome.storage.sync.get(["options"], function(result) {
     party = new JellyParty(result.options.localPeerName, video);
+    window.party = party;
     chrome.runtime.onMessage.addListener(function(
       request,
       sender,
@@ -568,7 +596,7 @@ if (typeof scriptAlreadyInjected === "undefined") {
           party.partyState.video = true;
           if (party.ws?.readyState === 1) {
             party.updateMagicLink();
-            party.updateCurrentlyWatching();
+            party.updateClientState();
           }
           log.info("Jelly-Party: Found video. Attaching to video..");
           notyf.success("Video detected!");
@@ -584,12 +612,10 @@ if (typeof scriptAlreadyInjected === "undefined") {
     findVideoInterval = setInterval(findVideoAndAttach, 1000);
   });
 } else {
-  // scriptAlreadyInject in window range -> let's skip injecting script again.
-  log.debug(
-    "Jelly-Party: No need to inject script again. Skipping script injection."
-  );
+  // scriptAlreadyInject true -> let's skip injecting script again.
+  log.debug("Jelly-Party: Skipping injection of contentScript.js.");
   // We must still refresh the user options
   chrome.storage.sync.get(["options"], function(result) {
-    party.localPeerName = result.options.localPeerName;
+    window.party.localPeerName = result.options.localPeerName;
   });
 }

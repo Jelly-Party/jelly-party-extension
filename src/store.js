@@ -8,14 +8,13 @@ export default {
     lastPartyId: "",
     websiteIsTested: false,
     magicLink: "",
-    localPeerName: "",
+    localPeerName: "", // must not be updated in updateState, since it is queried from Chrome storage
     favicon: "",
     video: ""
   },
   updateState: function(newState) {
     try {
       this.state.isActive = newState.isActive;
-      this.state.localPeerName = newState.localPeerName;
       this.state.partyId = newState.partyId;
       this.state.peers = newState.peers;
       this.state.wsIsConnected = newState.wsIsConnected;

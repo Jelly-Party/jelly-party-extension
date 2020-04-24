@@ -1,18 +1,15 @@
 <template>
   <div id="partyOverview">
-    <b-button
-      block
-      size="lg"
-      variant="secondary"
-      v-b-modal="'modal-leave-party'"
-      >Leave current party</b-button
-    >
-    <h3 class="mt-3">
+    <h3>
       Current party
       <span style="font-size: 1em">
         <b-icon-question-circle-fill id="questionmark" />
       </span>
     </h3>
+    <p style="font-size:1.2em">
+      <span style="user-select: none; font-weight: bold">Party-Id:</span>
+      <span class="badge badge-info"> {{ sharedState.partyId }} </span>
+    </p>
     <b-input-group class="mt-3">
       <b-form-input
         readonly
@@ -24,12 +21,28 @@
         >
       </b-input-group-append>
     </b-input-group>
-    <b-table class="mb-5" dark striped hover :items="listData">
+    <b-table dark striped hover :items="listData">
       <template v-slot:cell(peer)="data">
         <!-- Purify html to mitigate XSS attack vector -->
-        <div v-dompurify-html="data.item.peer"></div>
+        <div
+          style="display: inline-block"
+          v-dompurify-html="data.item.peer.favicon"
+        ></div>
+        {{ data.item.peer.name }}
+      </template>
+      <template v-slot:cell(status)="data">
+        <!-- Purify html to mitigate XSS attack vector -->
+        <div v-dompurify-html="data.item.status"></div>
       </template>
     </b-table>
+    <b-button
+      block
+      size="lg"
+      variant="secondary"
+      v-b-modal="'modal-leave-party'"
+      class="mb-5"
+      >Leave current party</b-button
+    >
     <div class="websiteStatus">
       <b-icon-circle-fill
         v-bind:color="websiteStatusFillColor"
@@ -54,7 +67,7 @@
     </b-modal>
     <b-tooltip
       target="questionmark"
-      title="Share this Party Id and let people join your party!"
+      title="Share the magic link and let people join your party by simply opening the link or share the party Id and let people join your party manually."
     ></b-tooltip>
   </div>
 </template>
@@ -79,6 +92,18 @@
 import store from "@/store.js";
 import { leaveParty } from "@/messaging.js";
 
+const toHHMMSS = secs => {
+  let sec_num = parseInt(secs, 10);
+  let hours = Math.floor(sec_num / 3600);
+  let minutes = Math.floor(sec_num / 60) % 60;
+  let seconds = sec_num % 60;
+
+  return [hours, minutes, seconds]
+    .map(v => (v < 10 ? "0" + v : v))
+    .filter((v, i) => v !== "00" || i > 0)
+    .join(":");
+};
+
 export default {
   name: "Party",
   data: function() {
@@ -93,10 +118,20 @@ export default {
   computed: {
     listData: function() {
       return this.sharedState.peers
-        ? this.sharedState.peers.map((peer, index) => ({
-            "#": index + 1,
-            Name: peer.clientName,
-            peer: `<img src="${peer.favicon}" alt="Favicon" style="height:1em; width: 1em;" class="mr-2"></img>`
+        ? this.sharedState.peers.map(peer => ({
+            peer: {
+              name: peer.clientName,
+              favicon: peer.favicon
+                ? `<img src="${peer.favicon}" alt="Favicon" style="display: inline-block; height:1em; width: 1em;"></img>`
+                : ""
+            },
+            status: `${
+              peer.videoState.paused
+                ? '<span class="badge badge-warning">Paused</span>'
+                : '<span class="badge badge-success">Playing</span>'
+            } <span class="badge badge-secondary">${toHHMMSS(
+              Math.floor(peer.videoState.currentTime)
+            )}</span>`
           }))
         : [];
     },

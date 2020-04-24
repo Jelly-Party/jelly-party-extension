@@ -1,27 +1,12 @@
 <template>
   <div id="home">
-    <div v-if="sharedState.video">
+    <div>
       <b-button block size="lg" variant="secondary" v-b-modal="'modal-start'"
         >Start a new party</b-button
       >
-      <b-button block size="lg" variant="secondary" @click="showRejoinModal"
-        >Rejoin last party</b-button
-      >
-      <p class="mt-4 mb-4">or join a party by Id</p>
+      <p class="mt-3 mb-3">or join a party by Id</p>
     </div>
-    <div v-if="!sharedState.video">
-      <h1>
-        Join party
-        <span style="font-size: 0.7em">
-          <b-icon-question-circle-fill id="questionmark" />
-        </span>
-      </h1>
-      <b-tooltip
-        target="questionmark"
-        title="You cannot currently create a party, because Jelly Party has not detected a video on this Website. You can still join somebody else's party by Id. The party will then open in a new tab."
-      ></b-tooltip>
-    </div>
-    <b-input-group class="mt-3">
+    <b-input-group class="">
       <b-form-input
         size="lg"
         placeholder="Party Id"
@@ -33,6 +18,10 @@
         >
       </b-input-group-append>
     </b-input-group>
+    <p class="text-center mt-2" style="font-size: 0.7em">
+      <span style="user-select: none">Your last party ID was </span>
+      <b>{{ sharedState.lastPartyId }}</b>
+    </p>
     <div class="settingsIcon">
       <b-button @click="goToSettings" size="sm" title="Settings">
         <b-icon icon="gear-fill" aria-hidden="true"></b-icon>
@@ -44,17 +33,16 @@
       ok-title="Start party"
       @ok="handleStartParty"
     >
-      <p class="my-4">Are you sure you want to start a new party?</p>
-    </b-modal>
-    <b-modal
-      ref="modal-rejoin"
-      title="Rejoin last party"
-      ok-title="Rejoin Party"
-      @ok="handleRejoinParty"
-    >
-      <p class="my-4">
-        {{ `Rejoin last party with Id ${sharedState.lastPartyId}?` }}
+      <p class="text-justify">
+        Are you sure you want to start a new party?
       </p>
+      <span class="text-justify font-weight-bold">
+        {{
+          sharedState.video
+            ? ""
+            : "Jelly-Party could not yet a find a video on this website. You will be notified once a video has been detected."
+        }}
+      </span>
     </b-modal>
     <b-modal
       id="modal-join"
@@ -62,18 +50,19 @@
       ok-title="Join Party"
       @ok="handleJoinParty"
     >
-      <p class="my-4">Are you sure you want to join this party?</p>
-    </b-modal>
-    <b-modal
-      ref="modal-rejoin-no-party-found"
-      title="No previous party found"
-      ok-title="Start new Party"
-      @ok="handleStartParty"
-    >
-      <p class="my-4">
-        We couldn't find a previous party. Would you like to start a new party
-        instead?
+      <p class="text-justify">
+        Are you sure you want to join this party?
       </p>
+      <p class="font-weight-bold text-justify">
+        You are in charge to navigate to the correct video yourself.
+      </p>
+      <span class="text-justify font-weight-bold">
+        {{
+          sharedState.video
+            ? ""
+            : "Jelly-Party could not yet a find a video on this website. You will be notified once a video has been detected."
+        }}
+      </span>
     </b-modal>
   </div>
 </template>
