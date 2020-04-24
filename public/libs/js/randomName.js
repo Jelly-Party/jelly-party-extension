@@ -1,5 +1,5 @@
 // Copyright https://github.com/jitsi/js-utils/blob/master/random/randomUtil.js
-if (typeof scriptAlreadyInjected === 'undefined') {
+if (!window.contentScriptInjected) {
     console.log('Jelly-Party: Injected "randomName" library.');
     // If we have already injected scripts, we can skip this step
     function randomInt(min, max) {
@@ -1114,4 +1114,6 @@ if (typeof scriptAlreadyInjected === 'undefined') {
         }
         return false;
     }
+} else {
+    console.log("Jelly-Party: Skipping injection of randomName.js")
 }
