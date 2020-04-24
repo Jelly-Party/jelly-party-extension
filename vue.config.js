@@ -7,20 +7,17 @@ module.exports = {
       entry: "src/main.js",
       template: "public/index.html",
       filename: "index.html",
-      title: "Jelly-Party App"
-    }
+      title: "Jelly-Party App",
+    },
   },
-  // background: {
-  //   entry: "src/browser/background.js",
-  //   filename: "background.js"
-  // }
+  filenameHashing: false,
   configureWebpack: {
     entry: {
       background: "./src/browser/background.js",
-      contentScript: "./src/browser/contentScript.js"
-    }
+      contentScript: "./src/browser/contentScript.js",
+    },
   },
-  chainWebpack: config => {
+  chainWebpack: (config) => {
     config.optimization.splitChunks(false);
-  }
+  },
 };

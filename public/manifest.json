@@ -3,7 +3,6 @@
   "version": "1.1.4",
   "description": "An extension that synchronizes video sessions!",
   "permissions": [
-    "activeTab",
     "storage",
     "webNavigation",
     "http://*/",
