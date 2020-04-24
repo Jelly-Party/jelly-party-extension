@@ -1,4 +1,4 @@
-import executePipeline from "./executePipeline";
+// import executePipeline from "./executePipeline";
 
 chrome.runtime.onInstalled.addListener(function() {
   function uuidv4() {
@@ -16,9 +16,9 @@ chrome.runtime.onInstalled.addListener(function() {
   });
 });
 
-chrome.webNavigation.onCompleted.addListener(function(e) {
-  console.log(e);
-  if (e.url.includes("jellyPartyId=")) {
-    executePipeline(e.tabId);
-  }
-});
+// chrome.webNavigation.onCompleted.addListener(function(e) {
+//   console.log(e);
+//   if (e.url.includes("jellyPartyId=")) {
+//     executePipeline(e.tabId);
+//   }
+// });
