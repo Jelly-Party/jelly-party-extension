@@ -34,10 +34,10 @@ if (!window.contentScriptInjected) {
         background:
           "linear-gradient(to bottom right, #ff9494 0%, #ee64f6 100%)",
         icon: {
-          className: "jelly-party-icon"
-        }
-      }
-    ]
+          className: "jelly-party-icon",
+        },
+      },
+    ],
   });
 
   notyf.success("Initialized successfully!");
@@ -50,7 +50,7 @@ if (!window.contentScriptInjected) {
     "https://www.amazon",
     "https://www.youtube.com",
     "https://vimeo.com",
-    "https://www.disneyplus.com"
+    "https://www.disneyplus.com",
   ];
   const currentWebsite = window.location.href;
   const websiteIsTested = (() => {
@@ -142,7 +142,7 @@ if (!window.contentScriptInjected) {
           lastPartyId: result.lastPartyId,
           websiteIsTested: websiteIsTested,
           favicon: document.querySelector("link[rel=icon]")?.href,
-          video: outerThis.partyState ? outerThis.partyState : false
+          video: outerThis.partyState ? outerThis.partyState : false,
         };
         if (outerThis.partyIdFromURL && !outerThis.magicLinkUsed) {
           log.debug("Joining party once via magic link.");
@@ -175,10 +175,10 @@ if (!window.contentScriptInjected) {
               favicon: party.partyState.favicon,
               videoState: {
                 paused: party.video.paused,
-                currentTime: party.video.currentTime
-              }
-            }
-          }
+                currentTime: party.video.currentTime,
+              },
+            },
+          },
         };
         party.ws.send(JSON.stringify(serverCommand));
       } catch (error) {
@@ -254,10 +254,10 @@ if (!window.contentScriptInjected) {
                     favicon: outerThis.partyState.favicon,
                     videoState: {
                       paused: true,
-                      currentTime: 0
-                    }
-                  }
-                }
+                      currentTime: 0,
+                    },
+                  },
+                },
               })
             );
             outerThis.updateClientStateInterval = setInterval(
@@ -272,15 +272,19 @@ if (!window.contentScriptInjected) {
                 // Reset event counter, based on the command we receive. We will not forward
                 // events until we have dealt with the command to prevent infinite loops.
                 eventsToProcess = 0;
+                // Find out which peer caused the event
+                let peer = outerThis.partyState.peers.filter(
+                  (peer) => peer.uuid === msg.data.peer.uuid
+                )[0].clientName;
                 if (msg.data.variant === "play") {
                   outerThis.playVideo(msg.data.tick);
-                  notyf.success(`${msg.data.peer} played the video.`);
+                  notyf.success(`${peer} played the video.`);
                 } else if (msg.data.variant === "pause") {
                   outerThis.pauseVideo(msg.data.tick);
-                  notyf.success(`${msg.data.peer} paused the video.`);
+                  notyf.success(`${peer} paused the video.`);
                 } else if (msg.data.variant === "seek") {
                   outerThis.seek(msg.data.tick);
-                  notyf.success(`${msg.data.peer} jumped to another location.`);
+                  notyf.success(`${peer} jumped to another location.`);
                 }
                 break;
               case "partyStateUpdate":
@@ -290,13 +294,13 @@ if (!window.contentScriptInjected) {
                 ) {
                   // Somebody left the party; Let's find out who
                   let previousUUIDs = outerThis.partyState.peers.map(
-                    peer => peer.uuid
+                    (peer) => peer.uuid
                   );
                   let newUUIDs = msg.data.partyState.peers.map(
-                    peer => peer.uuid
+                    (peer) => peer.uuid
                   );
                   let peerWhoLeft = outerThis.partyState.peers.filter(
-                    peer =>
+                    (peer) =>
                       peer.uuid === _.difference(previousUUIDs, newUUIDs)[0]
                   )[0];
                   if (peerWhoLeft) {
@@ -308,10 +312,10 @@ if (!window.contentScriptInjected) {
                 ) {
                   // Somebody joined the party
                   let previousUUIDs = outerThis.partyState.peers.map(
-                    peer => peer.uuid
+                    (peer) => peer.uuid
                   );
                   let newUUIDs = msg.data.partyState.peers.map(
-                    peer => peer.uuid
+                    (peer) => peer.uuid
                   );
                   if (previousUUIDs.length === 0) {
                     // Let's show all peers in the party
@@ -320,7 +324,7 @@ if (!window.contentScriptInjected) {
                     }
                   } else {
                     let peerWhoJoined = msg.data.partyState.peers.filter(
-                      peer =>
+                      (peer) =>
                         peer.uuid === _.difference(newUUIDs, previousUUIDs)[0]
                     )[0];
                     if (peerWhoJoined) {
@@ -332,7 +336,7 @@ if (!window.contentScriptInjected) {
                 }
                 outerThis.partyState = {
                   ...outerThis.partyState,
-                  ...msg.data.partyState
+                  ...msg.data.partyState,
                 };
                 break;
               case "setUUID":
@@ -363,7 +367,7 @@ if (!window.contentScriptInjected) {
     }
 
     filterPeer(skipPeer) {
-      return this.remotePeers.filter(e => e.connection.peer != skipPeer);
+      return this.remotePeers.filter((e) => e.connection.peer != skipPeer);
     }
 
     requestPeersToPlay() {
@@ -372,12 +376,13 @@ if (!window.contentScriptInjected) {
           type: "videoUpdate",
           data: {
             variant: "play",
-            tick: this.video.currentTime
-          }
+            tick: this.video.currentTime,
+            peer: { uuid: this.uuid },
+          },
         };
         var serverCommand = {
           type: "forward",
-          data: { commandToForward: clientCommand }
+          data: { commandToForward: clientCommand },
         };
         this.ws.send(JSON.stringify(serverCommand));
       }
@@ -390,13 +395,12 @@ if (!window.contentScriptInjected) {
           data: {
             variant: "pause",
             tick: this.video.currentTime,
-            peer: this.localPeerName
-          }
+            peer: { uuid: this.uuid },
+          },
         };
         var serverCommand = {
           type: "forward",
-          partyId: this.partyState.partyId,
-          data: { commandToForward: clientCommand }
+          data: { commandToForward: clientCommand },
         };
         this.ws.send(JSON.stringify(serverCommand));
       }
@@ -409,13 +413,12 @@ if (!window.contentScriptInjected) {
           data: {
             variant: "seek",
             tick: this.video.currentTime,
-            peer: this.localPeerName
-          }
+            peer: { uuid: this.uuid },
+          },
         };
         var serverCommand = {
           type: "forward",
-          partyId: this.partyState.partyId,
-          data: { commandToForward: clientCommand }
+          data: { commandToForward: clientCommand },
         };
         this.ws.send(JSON.stringify(serverCommand));
       }
