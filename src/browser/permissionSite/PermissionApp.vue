@@ -30,7 +30,7 @@ export default {
   mounted: function() {
     url = window.location.href.match(/\?jellyPartyUrl=(.+)/)[1];
     permissionURL = url.match(/https?:\/\/.+\//)[0];
-    simplifiedURL = permissionURL.match(/https?:\/\/(.+)\//)[1];
+    simplifiedURL = permissionURL.match(/https?:\/\/(.+?)\//)[1];
     document.getElementById("request-url").innerText = simplifiedURL;
   },
   methods: {
