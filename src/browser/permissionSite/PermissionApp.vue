@@ -37,7 +37,7 @@ export default {
     grantPermissions: function() {
       chrome.permissions.request(
         {
-          origins: [permissionURL],
+          origins: [permissionURL]
         },
         function(granted) {
           if (granted) {
@@ -50,8 +50,8 @@ export default {
           }
         }
       );
-    },
-  },
+    }
+  }
 };
 </script>
 

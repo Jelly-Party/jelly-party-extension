@@ -1,19 +1,19 @@
-const executePipeline = (tabId) => {
+const executePipeline = tabId => {
   console.log(`Jelly-Party: Executing pipeline for tab ${tabId}.`);
   chrome.tabs.insertCSS(tabId, {
-    file: "libs/css/notyf.min.css",
+    file: "libs/css/notyf.min.css"
   });
   chrome.tabs.executeScript(tabId, {
-    file: "libs/js/notyf.min.js",
+    file: "libs/js/notyf.min.js"
   });
   chrome.tabs.executeScript(tabId, {
-    file: "libs/js/loglevel.min.js",
+    file: "libs/js/loglevel.min.js"
   });
   chrome.tabs.executeScript(tabId, {
-    file: "libs/js/randomName.js",
+    file: "libs/js/randomName.js"
   });
   chrome.tabs.executeScript(tabId, {
-    file: "libs/js/lodash.js",
+    file: "libs/js/lodash.js"
   });
   var scriptToInject = "";
   switch (process.env.VUE_APP_MODE) {
@@ -31,7 +31,7 @@ const executePipeline = (tabId) => {
   }
   chrome.tabs.executeScript({ code: scriptToInject });
   chrome.tabs.executeScript(tabId, {
-    file: "js/contentScript.js",
+    file: "js/contentScript.js"
   });
 };
 
