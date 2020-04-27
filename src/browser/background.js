@@ -16,50 +16,62 @@ chrome.runtime.onInstalled.addListener(function() {
   });
 });
 
-chrome.webNavigation.onBeforeNavigate.addListener(
-  function(e) {
-    chrome.permissions.contains(
-      {
-        origins: [e.url]
-      },
-      hasPermission => {
-        if (hasPermission) {
-          console.log(
-            "Jelly-Party: Already have permission. No need to ask for permissions again."
-          );
-        } else {
-          console.log(
-            "Jelly-Party: Must ask for permission to automatically insert content script."
-          );
-          const requestPermissionSite =
-            chrome.runtime.getURL("requestPermissions.html") +
-            `?jellyPartyUrl=${e.url}`;
-          chrome.tabs.update({ url: requestPermissionSite }, () => {});
-        }
-      }
-    );
-  },
-  { url: [{ queryContains: "jellyPartyId" }] }
-);
+function redirectToParty(redirectURL) {
+  chrome.tabs.update({ url: redirectURL }, () => {
+    chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
+      var activeTabId = tabs[0].id;
+      // Let's wait shortly before injecting the content scripts
+      setTimeout(() => {
+        executePipeline(activeTabId);
+      }, 1000);
+    });
+  });
+}
 
-chrome.webNavigation.onCompleted.addListener(
-  function(e) {
-    chrome.permissions.contains(
+chrome.runtime.onMessageExternal.addListener(function(request, sender) {
+  console.log(request);
+  let redirectURL = new URL(request.redirectURL);
+  redirectURL.searchParams.append("jellyPartyId", request.jellyPartyId);
+  redirectURL = redirectURL.href;
+  console.log(redirectURL);
+  if (request.type === "requestPermissions") {
+    chrome.permissions.request(
       {
-        origins: [e.url]
+        origins: [request.permissionURL]
       },
-      hasPermission => {
-        if (hasPermission) {
-          chrome.tabs.query({ active: true, currentWindow: true }, function(
-            tabs
-          ) {
-            var activeTab = tabs[0];
-            var activeTabId = activeTab.id;
-            executePipeline(activeTabId);
-          });
+      function(granted) {
+        if (granted) {
+          console.log(
+            "Jelly-Party: Permission granted. Redirecting. Content script will now be inserted automatically, since permissions have been granted."
+          );
+          redirectToParty(redirectURL);
+        } else {
+          console.log("Jelly-Party: Permission not granted.");
         }
       }
     );
-  },
-  { url: [{ queryContains: "jellyPartyId" }] }
-);
+  } else if (request.type === "requestRedirect") {
+    if (sender.origin === "https://join.jelly-party.com") {
+      chrome.permissions.contains(
+        {
+          origins: [request.permissionURL]
+        },
+        hasPermission => {
+          if (hasPermission) {
+            // We already have permission. Therefore we must redirect the user to the new website
+            console.log(
+              "Jelly-Party: Already have permission. No need to ask for permissions again."
+            );
+            redirectToParty(redirectURL);
+          } else {
+            console.log(
+              "Jelly-Party: Must ask for permission to automatically insert content script."
+            );
+          }
+        }
+      );
+    }
+  } else {
+    console.log("Jelly-Party: Received unknown request.");
+  }
+});

@@ -2,7 +2,7 @@
   "name": "Jelly-Party",
   "version": "1.1.6",
   "description": "An extension that synchronizes video sessions!",
-  "permissions": ["activeTab", "webNavigation", "storage"],
+  "permissions": ["activeTab", "storage"],
   "optional_permissions": ["http://*/*", "https://*/*"],
   "background": {
     "scripts": ["js/background.js"],
@@ -24,5 +24,9 @@
     "128": "images/logo/128x128.png"
   },
   "manifest_version": 2,
-  "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'"
+  "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAywk9VbVWRWHTQ8JXVBe6rdpzRYdlRsLZ/pc3r+6OAoEMp9ZjcL5s4MmKkKK7aZIO3cWy3wLfZjRuqhdwGre8qVZHLw2FfrL8RPVl3d/WCB2aq6ztKQON49uPGUN9PpfyTbE7ZdKnOfRp5j9TM2Ip72wYz+0EPNr4oTEx1dnmAOUsqFpMb8lNjYwkqYwIM0rJ//QbV8PNsy+XObZSCrt9TMlgWnxMYzxBrS3Bp9qNr7sJQ8rzIlIisTLYhGLF1aR8pGj+qElGPFOc2Ul6txYkdlfDnBtsNx6CSC2lUdngw6rkSl6NTBL7hVCoBRkh4U1ZLyI2AwJN3+xfZTCvVdurpwIDAQAB",
+  "externally_connectable": {
+    "matches": ["https://join.jelly-party.com/*"]
+  }
 }
