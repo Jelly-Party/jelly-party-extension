@@ -1,3 +1,4 @@
+import WebsiteHandler from "./websiteHandler.js";
 /* global log, Notyf, _, generateRoomWithoutSeparator */
 if (!window.contentScriptInjected) {
   // scriptAlreadyInjected is undefined, therefore let's load everything
@@ -62,70 +63,23 @@ if (!window.contentScriptInjected) {
     return false;
   })();
 
-  // Required for Netflix hack
-  const injectScript = function(func) {
-    // See https://stackoverflow.com/questions/9515704/insert-code-into-the-page-context-using-a-content-script
-    // This takes a function as an argument and injects + executes it in the current tab, with full access to the global window object
-    var actualCode = "(" + func + ")();";
-    var script = document.createElement("script");
-    script.textContent = actualCode;
-    (document.head || document.documentElement).appendChild(script);
-    script.remove();
-  };
-  // Have we already injected our netflix hack?
-  var netflixHackInjected = false;
-  // Netflix-Hack: Used to enable seek in the video. Play & Pause don't require this hacky madness
-  const netflixHack = () => {
-    console.log("Injecting Netflix hack for seeking..");
-    const getSeekHook = function() {
-      const videoPlayer = window.netflix.appContext.state.playerApp.getAPI()
-        .videoPlayer;
-      return videoPlayer.getVideoPlayerBySessionId(
-        videoPlayer.getAllPlayerSessionIds()[0]
-      ).seek;
-    };
-    window.addEventListener("seekRequest", function(e) {
-      var tick = e.detail * 1000;
-      getSeekHook()(tick);
-      console.log(
-        `Jelly-Party: Netflix Context: Received seek request: ${tick}.`
-      );
-    });
-  };
-
-  // const loadChat = () => {
-  //   function setupPage() {
-  //     var chatDiv = document.createElement("div");
-  //     chatDiv.id = "chatDiv";
-  //     var chatButton = document.createElement("img");
-  //     chatButton.id = "chatButton";
-  //     chatButton.src =
-  //       "data:image/png;base64,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";
-  //     chatDiv.appendChild(chatButton);
-  //     document.body.insertBefore(chatDiv, null);
-  //     document
-  //       .querySelector("#chatButton")
-  //       .setAttribute("style", "width: 100%");
-  //     document
-  //       .querySelector("#chatDiv")
-  //       .setAttribute(
-  //         "style",
-  //         "position: fixed; bottom: 20vh; right: 3em; height: 70px; width: 70px; z-index: 1000"
-  //       );
-  //   }
-  // };
-
   class JellyParty {
     constructor(localPeerName, video) {
       this.localPeerName = localPeerName;
       this.video = video;
       this.magicLinkUsed = false;
-      this.partyIdFromURL = window.location.search.match(/jellyPartyId=(.+)/);
+      this.partyIdFromURL = new URLSearchParams(window.location.search).get(
+        "jellyPartyId"
+      );
       if (this.partyIdFromURL) {
-        this.partyIdFromURL = this.partyIdFromURL[1];
         log.debug(`partyIdFromURL is ${this.partyIdFromURL}`);
       }
       this.updateClientStateInterval = null;
+      // The WebsiteHandler handles playing, pausing & seeking videos
+      // on different websites. For most websites the generic video.play(),
+      // video.pause() & video.seek() will work, however some websites,
+      // such as Netflix, require direct access to video controllers.
+      this.websiteHandler = new WebsiteHandler(window.location.host);
       this.resetPartyState();
       log.debug("Jelly-Party: Global JellyParty Object");
       log.debug(this);
@@ -153,18 +107,19 @@ if (!window.contentScriptInjected) {
     }
 
     updateMagicLink() {
-      // Get "clean" wesite URL without jellyPartyId=..
-      var websiteURL = window.location.href.replace(/[?&]jellyPartyId=.+/g, "");
+      // Get "clean" website URL without jellyPartyId=..
+      let searchParams = new URLSearchParams(window.location.search);
+      searchParams.delete("jellyPartyId");
+      let redirectURL = encodeURIComponent(
+        window.location.origin + window.location.pathname + "?" + searchParams
+      );
       // Set the magic link
-      this.partyState.magicLink =
-        websiteURL +
-        (websiteURL.includes("?") ? "&" : "?") +
-        `jellyPartyId=${this.partyState.partyId}`;
+      this.partyState.magicLink = `https://join.jelly-party.com/?jellyPartyId=${this.partyState.partyId}&redirectURL=${redirectURL}`;
     }
 
     updateClientState() {
       // Request a client state update
-      // this is bound to window, see 'The "this" problem' @ https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/setInterval
+      // "this" is bound to window, see 'The "this" problem' @ https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/setInterval
       try {
         // We craft a command to let the server know about our new client state
         var serverCommand = {
@@ -435,7 +390,7 @@ if (!window.contentScriptInjected) {
           // The seek event will handle itself.
           eventsToProcess += 1;
           this.seek(tick);
-          this.video.play();
+          this.websiteHandler.play(this.video);
         } else {
           log.debug(
             "Jelly-Party: Trying to play video, but video is already playing."
@@ -459,7 +414,7 @@ if (!window.contentScriptInjected) {
           // The seek event will handle itself.
           eventsToProcess += 1;
           this.seek(tick);
-          this.video.pause();
+          this.websiteHandler.pause(this.video);
         }
       }
     }
@@ -470,23 +425,12 @@ if (!window.contentScriptInjected) {
           "Jelly-Party: No video defined. I shouldn't be receiving commands.."
         );
       } else {
-        const timeDelta = Math.abs(tick - video.currentTime);
+        const timeDelta = Math.abs(tick - this.video.currentTime);
         if (timeDelta > 0.5) {
           // Seeking is actually worth it. We're off by more than half a second.
           // Disable forwarding for the upcoming seek event.
           eventsToProcess += 1;
-          if (window.location.href.includes("https://www.netflix.com")) {
-            log.debug("Using netflix hack to seek..");
-            if (!netflixHackInjected) {
-              injectScript(netflixHack);
-              netflixHackInjected = true;
-            }
-            window.dispatchEvent(
-              new CustomEvent("seekRequest", { detail: tick })
-            );
-          } else {
-            this.video.currentTime = tick;
-          }
+          this.websiteHandler.seek(this.video, tick);
         } else {
           log.debug(
             "Jelly-Party: Not actually seeking. Almost at same time already."

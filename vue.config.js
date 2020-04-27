@@ -2,17 +2,13 @@
 module.exports = {
   publicPath: "",
   assetsDir: "",
+  lintOnSave: true,
   pages: {
     index: {
       entry: "src/main.js",
       template: "public/index.html",
       filename: "index.html",
       title: "Jelly-Party App"
-    },
-    permissionSite: {
-      entry: "src/browser/permissionSite/requestPermissions.js",
-      filename: "requestPermissions.html",
-      title: "Jelly-Party Permission Request"
     }
   },
   filenameHashing: false,
