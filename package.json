@@ -1,6 +1,6 @@
 {
   "name": "jelly-party-extension",
-  "version": "1.1.6",
+  "version": "1.1.7",
   "private": true,
   "scripts": {
     "dev": "vue-cli-service build --watch --mode development",
