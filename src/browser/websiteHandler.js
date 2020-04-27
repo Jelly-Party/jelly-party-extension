@@ -36,11 +36,20 @@ export default class WebsiteHandler {
             );
             getPlayer().pause();
           });
+          // We must move the .notyf Node inside the .sizing wrapper, to enable
+          // notyf notifications when Netflix is in full-screen mode.
+          // This is, because unlike most websites which request the entire
+          // html-document to be in fullscreen, netflix requests the
+          // sizing wrapper to be in fullscreen.
+          // See the fullscreen API: https://developer.mozilla.org/en-US/docs/Web/API/Fullscreen_API
+          document
+            .querySelector(".sizing-wrapper")
+            .append(document.querySelector(".notyf"));
         });
         break;
       default:
         console.log(
-          `Jelly-Party: No initialization required for ${this.host}.`
+          `Jelly-Party: No custom initialization required for ${this.host}.`
         );
     }
   }
