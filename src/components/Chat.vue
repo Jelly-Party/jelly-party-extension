@@ -194,28 +194,30 @@ export default {
       var minutes = "0" + date.getMinutes();
       return `${hours}:${minutes.substr(-2)}`;
     },
+    repositionChat() {
+      [
+        ".sc-launcher",
+        ".sc-open-icon",
+        ".sc-closed-icon",
+        ".sc-chat-window",
+      ].forEach((elem) => {
+        let style = document.querySelector(elem)?.style;
+        if (style) {
+          style.top = "";
+          style.left = "";
+        }
+      });
+    },
   },
   mounted: function() {
-    window.jellyPartyChat = this;
-
-    this.removeStylesOnce = _once(() => {
-      console
-        .log("Jelly-Party: Removing unnecessary chat styles once.")
-        [(".sc-launcher", ".sc-open-icon", ".sc-chat-window")].forEach(
-          (elem) => {
-            document.querySelector(elem).style.bottom = "";
-          }
-        );
-    });
-
-    function addListeners() {
+    const addListeners = function() {
       document
         .querySelector(".sc-launcher")
         .addEventListener("mousedown", mouseDown, false);
       window.addEventListener("mouseup", mouseUp, false);
-    }
+    }.bind(this);
 
-    function mouseUp(e) {
+    function mouseUp() {
       window.removeEventListener("mousemove", divMove, true);
     }
 
@@ -225,18 +227,17 @@ export default {
     }
 
     const divMove = function(e) {
-      if (!window.jellyPartyChat.isChatOpen) {
-        this.removeStylesOnce();
-        [(".sc-launcher", ".sc-open-icon")].forEach((elem) => {
-          document.querySelector(elem).style.top =
-            ((e.clientY - 30) / window.innerHeight) * 100 + "vh";
-          document.querySelector(elem).style.left =
-            ((e.clientX - 30) / window.innerWidth) * 100 + "vw";
-        });
-        document.querySelector(".sc-chat-window").style.top =
-          ((e.clientY - 640) / window.innerHeight) * 100 + "vh";
-        document.querySelector(".sc-chat-window").style.left =
-          ((e.clientX - 345) / window.innerWidth) * 100 + "vw";
+      [".sc-launcher", ".sc-open-icon", ".sc-closed-icon"].forEach((elem) => {
+        let style = document.querySelector(elem)?.style;
+        if (style) {
+          style.top = ((e.clientY - 30) / window.innerHeight) * 100 + "vh";
+          style.left = ((e.clientX - 30) / window.innerWidth) * 100 + "vw";
+        }
+      });
+      let chatStyle = document.querySelector(".sc-chat-window")?.style;
+      if (chatStyle) {
+        chatStyle.top = ((e.clientY - 640) / window.innerHeight) * 100 + "vh";
+        chatStyle.left = ((e.clientX - 345) / window.innerWidth) * 100 + "vw";
       }
     }.bind(this);
     addListeners();
