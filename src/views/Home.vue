@@ -96,14 +96,14 @@ export default {
     },
     goToSettings() {
       this.$router.replace({ path: "settings" });
-    },
+    }
   },
   watch: {
-    "sharedState.isActive": function(isActive, wasActive) {
+    "sharedState.isActive": function(isActive) {
       if (isActive) {
         this.$router.replace({ path: "party" });
       }
-    },
-  },
+    }
+  }
 };
 </script>

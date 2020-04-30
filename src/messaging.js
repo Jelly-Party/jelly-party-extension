@@ -1,5 +1,4 @@
 import store from "@/store.js";
-import router from "@/router/index.js";
 
 function startParty() {
   chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
@@ -61,11 +60,4 @@ function getOptions() {
   });
 }
 
-export {
-  startParty,
-  joinParty,
-  leaveParty,
-  getState,
-  getOptions,
-  setOptions,
-};
+export { startParty, joinParty, leaveParty, getState, getOptions, setOptions };

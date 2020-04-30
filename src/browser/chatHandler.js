@@ -15,23 +15,30 @@ export default class ChatHandler {
     switch (host) {
       case "www.netflix.com":
         this.resetChat = () => {
-          this.resetChatTo("15vh", "20vh");
+          if (!document.querySelector(".sc-launcher")) {
+            // Netflix has removed our chat
+            this.insertChatContainer();
+            this.mountChatApp();
+          }
+          this.positionChat("15vh", "20vh");
           try {
             document
               .querySelector(".sizing-wrapper")
               .append(document.querySelector("#jellyPartyChatDiv"));
-          } catch {
-            console.log("Jelly-Party: Problem resetting chat..");
+          } catch (e) {
+            console.log(
+              "Jelly-Party: Problem attaching chat to video wrapper. Probably not on video page right now."
+            );
           }
         };
         this.resetChat();
         break;
       case "www.youtube.com":
         this.resetChat = () => {
-          this.resetChatTo("10vh", "15vh");
+          this.positionChat("10vh", "15vh");
           try {
             document.querySelector("yt-hotkey-manager").remove();
-          } catch {
+          } catch (e) {
             console.log("Jelly-Party: Problem resetting chat..");
           }
         };
@@ -42,13 +49,18 @@ export default class ChatHandler {
         break;
       default:
         this.resetChat = () => {
-          this.resetChatTo("25px", "100px");
+          this.positionChat("25px", "100px");
         };
         this.resetChat();
     }
   }
 
   insertChatContainer() {
+    try {
+      document.querySelector("#jellyPartyChatDiv").remove();
+    } catch (e) {
+      () => {};
+    }
     var chatDiv = document.createElement("div");
     chatDiv.id = "jellyPartyChatDiv";
     var app = document.createElement("jellyPartyChatApp");
@@ -65,7 +77,7 @@ export default class ChatHandler {
 
   mountChatApp() {
     this.app = new Vue({
-      render: (h) => h(Chat),
+      render: h => h(Chat)
     }).$mount("#jellyPartyChatApp");
     this.chatComponent = this.app.$children[0];
   }
@@ -75,10 +87,17 @@ export default class ChatHandler {
     this.chatComponent.ws = ws;
   }
 
-  resetChatTo(bottomFab, bottomChat) {
+  positionChat(bottomFab, bottomChat) {
     console.log("Jelly-Party: Resetting chat");
-    document.querySelector(".sc-launcher").style.bottom = bottomFab;
-    document.querySelector(".sc-open-icon").style.bottom = bottomFab;
-    document.querySelector(".sc-chat-window").style.bottom = bottomChat;
+    [".sc-launcher", ".sc-open-icon", ".sc-closed-icon"].forEach(elem => {
+      let style = document.querySelector(elem)?.style;
+      if (style) {
+        style.bottom = bottomFab;
+      }
+    });
+    let chatStyle = document.querySelector(".sc-chat-window")?.style;
+    if (chatStyle) {
+      chatStyle.bottom = bottomChat;
+    }
   }
 }

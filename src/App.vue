@@ -13,19 +13,21 @@ import { getState } from "@/messaging.js";
 
 export default {
   components: {
-    Navbar,
-  },
+    Navbar
+  }
 };
 try {
   // Initially poll the state once and navigate accordingly
   // This will work if the content script is already injected,
   // otherwise it won't find a messaging port
   getState();
-} catch {}
+} catch (e) {
+  () => {};
+}
 // Execute the content script. Nothing will happen, if we
 // execute it again.
 chrome.tabs.executeScript({
-  file: "js/contentScript.js",
+  file: "js/contentScript.js"
 });
 
 // Periodically poll the content script for the new state
