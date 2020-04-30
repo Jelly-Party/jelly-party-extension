@@ -1,4 +1,4 @@
-export default class WebsiteHandler {
+export default class VideoHandler {
   constructor(host) {
     this.host = host;
     this.initialize(host);
@@ -42,9 +42,13 @@ export default class WebsiteHandler {
           // html-document to be in fullscreen, netflix requests the
           // sizing wrapper to be in fullscreen.
           // See the fullscreen API: https://developer.mozilla.org/en-US/docs/Web/API/Fullscreen_API
-          document
-            .querySelector(".sizing-wrapper")
-            .append(document.querySelector(".notyf"));
+          try {
+            document
+              .querySelector(".sizing-wrapper")
+              .append(document.querySelector(".notyf"));
+          } catch {
+            console.log("Jelly-Party: Cannot reattach Notyf.");
+          }
         });
         break;
       default:

@@ -32,7 +32,7 @@ export default {
   methods: {
     close: function() {
       window.close();
-    },
-  },
+    }
+  }
 };
 </script>

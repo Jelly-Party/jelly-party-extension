@@ -1,4 +1,4 @@
-import executePipeline from "./executePipeline";
+import injectContentScript from "./injectContentScript";
 
 chrome.runtime.onInstalled.addListener(function() {
   function uuidv4() {
@@ -22,7 +22,7 @@ function redirectToParty(redirectURL) {
       var activeTabId = tabs[0].id;
       // Let's wait shortly before injecting the content scripts
       setTimeout(() => {
-        executePipeline(activeTabId);
+        injectContentScript(activeTabId);
       }, 1000);
     });
   });

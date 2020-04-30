@@ -25,26 +25,6 @@ function joinParty(id) {
   });
 }
 
-function rejoinParty() {
-  if (store.state.lastPartyId) {
-    // console.log(`Rejoing last party with Party-Id: ${store.state.lastPartyId}`);
-    // console.log(`store.state.lastPartyId is ${store.state.lastPartyId}`);
-    chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
-      console.log("Jelly-Party: Trying to rejoin previous party.");
-      chrome.tabs.sendMessage(
-        tabs[0].id,
-        { command: "joinParty", data: { partyId: store.state.lastPartyId } },
-        function() {
-          getState();
-        }
-      );
-    });
-  } else {
-    // If there's no previous party, we'll just start a new one
-    this.startParty();
-  }
-}
-
 function leaveParty() {
   chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
     chrome.tabs.sendMessage(tabs[0].id, { command: "leaveParty" }, function() {
@@ -53,7 +33,7 @@ function leaveParty() {
   });
 }
 
-function getState(navigate = false) {
+function getState() {
   chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
     chrome.tabs.sendMessage(tabs[0].id, { command: "getState" }, function(
       response
@@ -61,14 +41,6 @@ function getState(navigate = false) {
       store.updateState(response.data);
       console.log("New state is");
       console.log(store.state);
-      if (navigate) {
-        // Route to Party Screen based on current state
-        if (response.data.isActive) {
-          if (router.history.current.name !== "Party") {
-            router.replace({ path: "party" });
-          }
-        }
-      }
     });
   });
 }
@@ -92,9 +64,8 @@ function getOptions() {
 export {
   startParty,
   joinParty,
-  rejoinParty,
   leaveParty,
   getState,
   getOptions,
-  setOptions
+  setOptions,
 };

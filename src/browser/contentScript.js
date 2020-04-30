@@ -1,17 +1,26 @@
-import WebsiteHandler from "./websiteHandler.js";
-/* global log, Notyf, _, generateRoomWithoutSeparator */
+import VideoHandler from "./videoHandler.js";
+import ChatHandler from "./chatHandler.js";
+import { difference as _difference } from "lodash-es";
+import log from "loglevel";
+import generateRoomWithoutSeparator from "./randomName.js";
+import Notyf from "./libs/js/notyf.min.js";
+import "./libs/css/notyf.min.css";
+
 if (!window.contentScriptInjected) {
   // scriptAlreadyInjected is undefined, therefore let's load everything
   window.contentScriptInjected = true;
   var DEBUG;
-  switch (window.mode) {
+  switch (process.env.VUE_APP_MODE) {
     case "production":
+      window.mode = "production";
       DEBUG = false;
       break;
-    case "staging":
+    case "development":
+      window.mode = "development";
       DEBUG = true;
       break;
-    case "development":
+    case "staging":
+      window.mode = "staging";
       DEBUG = true;
       break;
     default:
@@ -19,14 +28,13 @@ if (!window.contentScriptInjected) {
   }
 
   if (DEBUG) {
-    log.log("Jelly-Party: Injecting Content Script!");
     log.enableAll();
   } else {
     log.setDefaultLevel("info");
   }
   log.info(`Jelly-Party: Debug logging is ${DEBUG ? "enabled" : "disabled"}.`);
   // Create notyf object
-  var notyf = new Notyf({
+  var notyf = new (Notyf())({
     duration: 3000,
     position: { x: "center", y: "top" },
     types: [
@@ -35,13 +43,13 @@ if (!window.contentScriptInjected) {
         background:
           "linear-gradient(to bottom right, #ff9494 0%, #ee64f6 100%)",
         icon: {
-          className: "jelly-party-icon"
-        }
-      }
-    ]
+          className: "jelly-party-icon",
+        },
+      },
+    ],
   });
 
-  notyf.success("Initialized successfully!");
+  notyf.success("Jelly Party loaded!");
 
   // Needed to disable event forwarding for some time
   var eventsToProcess;
@@ -51,12 +59,11 @@ if (!window.contentScriptInjected) {
     "https://www.amazon",
     "https://www.youtube.com",
     "https://vimeo.com",
-    "https://www.disneyplus.com"
+    "https://www.disneyplus.com",
   ];
-  const currentWebsite = window.location.href;
   const websiteIsTested = (() => {
     for (const stableWebsite of stableWebsites) {
-      if (currentWebsite.includes(stableWebsite)) {
+      if (window.location.href.includes(stableWebsite)) {
         return true;
       }
     }
@@ -75,11 +82,12 @@ if (!window.contentScriptInjected) {
         log.debug(`partyIdFromURL is ${this.partyIdFromURL}`);
       }
       this.updateClientStateInterval = null;
-      // The WebsiteHandler handles playing, pausing & seeking videos
+      // The VideoHandler handles playing, pausing & seeking videos
       // on different websites. For most websites the generic video.play(),
       // video.pause() & video.seek() will work, however some websites,
       // such as Netflix, require direct access to video controllers.
-      this.websiteHandler = new WebsiteHandler(window.location.host);
+      this.videoHandler = new VideoHandler(window.location.host);
+      this.chatHandler = new ChatHandler(window.location.host);
       this.resetPartyState();
       log.debug("Jelly-Party: Global JellyParty Object");
       log.debug(this);
@@ -96,7 +104,7 @@ if (!window.contentScriptInjected) {
           lastPartyId: result.lastPartyId,
           websiteIsTested: websiteIsTested,
           favicon: document.querySelector("link[rel=icon]")?.href,
-          video: outerThis.partyState ? outerThis.partyState : false
+          video: outerThis.partyState ? outerThis.partyState : false,
         };
         if (outerThis.partyIdFromURL && !outerThis.magicLinkUsed) {
           log.debug("Joining party once via magic link.");
@@ -122,20 +130,22 @@ if (!window.contentScriptInjected) {
       // "this" is bound to window, see 'The "this" problem' @ https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/setInterval
       try {
         // We craft a command to let the server know about our new client state
-        var serverCommand = {
-          type: "clientUpdate",
-          data: {
-            newClientState: {
-              currentlyWatching: party.partyState.magicLink,
-              favicon: party.partyState.favicon,
-              videoState: {
-                paused: party.video.paused,
-                currentTime: party.video.currentTime
-              }
-            }
-          }
-        };
-        party.ws.send(JSON.stringify(serverCommand));
+        if (party.video) {
+          var serverCommand = {
+            type: "clientUpdate",
+            data: {
+              newClientState: {
+                currentlyWatching: party.partyState.magicLink,
+                favicon: party.partyState.favicon,
+                videoState: {
+                  paused: party.video.paused,
+                  currentTime: party.video.currentTime,
+                },
+              },
+            },
+          };
+          party.ws.send(JSON.stringify(serverCommand));
+        }
       } catch (error) {
         log.debug("Jelly-Party: Error updating client state..");
         log.error(error);
@@ -188,6 +198,7 @@ if (!window.contentScriptInjected) {
           outerThis.ws.onopen = function() {
             log.debug("Jelly-Party: Connected to Jelly-Party Websocket.");
             notyf.success("Connected to server!");
+            outerThis.chatHandler.connectWebSocket(outerThis.ws);
             chrome.storage.sync.set(
               { lastPartyId: outerThis.partyState.partyId },
               function() {
@@ -209,10 +220,10 @@ if (!window.contentScriptInjected) {
                     favicon: outerThis.partyState.favicon,
                     videoState: {
                       paused: true,
-                      currentTime: 0
-                    }
-                  }
-                }
+                      currentTime: 0,
+                    },
+                  },
+                },
               })
             );
             outerThis.updateClientStateInterval = setInterval(
@@ -229,7 +240,7 @@ if (!window.contentScriptInjected) {
                 eventsToProcess = 0;
                 // Find out which peer caused the event
                 var peer = outerThis.partyState.peers.filter(
-                  peer => peer.uuid === msg.data.peer.uuid
+                  (peer) => peer.uuid === msg.data.peer.uuid
                 )[0].clientName;
                 if (msg.data.variant === "play") {
                   outerThis.playVideo(msg.data.tick);
@@ -249,14 +260,14 @@ if (!window.contentScriptInjected) {
                 ) {
                   // Somebody left the party; Let's find out who
                   let previousUUIDs = outerThis.partyState.peers.map(
-                    peer => peer.uuid
+                    (peer) => peer.uuid
                   );
                   let newUUIDs = msg.data.partyState.peers.map(
-                    peer => peer.uuid
+                    (peer) => peer.uuid
                   );
                   let peerWhoLeft = outerThis.partyState.peers.filter(
-                    peer =>
-                      peer.uuid === _.difference(previousUUIDs, newUUIDs)[0]
+                    (peer) =>
+                      peer.uuid === _difference(previousUUIDs, newUUIDs)[0]
                   )[0];
                   if (peerWhoLeft) {
                     notyf.success(`${peerWhoLeft.clientName} left the party.`);
@@ -267,10 +278,10 @@ if (!window.contentScriptInjected) {
                 ) {
                   // Somebody joined the party
                   let previousUUIDs = outerThis.partyState.peers.map(
-                    peer => peer.uuid
+                    (peer) => peer.uuid
                   );
                   let newUUIDs = msg.data.partyState.peers.map(
-                    peer => peer.uuid
+                    (peer) => peer.uuid
                   );
                   if (previousUUIDs.length === 0) {
                     // Let's show all peers in the party
@@ -279,8 +290,8 @@ if (!window.contentScriptInjected) {
                     }
                   } else {
                     let peerWhoJoined = msg.data.partyState.peers.filter(
-                      peer =>
-                        peer.uuid === _.difference(newUUIDs, previousUUIDs)[0]
+                      (peer) =>
+                        peer.uuid === _difference(newUUIDs, previousUUIDs)[0]
                     )[0];
                     if (peerWhoJoined) {
                       notyf.success(
@@ -291,11 +302,19 @@ if (!window.contentScriptInjected) {
                 }
                 outerThis.partyState = {
                   ...outerThis.partyState,
-                  ...msg.data.partyState
+                  ...msg.data.partyState,
                 };
+                // We must forward the new partyState to the Chat.
+                outerThis.chatHandler.chatComponent.receivePartyStateUpdate(
+                  outerThis.partyState
+                );
+                break;
+              case "chatMessage":
+                outerThis.chatHandler.chatComponent.receiveChatMessage(msg);
                 break;
               case "setUUID":
                 outerThis.uuid = msg.data.uuid;
+                outerThis.ws.uuid = msg.data.uuid;
                 break;
               default:
                 log.debug(
@@ -322,7 +341,7 @@ if (!window.contentScriptInjected) {
     }
 
     filterPeer(skipPeer) {
-      return this.remotePeers.filter(e => e.connection.peer != skipPeer);
+      return this.remotePeers.filter((e) => e.connection.peer != skipPeer);
     }
 
     requestPeersToPlay() {
@@ -332,12 +351,12 @@ if (!window.contentScriptInjected) {
           data: {
             variant: "play",
             tick: this.video.currentTime,
-            peer: { uuid: this.uuid }
-          }
+            peer: { uuid: this.uuid },
+          },
         };
         var serverCommand = {
           type: "forward",
-          data: { commandToForward: clientCommand }
+          data: { commandToForward: clientCommand },
         };
         this.ws.send(JSON.stringify(serverCommand));
       }
@@ -350,12 +369,12 @@ if (!window.contentScriptInjected) {
           data: {
             variant: "pause",
             tick: this.video.currentTime,
-            peer: { uuid: this.uuid }
-          }
+            peer: { uuid: this.uuid },
+          },
         };
         var serverCommand = {
           type: "forward",
-          data: { commandToForward: clientCommand }
+          data: { commandToForward: clientCommand },
         };
         this.ws.send(JSON.stringify(serverCommand));
       }
@@ -368,12 +387,12 @@ if (!window.contentScriptInjected) {
           data: {
             variant: "seek",
             tick: this.video.currentTime,
-            peer: { uuid: this.uuid }
-          }
+            peer: { uuid: this.uuid },
+          },
         };
         var serverCommand = {
           type: "forward",
-          data: { commandToForward: clientCommand }
+          data: { commandToForward: clientCommand },
         };
         this.ws.send(JSON.stringify(serverCommand));
       }
@@ -390,7 +409,7 @@ if (!window.contentScriptInjected) {
           // The seek event will handle itself.
           eventsToProcess += 1;
           this.seek(tick);
-          this.websiteHandler.play(this.video);
+          this.videoHandler.play(this.video);
         } else {
           log.debug(
             "Jelly-Party: Trying to play video, but video is already playing."
@@ -414,7 +433,7 @@ if (!window.contentScriptInjected) {
           // The seek event will handle itself.
           eventsToProcess += 1;
           this.seek(tick);
-          this.websiteHandler.pause(this.video);
+          this.videoHandler.pause(this.video);
         }
       }
     }
@@ -430,7 +449,7 @@ if (!window.contentScriptInjected) {
           // Seeking is actually worth it. We're off by more than half a second.
           // Disable forwarding for the upcoming seek event.
           eventsToProcess += 1;
-          this.websiteHandler.seek(this.video, tick);
+          this.videoHandler.seek(this.video, tick);
         } else {
           log.debug(
             "Jelly-Party: Not actually seeking. Almost at same time already."
@@ -539,6 +558,7 @@ if (!window.contentScriptInjected) {
         video = document.querySelector("video");
         if (video) {
           clearInterval(findVideoInterval);
+          party.chatHandler.resetChat();
           party.video = video;
           party.partyState.video = true;
           if (party.ws?.readyState === 1) {

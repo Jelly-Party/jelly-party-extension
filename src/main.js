@@ -5,7 +5,6 @@ import router from "./router";
 import "bootstrap/dist/css/bootstrap.css";
 import "bootstrap-vue/dist/bootstrap-vue.css";
 import VueClipboard from "vue-clipboard2";
-import _ from "lodash";
 import VueDOMPurifyHTML from "vue-dompurify-html";
 
 // VueDOMPurifyHTML.addHook("afterSanitizeAttributes", function(node) {
@@ -18,8 +17,6 @@ import VueDOMPurifyHTML from "vue-dompurify-html";
 // });
 
 Vue.use(VueDOMPurifyHTML);
-console.log(VueDOMPurifyHTML);
-Object.defineProperty(Vue.prototype, "$_", { value: _ });
 Vue.use(VueClipboard);
 // Install BootstrapVue & BootstrapVue icon components
 Vue.use(BootstrapVue);

@@ -78,7 +78,7 @@
 <script>
 // @ is an alias to /src
 import store from "@/store.js";
-import { startParty, joinParty, rejoinParty } from "@/messaging.js";
+import { startParty, joinParty } from "@/messaging.js";
 
 export default {
   name: "Home",
@@ -94,20 +94,16 @@ export default {
       joinParty(this.partyJoinText);
       this.$router.replace({ path: "party" });
     },
-    handleRejoinParty() {
-      rejoinParty();
-      this.$router.replace({ path: "party" });
-    },
-    showRejoinModal() {
-      if (this.sharedState.lastPartyId) {
-        this.$refs["modal-rejoin"].show();
-      } else {
-        this.$refs["modal-rejoin-no-party-found"].show();
-      }
-    },
     goToSettings() {
       this.$router.replace({ path: "settings" });
-    }
-  }
+    },
+  },
+  watch: {
+    "sharedState.isActive": function(isActive, wasActive) {
+      if (isActive) {
+        this.$router.replace({ path: "party" });
+      }
+    },
+  },
 };
 </script>

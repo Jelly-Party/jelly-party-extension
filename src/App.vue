@@ -13,45 +13,21 @@ import { getState } from "@/messaging.js";
 
 export default {
   components: {
-    Navbar
-  }
+    Navbar,
+  },
 };
-// Try to execute content scripts and dependencies
-chrome.tabs.insertCSS({
-  file: "libs/css/notyf.min.css"
-});
+try {
+  // Initially poll the state once and navigate accordingly
+  // This will work if the content script is already injected,
+  // otherwise it won't find a messaging port
+  getState();
+} catch {}
+// Execute the content script. Nothing will happen, if we
+// execute it again.
 chrome.tabs.executeScript({
-  file: "libs/js/notyf.min.js"
+  file: "js/contentScript.js",
 });
-chrome.tabs.executeScript({
-  file: "libs/js/loglevel.min.js"
-});
-chrome.tabs.executeScript({
-  file: "libs/js/randomName.js"
-});
-chrome.tabs.executeScript({
-  file: "libs/js/lodash.js"
-});
-var scriptToInject = "";
-switch (process.env.VUE_APP_MODE) {
-  case "production":
-    scriptToInject = "window.mode='production'";
-    break;
-  case "development":
-    scriptToInject = "window.mode='development'";
-    break;
-  case "staging":
-    scriptToInject = "window.mode='staging'";
-    break;
-  default:
-    break;
-}
-chrome.tabs.executeScript({ code: scriptToInject });
-chrome.tabs.executeScript({
-  file: "js/contentScript.js"
-});
-// Initially poll the state once and navigate accordingly
-getState(true);
+
 // Periodically poll the content script for the new state
 window.setInterval(() => {
   console.log("Querying party state");
