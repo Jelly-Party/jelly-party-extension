@@ -240,7 +240,7 @@ export default {
     }
   },
   mounted: function() {
-    console.log("Im being mounted")
+    console.log("Im being mounted");
     const addListeners = function() {
       document
         .querySelector(".sc-launcher")

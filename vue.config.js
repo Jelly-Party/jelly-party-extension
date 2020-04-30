@@ -20,5 +20,7 @@ module.exports = {
   },
   chainWebpack: config => {
     config.optimization.splitChunks(false);
-  }
+  },
+  // TODO: Look into webpack's side effects: https://github.com/vuejs/vue-cli/issues/1287
+  css: { extract: false }
 };
