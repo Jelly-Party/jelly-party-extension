@@ -404,17 +404,11 @@ if (!window.contentScriptInjected) {
           "Jelly-Party: No video defined. I shouldn't be receiving commands.."
         );
       } else {
-        if (this.video.paused) {
-          // At the least, disable forwarding for the play event.
-          // The seek event will handle itself.
-          eventsToProcess += 1;
-          this.seek(tick);
-          this.videoHandler.play(this.video);
-        } else {
-          log.debug(
-            "Jelly-Party: Trying to play video, but video is already playing."
-          );
-        }
+        // At the least, disable forwarding for the play event.
+        // The seek event will handle itself.
+        eventsToProcess += 1;
+        this.seek(tick);
+        this.videoHandler.play(this.video);
       }
     }
 
@@ -424,17 +418,11 @@ if (!window.contentScriptInjected) {
           "Jelly-Party: No video defined. I shouldn't be receiving commands.."
         );
       } else {
-        if (this.video.paused) {
-          log.debug(
-            "Jelly-Party: Trying to pause video, but video is already paused."
-          );
-        } else {
-          // At the least, disable forwarding for the pause event.
-          // The seek event will handle itself.
-          eventsToProcess += 1;
-          this.seek(tick);
-          this.videoHandler.pause(this.video);
-        }
+        // At the least, disable forwarding for the pause event.
+        // The seek event will handle itself.
+        eventsToProcess += 1;
+        this.seek(tick);
+        this.videoHandler.pause(this.video);
       }
     }
 
