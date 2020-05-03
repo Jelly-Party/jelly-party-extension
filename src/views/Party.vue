@@ -1,5 +1,5 @@
 <template>
-  <div id="partyOverview">
+  <div id="partyOverview" class="p-3">
     <h3>
       Current party
       <span style="font-size: 1em">

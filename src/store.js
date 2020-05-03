@@ -12,6 +12,20 @@ export default {
     favicon: "",
     video: ""
   },
+  avatarState: {
+    accessoriesType: "",
+    clotheType: "",
+    clotheColor: "",
+    eyebrowType: "",
+    eyeType: "",
+    facialHairColor: "",
+    facialHairType: "",
+    graphicType: "'Hola'",
+    hairColor: "",
+    mouthType: "",
+    skinColor: "",
+    topType: ""
+  },
   updateState: function(newState) {
     try {
       this.state.isActive = newState.isActive;
@@ -28,6 +42,14 @@ export default {
         `Error updating party state for newState of ${JSON.stringify(newState)}`
       );
       console.log(e);
+    }
+  },
+  updateAvatarState: function(newState) {
+    console.log("Updating avatar state");
+    console.log(newState);
+    for (const key of Object.keys(newState)) {
+      console.log(`Updating ${key}`);
+      this.avatarState[key] = newState[key];
     }
   }
 };

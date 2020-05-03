@@ -2,6 +2,7 @@ import Vue from "vue";
 import VueRouter from "vue-router";
 import Home from "../views/Home.vue";
 import Party from "../views/Party.vue";
+import CustomizeAvatar from "../views/CustomizeAvatar.vue";
 
 Vue.use(VueRouter);
 
@@ -24,6 +25,11 @@ const routes = [
     // which is lazy-loaded when the route is visited.
     component: () =>
       import(/* webpackChunkName: "settings" */ "../views/Settings.vue")
+  },
+  {
+    path: "/customizeAvatar",
+    name: "CustomizeAvatar",
+    component: CustomizeAvatar
   }
 ];
 

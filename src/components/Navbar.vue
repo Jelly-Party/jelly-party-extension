@@ -1,15 +1,18 @@
 <template>
-  <div class="brand-header">
-    <span
-      id="close-button"
-      class="font-weight-bold btn text-white p-0"
-      style="font-size:1.3em; position: absolute; top: 6px; right: 6px"
-      v-on:click="close"
-      ><b-icon-x></b-icon-x
-    ></span>
-    <h3 class="text-white mt-0 p-4 text-center font-weight-bold">
-      {{ title }}
-    </h3>
+  <div>
+    <div style="height: 81px"></div>
+    <div class="brand-header w-100">
+      <span
+        id="close-button"
+        class="font-weight-bold btn text-white p-0"
+        style="font-size:1.3em; position: absolute; top: 6px; right: 6px"
+        v-on:click="close"
+        ><b-icon-x></b-icon-x
+      ></span>
+      <h3 class="text-white mt-0 mb-0 p-4 text-center font-weight-bold">
+        {{ title }}
+      </h3>
+    </div>
   </div>
 </template>
 
@@ -36,3 +39,10 @@ export default {
   }
 };
 </script>
+
+<style scoped>
+.brand-header {
+  position: fixed;
+  top: 0;
+}
+</style>

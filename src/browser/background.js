@@ -1,4 +1,6 @@
-import injectContentScript from "./injectContentScript";
+import { injectContentScript } from "./injectContentScript";
+
+console.log("Background run!!!");
 
 chrome.runtime.onInstalled.addListener(function() {
   function uuidv4() {
@@ -9,10 +11,28 @@ chrome.runtime.onInstalled.addListener(function() {
       ).toString(16)
     );
   }
-  var options = { localPeerName: "guest", guid: uuidv4() };
+  let options = { localPeerName: "guest", guid: uuidv4() };
   chrome.storage.sync.set({ options: options }, function() {
     console.log("Options have been initialized.");
     console.log(options);
+  });
+  let initialAvatar = {
+    accessoriesType: "Round",
+    clotheType: "ShirtScoopNeck",
+    clotheColor: "White",
+    eyebrowType: "Default",
+    eyeType: "Default",
+    facialHairColor: "Auburn",
+    facialHairType: "BeardMedium",
+    graphicType: "Hola",
+    hairColor: "Auburn",
+    mouthType: "Twinkle",
+    skinColor: "Light",
+    topType: "ShortHairShortCurly"
+  };
+  chrome.storage.sync.set({ avatarState: initialAvatar }, function() {
+    console.log("Avatar has been initialized.");
+    console.log(initialAvatar);
   });
 });
 
@@ -20,7 +40,7 @@ function redirectToParty(redirectURL) {
   chrome.tabs.update({ url: redirectURL }, () => {
     chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
       var activeTabId = tabs[0].id;
-      // Let's wait shortly before injecting the content scripts
+      // Let's attempt to inject the content script until we have been successful
       setTimeout(() => {
         injectContentScript(activeTabId);
       }, 1000);

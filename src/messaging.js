@@ -38,8 +38,8 @@ function getState() {
       response
     ) {
       store.updateState(response.data);
-      console.log("New state is");
-      console.log(store.state);
+      // console.log("New state is");
+      // console.log(store.state);
     });
   });
 }
@@ -60,4 +60,28 @@ function getOptions() {
   });
 }
 
-export { startParty, joinParty, leaveParty, getState, getOptions, setOptions };
+function getAvatarState() {
+  chrome.storage.sync.get(["avatarState"], function(res) {
+    console.log("Got avatar state from settings");
+    console.log(res);
+    store.updateAvatarState(res.avatarState);
+  });
+}
+
+function setAvatarState(avatarState) {
+  chrome.storage.sync.set({ avatarState: avatarState }, function() {
+    console.log("Avatar state has been updated!");
+    console.log(avatarState);
+  });
+}
+
+export {
+  startParty,
+  joinParty,
+  leaveParty,
+  getState,
+  getOptions,
+  setOptions,
+  getAvatarState,
+  setAvatarState
+};

@@ -1,5 +1,5 @@
 <template>
-  <div id="home">
+  <div id="home" class="p-3">
     <div>
       <b-button block size="lg" variant="secondary" v-b-modal="'modal-start'"
         >Start a new party</b-button
