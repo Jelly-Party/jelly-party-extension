@@ -1,6 +1,6 @@
 [submodule "src/browser/vue-beautiful-chat"]
 	path = src/browser/vue-beautiful-chat
-	url = https://github.com/mattmezza/vue-beautiful-chat.git
+	url = https://github.com/seandlg/jelly-party-vue-beautiful-chat
 [submodule "src/browser/vuejs-avataaars"]
 	path = src/browser/vuejs-avataaars
-	url = https://github.com/orgordin/vuejs-avataaars.git
+	url = https://github.com/seandlg/jelly-party-vuejs-avataaars
