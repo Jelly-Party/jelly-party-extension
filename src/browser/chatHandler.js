@@ -1,6 +1,6 @@
 import Vue from "vue";
 import Chat from "@/components/Chat.vue";
-import BeautifulChat from "./vue-beautiful-chat/src/index.js";
+import BeautifulChat from "./vue-beautiful-chat/index.js";
 Vue.use(BeautifulChat);
 
 export default class ChatHandler {

@@ -51,10 +51,10 @@
 </template>
 
 <script>
-import CloseIcon from "vue-beautiful-chat/src/assets/close-icon.png";
+import CloseIcon from "@/browser/vue-beautiful-chat/assets/close-icon.png";
 import OpenIcon from "../../public/images/logo/64x64.png";
-import FileIcon from "vue-beautiful-chat/src/assets/file.svg";
-import CloseIconSvg from "vue-beautiful-chat/src/assets/close.svg";
+import FileIcon from "@/browser/vue-beautiful-chat/assets/file.svg";
+import CloseIconSvg from "@/browser/vue-beautiful-chat/assets/close.svg";
 import { difference as _difference, throttle as _throttle } from "lodash-es";
 
 export default {
