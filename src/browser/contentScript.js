@@ -161,7 +161,7 @@ if (!window.contentScriptInjected) {
     }
     connectToPartyHelper(partyId = "") {
       const outerThis = this;
-      chrome.storage.sync.get(["options"], function(res) {
+      chrome.storage.sync.get(["options", "avatarState"], function(res) {
         // Start a new party if no partyId is given, else join an existing party
         var start = partyId ? false : true;
         log.info(
@@ -221,7 +221,8 @@ if (!window.contentScriptInjected) {
                     videoState: {
                       paused: true,
                       currentTime: 0
-                    }
+                    },
+                    avatarState: res.avatarState 
                   }
                 }
               })

@@ -25,10 +25,10 @@
           <small v-if="message.author">
             ―
             {{
-              message.author === "me"
+              message.me
                 ? "me"
                 : participants.filter(
-                    participant => participant.id === message.author
+                    (participant) => participant.id === message.author
                   )[0].name
             }}
             [{{ timeStampToDateString(message.data.timestamp) }}]</small
@@ -40,8 +40,8 @@
           🎥🎉🍿
           {{
             participants
-              .filter(m => m.name !== "info")
-              .map(m => m.name)
+              .filter((m) => m.name !== "Jelly" && !m.left)
+              .map((m) => m.name)
               .join(" & ")
           }}
         </p>
@@ -55,8 +55,6 @@ import CloseIcon from "vue-beautiful-chat/src/assets/close-icon.png";
 import OpenIcon from "../../public/images/logo/64x64.png";
 import FileIcon from "vue-beautiful-chat/src/assets/file.svg";
 import CloseIconSvg from "vue-beautiful-chat/src/assets/close.svg";
-import Boy from "../../public/images/boy.png";
-// import Girl from "../../public/images/girl.png";
 import { difference as _difference, throttle as _throttle } from "lodash-es";
 
 export default {
@@ -66,22 +64,24 @@ export default {
       icons: {
         open: {
           img: OpenIcon,
-          name: "default"
+          name: "default",
         },
         close: {
           img: CloseIcon,
-          name: "default"
+          name: "default",
         },
         file: {
           img: FileIcon,
-          name: "default"
+          name: "default",
         },
         closeSvg: {
           img: CloseIconSvg,
-          name: "default"
-        }
+          name: "default",
+        },
       },
-      participants: [{ id: "jellyPartySupportBot", name: "Jelly" }], // the list of all the participant of the conversation. `name` is the user name, `id` is used to establish the author of a message, `imageUrl` is supposed to be the user avatar.
+      participants: [
+        { id: "jellyPartySupportBot", name: "Jelly", left: false },
+      ], // the list of all the participant of the conversation. `name` is the user name, `id` is used to establish the author of a message, `imageUrl` is supposed to be the user avatar.
       titleImageUrl: OpenIcon,
       messageList: [
         {
@@ -90,9 +90,9 @@ export default {
           data: {
             text:
               'You can use this chat to talk to people in your party. Type "#helpme" to open our FAQ in a new tab.',
-            timestamp: Date.now()
-          }
-        }
+            timestamp: Date.now(),
+          },
+        },
       ], // the list of the messages to show, can be paginated and adjusted dynamically
       newMessagesCount: 0,
       isChatOpen: false, // to determine whether the chat window should be open or closed
@@ -101,32 +101,32 @@ export default {
         header: {
           bg:
             "linear-gradient(to right bottom, rgb(141, 207, 243) 0px, rgb(145, 100, 255)",
-          text: "#ffffff"
+          text: "#ffffff",
         },
         launcher: {
           bg:
-            "linear-gradient(to right bottom, rgb(141, 207, 243) 0px, rgb(145, 100, 255)"
+            "linear-gradient(to right bottom, rgb(141, 207, 243) 0px, rgb(145, 100, 255)",
         },
         messageList: {
-          bg: "#dee2e6"
+          bg: "#dee2e6",
         },
         sentMessage: {
           bg:
             "linear-gradient(to right bottom, rgb(141, 207, 243) 0px, rgb(145, 100, 255)",
-          text: "#ffffff"
+          text: "#ffffff",
         },
         receivedMessage: {
           bg:
             "linear-gradient(to right bottom, rgb(255, 148, 148) 0%, rgb(238, 100, 246) 100%)",
-          text: "#ffffff"
+          text: "#ffffff",
         },
         userInput: {
           bg: "#f4f7f9",
-          text: "#565867"
-        }
+          text: "#565867",
+        },
       }, // specifies the color scheme for the component
       alwaysScrollToBottom: true, // when set to true always scrolls the chat to the bottom when new events are in (new message, user starts typing...)
-      messageStyling: true // enables *bold* /emph/ _underline_ and such (more info at github.com/mattezza/msgdown)
+      messageStyling: true, // enables *bold* /emph/ _underline_ and such (more info at github.com/mattezza/msgdown)
     };
   },
   methods: {
@@ -136,8 +136,8 @@ export default {
         window.open("https://www.jelly-party.com/#gettingStarted", "_blank");
       } else if (this.ws) {
         message.data.timestamp = Date.now();
-        // message.author = this.ws.uuid;
-        // message.name = "me"
+        message.author = this.ws.uuid;
+        message.me = true;
         this.messageList = [...this.messageList, message];
         // send message to server
         let serverCommand = {
@@ -146,12 +146,11 @@ export default {
             commandToForward: {
               type: "chatMessage",
               data: {
-                author: message.author,
                 type: message.type,
-                data: message.data
-              }
-            }
-          }
+                data: message.data,
+              },
+            },
+          },
         };
         this.ws.send(JSON.stringify(serverCommand));
       } else {
@@ -169,9 +168,9 @@ export default {
               data: {
                 text:
                   'You must be inside a party to chat. Need more information? Type "#helpme" to open our FAQ in a new tab.',
-                timestamp: Date.now()
-              }
-            }
+                timestamp: Date.now(),
+              },
+            },
           ];
         }
       }
@@ -191,7 +190,7 @@ export default {
     },
     handleOnType() {},
     editMessage(message) {
-      const m = this.messageList.find(m => m.id === message.id);
+      const m = this.messageList.find((m) => m.id === message.id);
       m.isEdited = true;
       m.data.text = message.data.text;
     },
@@ -204,24 +203,42 @@ export default {
         {
           type: chatMessage.data.type,
           author: chatMessage.peer.uuid,
-          data: chatMessage.data.data
-        }
+          data: chatMessage.data.data,
+        },
       ];
     },
     receivePartyStateUpdate(newPartyState) {
       // Let's add any new clients. We must remember old clients so that chat messages
       // show correctly even after a client has left the party.
-      let newUUIDs = newPartyState.peers.map(peer => peer.uuid);
-      let previousUUIDs = this.participants.map(participant => participant.id);
+      console.log("Receiving update")
+      console.log(newPartyState)
+      let newUUIDs = newPartyState.peers.map((peer) => peer.uuid);
+      let previousUUIDs = this.participants
+        .filter((p) => p.id !== "jellyPartySupportBot")
+        .map((participant) => participant.id);
       let addUUIDs = _difference(newUUIDs, previousUUIDs);
+      let markLeftUUIDs = _difference(previousUUIDs, newUUIDs);
       for (const addUUID of addUUIDs) {
         this.participants.push(
           newPartyState.peers
-            .filter(peer => peer.uuid === addUUID)
-            .map(peer => {
-              return { id: peer.uuid, name: peer.clientName, imageUrl: Boy };
+            .filter((peer) => peer.uuid === addUUID)
+            .map((peer) => {
+              return {
+                id: peer.uuid,
+                name: peer.clientName,
+                avatarState: peer.avatarState,
+                left: false,
+              };
             })[0]
         );
+      }
+      // Mark everybody who's left, since we must keep participants list
+      // (some state is maintained in this.participants)
+      for (const markLeftUUID of markLeftUUIDs) {
+        let participant = this.participants.find(
+          (participant) => participant.id === markLeftUUID
+        );
+        participant.left = true;
       }
     },
     timeStampToDateString(ts) {
@@ -235,15 +252,15 @@ export default {
         ".sc-launcher",
         ".sc-open-icon",
         ".sc-closed-icon",
-        ".sc-chat-window"
-      ].forEach(elem => {
+        ".sc-chat-window",
+      ].forEach((elem) => {
         let style = document.querySelector(elem)?.style;
         if (style) {
           style.top = "";
           style.left = "";
         }
       });
-    }
+    },
   },
   mounted: function() {
     const addListeners = function() {
@@ -264,7 +281,7 @@ export default {
 
     const throttled = _throttle(
       function(e) {
-        [".sc-launcher", ".sc-open-icon", ".sc-closed-icon"].forEach(elem => {
+        [".sc-launcher", ".sc-open-icon", ".sc-closed-icon"].forEach((elem) => {
           let style = document.querySelector(elem)?.style;
           if (style) {
             style.top = ((e.clientY - 30) / window.innerHeight) * 100 + "vh";
@@ -280,7 +297,7 @@ export default {
       30
     );
     addListeners();
-  }
+  },
 };
 </script>
 
