@@ -120,7 +120,7 @@ export default {
     getAvatarState();
   },
   beforeDestroy: function() {
-    console.log("Saving avatar state!");
+    console.log("Jelly-Party: Saving avatar state!");
     setAvatarState(store.avatarState);
   }
 };
