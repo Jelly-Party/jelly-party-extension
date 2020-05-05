@@ -9,6 +9,7 @@ export default class ChatHandler {
     this.insertChatContainer();
     this.mountChatApp();
     this.customize(host);
+    this.resetChat();
   }
 
   customize(host) {
@@ -31,7 +32,6 @@ export default class ChatHandler {
             );
           }
         };
-        this.resetChat();
         break;
       case "www.youtube.com":
         this.resetChat = () => {
@@ -42,16 +42,29 @@ export default class ChatHandler {
             console.log("Jelly-Party: Problem resetting chat..");
           }
         };
-        this.resetChat();
         // Workaround due to complicated event flow I simply don't understand
         // If we leave hotkeys enabled, anything character typed into the chat
         // will be interpreted as a hotkey...
         break;
+      case "www.disneyplus.com":
+        this.resetChat = () => {
+          this.positionChat("25px", "100px");
+          try {
+            document
+              .querySelector("#app_body_content")
+              .append(document.querySelector("#jellyPartyChatDiv"));
+          } catch (e) {
+            console.log(
+              "Jelly-Party: Problem attaching chat to video wrapper. Probably not on video page right now."
+            );
+          }
+        };
+        break;
       default:
+        console.log(`Jelly-Party: No chat customization intended for ${host}`);
         this.resetChat = () => {
           this.positionChat("25px", "100px");
         };
-        this.resetChat();
     }
   }
 

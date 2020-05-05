@@ -1,15 +1,8 @@
-var contentScriptLoaded = false;
-const injectContentScript = tabId => {
+const injectContentScript = async tabId => {
   console.log(`Jelly-Party: Injecting content script for tab ${tabId}.`);
-  chrome.tabs.executeScript(
-    tabId,
-    {
-      file: "js/contentScript.js"
-    },
-    () => {
-      contentScriptLoaded = true;
-    }
-  );
+  return await chrome.tabs.executeScript(tabId, {
+    file: "js/contentScript.js"
+  });
 };
 
-export { injectContentScript, contentScriptLoaded };
+export { injectContentScript };
