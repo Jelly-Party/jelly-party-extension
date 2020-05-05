@@ -21,15 +21,15 @@
 </template>
 
 <script>
-import EmojiConvertor from 'emoji-js'
-import emojiData from './emojiData'
+import EmojiConvertor from "emoji-js";
+import emojiData from "./emojiData";
 
 export default {
   data() {
     return {
       emojiData,
       emojiConvertor: new EmojiConvertor()
-    }
+    };
   },
   props: {
     onBlur: {
@@ -43,21 +43,21 @@ export default {
   },
   methods: {
     emojiClicked(emoji) {
-      this.onEmojiPicked(emoji)
-      this.$refs.domNode.blur()
+      this.onEmojiPicked(emoji);
+      this.$refs.domNode.blur();
     }
   },
   mounted() {
-    const elem = this.$refs.domNode
-    elem.style.opacity = 0
+    const elem = this.$refs.domNode;
+    elem.style.opacity = 0;
     window.requestAnimationFrame(() => {
-      elem.style.transition = 'opacity 350ms'
-      elem.style.opacity = 1
-    })
-    this.$refs.domNode.focus()
-    this.emojiConvertor.init_env()
+      elem.style.transition = "opacity 350ms";
+      elem.style.opacity = 1;
+    });
+    this.$refs.domNode.focus();
+    this.emojiConvertor.init_env();
   }
-}
+};
 </script>
 
 <style scoped>
@@ -74,7 +74,7 @@ export default {
 }
 
 .sc-emoji-picker:after {
-  content: '';
+  content: "";
   width: 14px;
   height: 14px;
   background: white;

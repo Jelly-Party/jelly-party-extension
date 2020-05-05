@@ -21,7 +21,7 @@
 <script>
 export default {
   data() {
-    return {}
+    return {};
   },
   props: {
     suggestions: {
@@ -33,7 +33,7 @@ export default {
       required: true
     }
   }
-}
+};
 </script>
 
 <style>

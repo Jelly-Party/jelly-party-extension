@@ -7,7 +7,7 @@
 </template>
 
 <script>
-import IconBase from './components/IconBase.vue'
+import IconBase from "./components/IconBase.vue";
 
 export default {
   props: {
@@ -18,13 +18,13 @@ export default {
     tooltip: {
       type: String,
       required: false,
-      default: ''
+      default: ""
     }
   },
   components: {
     IconBase
   }
-}
+};
 </script>
 
 <style scoped>

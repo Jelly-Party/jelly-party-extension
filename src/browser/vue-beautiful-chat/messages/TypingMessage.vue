@@ -13,7 +13,7 @@ export default {
       required: true
     }
   }
-}
+};
 </script>
 <style scoped>
 .sc-typing-indicator {

@@ -41,13 +41,13 @@ export default {
   },
   methods: {
     _handleClick(e) {
-      e.target.value = null
+      e.target.value = null;
     },
     _handleChange(e) {
-      this.onChange(e.target.files[0])
+      this.onChange(e.target.files[0]);
     }
   }
-}
+};
 </script>
 
 <style scoped>

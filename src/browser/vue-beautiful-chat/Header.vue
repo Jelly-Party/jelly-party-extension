@@ -24,7 +24,7 @@
   </div>
 </template>
 <script>
-import CloseIcon from './assets/close-icon-big.png'
+import CloseIcon from "./assets/close-icon-big.png";
 
 export default {
   props: {
@@ -34,9 +34,9 @@ export default {
         return {
           close: {
             img: CloseIcon,
-            name: 'default'
+            name: "default"
           }
-        }
+        };
       }
     },
     imageUrl: {
@@ -65,16 +65,16 @@ export default {
   },
   methods: {
     toggleUserList() {
-      this.inUserList = !this.inUserList
-      this.$emit('userList', this.inUserList)
+      this.inUserList = !this.inUserList;
+      this.$emit("userList", this.inUserList);
     }
   },
   data() {
     return {
       inUserList: false
-    }
+    };
   }
-}
+};
 </script>
 <style scoped>
 .sc-header {

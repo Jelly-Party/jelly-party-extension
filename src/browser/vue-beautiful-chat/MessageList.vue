@@ -52,8 +52,8 @@
   </div>
 </template>
 <script>
-import Message from './Message.vue'
-import chatIcon from './assets/chat-icon.svg'
+import Message from "./Message.vue";
+import chatIcon from "./assets/chat-icon.svg";
 
 export default {
   components: {
@@ -87,11 +87,11 @@ export default {
   },
   methods: {
     _scrollDown() {
-      this.$refs.scrollList.scrollTop = this.$refs.scrollList.scrollHeight
+      this.$refs.scrollList.scrollTop = this.$refs.scrollList.scrollHeight;
     },
     handleScroll(e) {
       if (e.target.scrollTop === 0) {
-        this.$emit('scrollToTop')
+        this.$emit("scrollToTop");
       }
     },
     shouldScrollToBottom() {
@@ -99,29 +99,25 @@ export default {
         this.alwaysScrollToBottom ||
         this.$refs.scrollList.scrollTop >
           this.$refs.scrollList.scrollHeight - 600
-      )
+      );
     },
     profile(author) {
-      const profile = this.participants.find(profile => profile.id === author)
-      console.log(`author is ${author}`)
-      console.log(`profile is ${JSON.stringify(profile)}`)
-      console.log(`participants is:`)
-      console.log(this.participants)
-      return profile
-    },
+      const profile = this.participants.find(profile => profile.id === author);
+      return profile;
+    }
   },
   computed: {
     defaultChatIcon() {
-      return chatIcon
+      return chatIcon;
     }
   },
   mounted() {
-    this.$nextTick(this._scrollDown())
+    this.$nextTick(this._scrollDown());
   },
   updated() {
-    if (this.shouldScrollToBottom()) this.$nextTick(this._scrollDown())
+    if (this.shouldScrollToBottom()) this.$nextTick(this._scrollDown());
   }
-}
+};
 </script>
 
 <style scoped>

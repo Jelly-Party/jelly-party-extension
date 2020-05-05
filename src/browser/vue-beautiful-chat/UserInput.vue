@@ -90,16 +90,16 @@
 </template>
 
 <script>
-import EmojiIcon from './icons/EmojiIcon.vue'
-import FileIcons from './icons/FileIcons.vue'
-import UserInputButton from './UserInputButton.vue'
-import Suggestions from './Suggestions.vue'
-import FileIcon from './assets/file.svg'
-import CloseIconSvg from './assets/close.svg'
-import store from './store/'
-import IconCross from './components/icons/IconCross.vue'
-import IconOk from './components/icons/IconOk.vue'
-import IconSend from './components/icons/IconSend.vue'
+import EmojiIcon from "./icons/EmojiIcon.vue";
+import FileIcons from "./icons/FileIcons.vue";
+import UserInputButton from "./UserInputButton.vue";
+import Suggestions from "./Suggestions.vue";
+import FileIcon from "./assets/file.svg";
+import CloseIconSvg from "./assets/close.svg";
+import store from "./store/";
+import IconCross from "./components/icons/IconCross.vue";
+import IconOk from "./components/icons/IconOk.vue";
+import IconSend from "./components/icons/IconSend.vue";
 
 export default {
   components: {
@@ -119,13 +119,13 @@ export default {
         return {
           file: {
             img: FileIcon,
-            name: 'default'
+            name: "default"
           },
           closeSvg: {
             img: CloseIconSvg,
-            name: 'default'
+            name: "default"
           }
-        }
+        };
       }
     },
     showEmoji: {
@@ -146,7 +146,7 @@ export default {
     },
     placeholder: {
       type: String,
-      default: 'Write something...'
+      default: "Write something..."
     },
     colors: {
       type: Object,
@@ -158,123 +158,123 @@ export default {
       file: null,
       inputActive: false,
       store
-    }
+    };
   },
   methods: {
     cancelFile() {
-      this.file = null
+      this.file = null;
     },
     setInputActive(onoff) {
-      this.inputActive = onoff
+      this.inputActive = onoff;
     },
     handleKey(event) {
       if (event.keyCode === 13 && !event.shiftKey) {
         if (!this.isEditing) {
-          this._submitText(event)
+          this._submitText(event);
         } else {
-          this._editText(event)
+          this._editText(event);
         }
-        this._editFinish()
-        event.preventDefault()
+        this._editFinish();
+        event.preventDefault();
       } else if (event.keyCode === 27) {
-        this._editFinish()
-        event.preventDefault()
+        this._editFinish();
+        event.preventDefault();
       }
 
-      this.$emit('onType')
+      this.$emit("onType");
     },
     focusUserInput() {
       this.$nextTick(() => {
-        this.$refs.userInput.focus()
-      })
+        this.$refs.userInput.focus();
+      });
     },
     _submitSuggestion(suggestion) {
-      this.onSubmit({ author: 'me', type: 'text', data: { text: suggestion } })
+      this.onSubmit({ author: "me", type: "text", data: { text: suggestion } });
     },
     _submitText(event) {
-      const text = this.$refs.userInput.textContent
-      const file = this.file
+      const text = this.$refs.userInput.textContent;
+      const file = this.file;
       if (file) {
-        this._submitTextWhenFile(event, text, file)
+        this._submitTextWhenFile(event, text, file);
       } else {
         if (text && text.length > 0) {
           this.onSubmit({
-            author: 'me',
-            type: 'text',
+            author: "me",
+            type: "text",
             data: { text }
-          })
-          this.$refs.userInput.innerHTML = ''
+          });
+          this.$refs.userInput.innerHTML = "";
         }
       }
     },
     _submitTextWhenFile(event, text, file) {
       if (text && text.length > 0) {
         this.onSubmit({
-          author: 'me',
-          type: 'file',
+          author: "me",
+          type: "file",
           data: { text, file }
-        })
-        this.file = null
-        this.$refs.userInput.innerHTML = ''
+        });
+        this.file = null;
+        this.$refs.userInput.innerHTML = "";
       } else {
         this.onSubmit({
-          author: 'me',
-          type: 'file',
+          author: "me",
+          type: "file",
           data: { file }
-        })
-        this.file = null
+        });
+        this.file = null;
       }
     },
     _editText(event) {
-      const text = this.$refs.userInput.textContent
+      const text = this.$refs.userInput.textContent;
       if (text && text.length) {
-        this.$emit('edit', {
-          author: 'me',
-          type: 'text',
+        this.$emit("edit", {
+          author: "me",
+          type: "text",
           id: store.editMessage.id,
           data: { text }
-        })
-        this._editFinish()
+        });
+        this._editFinish();
       }
     },
     _handleEmojiPicked(emoji) {
       this.onSubmit({
-        author: 'me',
-        type: 'emoji',
+        author: "me",
+        type: "emoji",
         data: { emoji }
-      })
+      });
     },
     _handleFileSubmit(file) {
-      this.file = file
+      this.file = file;
     },
     _editFinish() {
-      this.store.editMessage = null
+      this.store.editMessage = null;
     }
   },
   watch: {
     editMessageId(m) {
       if (store.editMessage != null && store.editMessage != undefined) {
-        this.$refs.userInput.focus()
-        this.$refs.userInput.textContent = store.editMessage.data.text
+        this.$refs.userInput.focus();
+        this.$refs.userInput.textContent = store.editMessage.data.text;
       } else {
-        this.$refs.userInput.textContent = ''
+        this.$refs.userInput.textContent = "";
       }
     }
   },
   computed: {
     editMessageId() {
-      return this.isEditing && store.editMessage.id
+      return this.isEditing && store.editMessage.id;
     },
     isEditing() {
-      return store.editMessage && store.editMessage.id
+      return store.editMessage && store.editMessage.id;
     }
   },
   mounted() {
-    this.$root.$on('focusUserInput', () => {
-      this.focusUserInput()
-    })
+    this.$root.$on("focusUserInput", () => {
+      this.focusUserInput();
+    });
   }
-}
+};
 </script>
 
 <style>

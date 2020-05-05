@@ -50,7 +50,7 @@
 </template>
 
 <script>
-import EmojiPicker from './../EmojiPicker.vue'
+import EmojiPicker from "./../EmojiPicker.vue";
 
 export default {
   components: {
@@ -59,7 +59,7 @@ export default {
   data() {
     return {
       isActive: false
-    }
+    };
   },
   props: {
     onEmojiPicked: {
@@ -73,13 +73,13 @@ export default {
   },
   methods: {
     _openPicker(e) {
-      this.isActive = !this.isActive
+      this.isActive = !this.isActive;
     },
     _handlePickerBlur() {
-      this.isActive = false
+      this.isActive = false;
     }
   }
-}
+};
 </script>
 
 <style scoped>

@@ -82,17 +82,17 @@
 </template>
 
 <script>
-import TextMessage from './messages/TextMessage.vue'
-import FileMessage from './messages/FileMessage.vue'
-import EmojiMessage from './messages/EmojiMessage.vue'
-import TypingMessage from './messages/TypingMessage.vue'
-import SystemMessage from './messages/SystemMessage.vue'
-import Avataaars from '../vuejs-avataaars/src/entry.js'
-import JellyPartyLogo from '../../../public/images/logo/svg/Logo-Chat.svg'
+import TextMessage from "./messages/TextMessage.vue";
+import FileMessage from "./messages/FileMessage.vue";
+import EmojiMessage from "./messages/EmojiMessage.vue";
+import TypingMessage from "./messages/TypingMessage.vue";
+import SystemMessage from "./messages/SystemMessage.vue";
+import Avataaars from "../vuejs-avataaars/src/entry.js";
+import JellyPartyLogo from "../../../public/images/logo/svg/Logo-Chat.svg";
 
 export default {
   data() {
-    return {}
+    return {};
   },
   components: {
     TextMessage,
@@ -124,19 +124,20 @@ export default {
       type: Object,
       required: false,
       default: function() {
-        return { accessoriesType: "",
-            clotheType:"",
-            clotheColor:"",
-            eyebrowType:"",
-            eyeType:"",
-            facialHairColor:"",
-            facialHairType:"",
-            graphicType:"",
-            hairColor:"",
-            mouthType:"",
-            skinColor:"",
-            topType:""
-                  }
+        return {
+          accessoriesType: "",
+          clotheType: "",
+          clotheColor: "",
+          eyebrowType: "",
+          eyeType: "",
+          facialHairColor: "",
+          facialHairType: "",
+          graphicType: "",
+          hairColor: "",
+          mouthType: "",
+          skinColor: "",
+          topType: ""
+        };
       }
     }
   },
@@ -145,26 +146,26 @@ export default {
       return {
         color: this.colors.sentMessage.text,
         background: this.colors.sentMessage.bg
-      }
+      };
     },
     receivedColorsStyle() {
       return {
         color: this.colors.receivedMessage.text,
         background: this.colors.receivedMessage.bg
-      }
+      };
     },
     determineMessageColors() {
       return this.message.me
         ? this.sentColorsStyle()
-        : this.receivedColorsStyle()
+        : this.receivedColorsStyle();
     }
   },
   computed: {
     authorName() {
-      return this.user && this.user.name
+      return this.user && this.user.name;
     }
   }
-}
+};
 </script>
 <style lang="scss">
 .sc-message {
@@ -265,11 +266,14 @@ export default {
   color: white;
   background-color: #4e8cff;
   max-width: 100%;
+}
+
+.sc-message--text {
   word-break: break-all;
 }
 
 .sc-message--text code {
-  font-family: 'Courier New', Courier, monospace !important;
+  font-family: "Courier New", Courier, monospace !important;
 }
 
 .sc-message--content.received .sc-message--text {
@@ -295,7 +299,7 @@ export default {
     border-color: black;
     z-index: 1;
   }
-  &[x-placement^='top'] {
+  &[x-placement^="top"] {
     margin-bottom: 5px;
     .tooltip-arrow {
       border-width: 5px 5px 0 5px;
@@ -308,7 +312,7 @@ export default {
       margin-bottom: 0;
     }
   }
-  &[x-placement^='bottom'] {
+  &[x-placement^="bottom"] {
     margin-top: 5px;
     .tooltip-arrow {
       border-width: 0 5px 5px 5px;
@@ -321,7 +325,7 @@ export default {
       margin-bottom: 0;
     }
   }
-  &[x-placement^='right'] {
+  &[x-placement^="right"] {
     margin-left: 5px;
     .tooltip-arrow {
       border-width: 5px 5px 5px 0;
@@ -334,7 +338,7 @@ export default {
       margin-right: 0;
     }
   }
-  &[x-placement^='left'] {
+  &[x-placement^="left"] {
     margin-right: 5px;
     .tooltip-arrow {
       border-width: 5px 0 5px 5px;
@@ -347,12 +351,12 @@ export default {
       margin-right: 0;
     }
   }
-  &[aria-hidden='true'] {
+  &[aria-hidden="true"] {
     visibility: hidden;
     opacity: 0;
     transition: opacity 0.15s, visibility 0.15s;
   }
-  &[aria-hidden='false'] {
+  &[aria-hidden="false"] {
     visibility: visible;
     opacity: 1;
     transition: opacity 0.15s;

@@ -54,19 +54,19 @@
 </template>
 
 <script>
-import IconBase from './../components/IconBase.vue'
-import IconEdit from './../components/icons/IconEdit.vue'
-import IconCross from './../components/icons/IconCross.vue'
-import escapeGoat from 'escape-goat'
-import Autolinker from 'autolinker'
-import store from './../store/'
-const fmt = require('msgdown')
+import IconBase from "./../components/IconBase.vue";
+import IconEdit from "./../components/icons/IconEdit.vue";
+import IconCross from "./../components/icons/IconCross.vue";
+import escapeGoat from "escape-goat";
+import Autolinker from "autolinker";
+import store from "./../store/";
+const fmt = require("msgdown");
 
 export default {
   data() {
     return {
       store
-    }
+    };
   },
   props: {
     message: {
@@ -84,23 +84,23 @@ export default {
   },
   computed: {
     messageText() {
-      const escaped = escapeGoat.escape(this.message.data.text)
+      const escaped = escapeGoat.escape(this.message.data.text);
 
       return Autolinker.link(this.messageStyling ? fmt(escaped) : escaped, {
-        className: 'chatLink',
-        truncate: { length: 50, location: 'smart' }
-      })
+        className: "chatLink",
+        truncate: { length: 50, location: "smart" }
+      });
     },
     me() {
-      return Boolean(this.message.me)
+      return Boolean(this.message.me);
     },
     isEditing() {
-      return (store.editMessage && store.editMessage.id) == this.message.id
+      return (store.editMessage && store.editMessage.id) == this.message.id;
     }
   },
   methods: {
     edit() {
-      this.store.editMessage = this.message
+      this.store.editMessage = this.message;
     }
   },
   components: {
@@ -108,7 +108,7 @@ export default {
     IconCross,
     IconEdit
   }
-}
+};
 </script>
 
 <style scoped>

@@ -70,10 +70,10 @@
 </template>
 
 <script>
-import Header from './Header.vue'
-import MessageList from './MessageList.vue'
-import UserInput from './UserInput.vue'
-import UserList from './UserList.vue'
+import Header from "./Header.vue";
+import MessageList from "./MessageList.vue";
+import UserInput from "./UserInput.vue";
+import UserList from "./UserList.vue";
 
 export default {
   components: {
@@ -105,7 +105,7 @@ export default {
     },
     titleImageUrl: {
       type: String,
-      default: ''
+      default: ""
     },
     onUserInputSubmit: {
       type: Function,
@@ -125,7 +125,7 @@ export default {
     },
     placeholder: {
       type: String,
-      default: 'Write a message...'
+      default: "Write a message..."
     },
     showTypingIndicator: {
       type: String,
@@ -151,26 +151,26 @@ export default {
   data() {
     return {
       showUserList: false
-    }
+    };
   },
   computed: {
     messages() {
-      let messages = this.messageList
+      let messages = this.messageList;
 
-      return messages
+      return messages;
     }
   },
   methods: {
     handleUserListToggle(showUserList) {
-      this.showUserList = showUserList
+      this.showUserList = showUserList;
     },
     getSuggestions() {
       return this.messages.length > 0
         ? this.messages[this.messages.length - 1].suggestions
-        : []
+        : [];
     }
   }
-}
+};
 </script>
 <style scoped>
 html {
@@ -211,7 +211,7 @@ html {
   flex-direction: column;
   justify-content: space-between;
   border-radius: 10px;
-  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
   animation: fadeIn;
   animation-duration: 0.3s;
   animation-timing-function: ease-in-out;
