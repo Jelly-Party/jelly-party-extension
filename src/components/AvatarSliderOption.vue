@@ -63,7 +63,6 @@ export default {
   },
   methods: {
     nextOption: function() {
-      console.log(this.options);
       let index = this.options.indexOf(this.avatarState[this.optionsKey]);
       let newState = "";
       if (index >= 0 && index < this.options.length - 1) {
