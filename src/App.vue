@@ -7,29 +7,12 @@
 
 <script>
 import Navbar from "./components/Navbar.vue";
-import { getState } from "@/messaging.js";
-import {
-  injectContentScript,
-  contentScriptLoaded
-} from "@/browser/injectContentScript.js";
 
 export default {
   components: {
     Navbar
   }
 };
-// Execute the content script. Nothing will happen, if we
-// execute it again.
-chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
-  var activeTabId = tabs[0].id;
-  injectContentScript(activeTabId);
-});
-// Periodically poll the content script for the new state
-window.setInterval(() => {
-  if (contentScriptLoaded) {
-    getState();
-  }
-}, 1000);
 </script>
 
 <style>
