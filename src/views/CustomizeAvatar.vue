@@ -47,17 +47,17 @@
 <script>
 import store from "@/store.js";
 import BackButton from "@/components/BackButton.vue";
-import Avataaar from "../browser/vuejs-avataaars/src/entry.js";
+import Avataaar from "../browser/vuejs-avataaars/entry.js";
 import AvatarSliderOption from "@/components/AvatarSliderOption.vue";
 import { getAvatarState, setAvatarState } from "../messaging.js";
-import { mouthTypes } from "../browser/vuejs-avataaars/src/assetsTypes/mouth.js";
-import { eyeTypes } from "../browser/vuejs-avataaars/src/assetsTypes/eyes.js";
-import { eyebrowTypes } from "../browser/vuejs-avataaars/src/assetsTypes/eyebrows.js";
-import { clothesType } from "../browser/vuejs-avataaars/src/assetsTypes/clothes.js";
-import { topTypes } from "../browser/vuejs-avataaars/src/assetsTypes/top.js";
-import { accessoriesTypes } from "../browser/vuejs-avataaars/src/assetsTypes/accessories.js";
-import { facialHairTypes } from "../browser/vuejs-avataaars/src/assetsTypes/facial-hair.js";
-import { GraphicShirtTypes } from "../browser/vuejs-avataaars/src/assetsTypes/graphic-shirt.js";
+import { mouthTypes } from "../browser/vuejs-avataaars/assetsTypes/mouth.js";
+import { eyeTypes } from "../browser/vuejs-avataaars/assetsTypes/eyes.js";
+import { eyebrowTypes } from "../browser/vuejs-avataaars/assetsTypes/eyebrows.js";
+import { clothesType } from "../browser/vuejs-avataaars/assetsTypes/clothes.js";
+import { topTypes } from "../browser/vuejs-avataaars/assetsTypes/top.js";
+import { accessoriesTypes } from "../browser/vuejs-avataaars/assetsTypes/accessories.js";
+import { facialHairTypes } from "../browser/vuejs-avataaars/assetsTypes/facial-hair.js";
+import { GraphicShirtTypes } from "../browser/vuejs-avataaars/assetsTypes/graphic-shirt.js";
 
 export default {
   components: {

@@ -53,7 +53,7 @@ import store from "@/store.js";
 import BackButton from "@/components/BackButton.vue";
 import { getOptions, setOptions, getAvatarState } from "@/messaging.js";
 import { debounce as _debounce } from "lodash-es";
-import Avataaar from "@/browser/vuejs-avataaars/src/entry.js";
+import Avataaar from "@/browser/vuejs-avataaars/entry.js";
 
 export default {
   components: {

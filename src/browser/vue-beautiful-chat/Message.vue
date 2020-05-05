@@ -87,7 +87,7 @@ import FileMessage from "./messages/FileMessage.vue";
 import EmojiMessage from "./messages/EmojiMessage.vue";
 import TypingMessage from "./messages/TypingMessage.vue";
 import SystemMessage from "./messages/SystemMessage.vue";
-import Avataaars from "../vuejs-avataaars/src/entry.js";
+import Avataaars from "../vuejs-avataaars/entry.js";
 import JellyPartyLogo from "../../../public/images/logo/svg/Logo-Chat.svg";
 
 export default {
