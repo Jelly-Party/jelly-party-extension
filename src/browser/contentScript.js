@@ -46,10 +46,10 @@ import "./libs/css/notyf.min.css";
           background:
             "linear-gradient(to bottom right, #ff9494 0%, #ee64f6 100%)",
           icon: {
-            className: "jelly-party-icon"
-          }
-        }
-      ]
+            className: "jelly-party-icon",
+          },
+        },
+      ],
     });
 
     notyf.success("Jelly Party loaded!");
@@ -60,7 +60,7 @@ import "./libs/css/notyf.min.css";
       "https://www.amazon",
       "https://www.youtube.com",
       "https://vimeo.com",
-      "https://www.disneyplus.com"
+      "https://www.disneyplus.com",
     ];
     const websiteIsTested = (() => {
       for (const stableWebsite of stableWebsites) {
@@ -94,24 +94,26 @@ import "./libs/css/notyf.min.css";
       }
 
       resetPartyState() {
-        const outerThis = this;
-        chrome.storage.sync.get(["lastPartyId"], function(result) {
-          outerThis.partyState = {
-            isActive: false,
-            partyId: "",
-            peers: [],
-            wsIsConnected: false,
-            lastPartyId: result.lastPartyId,
-            websiteIsTested: websiteIsTested,
-            favicon: document.querySelector("link[rel=icon]")?.href,
-            video: outerThis.partyState ? outerThis.partyState : false
-          };
-          if (outerThis.partyIdFromURL && !outerThis.magicLinkUsed) {
-            log.debug("Joining party once via magic link.");
-            outerThis.magicLinkUsed = true;
-            outerThis.joinParty(outerThis.partyIdFromURL);
-          }
-        });
+        chrome.storage.sync.get(
+          ["lastPartyId"],
+          function(result) {
+            this.partyState = {
+              isActive: false,
+              partyId: "",
+              peers: [],
+              wsIsConnected: false,
+              lastPartyId: result.lastPartyId,
+              websiteIsTested: websiteIsTested,
+              favicon: document.querySelector("link[rel=icon]")?.href,
+              video: this.partyState ? this.partyState : false,
+            };
+            if (this.partyIdFromURL && !this.magicLinkUsed) {
+              log.debug("Joining party once via magic link.");
+              this.magicLinkUsed = true;
+              this.joinParty(this.partyIdFromURL);
+            }
+          }.bind(this)
+        );
       }
 
       updateMagicLink() {
@@ -139,10 +141,10 @@ import "./libs/css/notyf.min.css";
                   favicon: party.partyState.favicon,
                   videoState: {
                     paused: party.video.paused,
-                    currentTime: party.video.currentTime
-                  }
-                }
-              }
+                    currentTime: party.video.currentTime,
+                  },
+                },
+              },
             };
             party.ws.send(JSON.stringify(serverCommand));
           }
@@ -160,180 +162,184 @@ import "./libs/css/notyf.min.css";
         this.connectToPartyHelper(partyId);
       }
       connectToPartyHelper(partyId = "") {
-        const outerThis = this;
-        chrome.storage.sync.get(["options", "avatarState"], function(res) {
-          // Start a new party if no partyId is given, else join an existing party
-          var start = partyId ? false : true;
-          log.info(
-            `Jelly-Party: ${
-              start ? "Starting a new party." : "Joining a new party."
-            }`
-          );
-          // Let's fetch the latest client name from the chrome API
-          outerThis.localPeerName = res.options.localPeerName;
-          if (outerThis.partyState.isActive) {
-            log.error(
-              `Jelly-Party: Error. Cannot ${
-                start ? "start" : "join"
-              } a party while still in an active party.`
+        chrome.storage.sync.get(
+          ["options", "avatarState"],
+          function(res) {
+            // Start a new party if no partyId is given, else join an existing party
+            var start = partyId ? false : true;
+            log.info(
+              `Jelly-Party: ${
+                start ? "Starting a new party." : "Joining a new party."
+              }`
             );
-          } else {
-            outerThis.admin = Boolean(start);
-            outerThis.partyState.isActive = true;
-            outerThis.partyState.partyId = start
-              ? generateRoomWithoutSeparator()
-              : partyId;
-            // Set the magic link
-            outerThis.updateMagicLink();
-            var wsAddress = "";
-            switch (window.mode) {
-              case "staging":
-                wsAddress = "wss://staging.jelly-party.com:8080";
-                break;
-              default:
-                wsAddress = "wss://ws.jelly-party.com:8080";
-            }
-            log.debug(`Connecting to ${wsAddress}`);
-            outerThis.ws = new WebSocket(wsAddress);
-            outerThis.ws.onopen = function() {
-              log.debug("Jelly-Party: Connected to Jelly-Party Websocket.");
-              notyf.success("Connected to server!");
-              outerThis.chatHandler.connectWebSocket(outerThis.ws);
-              chrome.storage.sync.set(
-                { lastPartyId: outerThis.partyState.partyId },
-                function() {
-                  log.debug(
-                    `Jelly-Party: Last Party Id set to ${outerThis.partyState.partyId}`
-                  );
-                }
+            // Let's fetch the latest client name from the chrome API
+            this.localPeerName = res.options.localPeerName;
+            if (this.partyState.isActive) {
+              log.error(
+                `Jelly-Party: Error. Cannot ${
+                  start ? "start" : "join"
+                } a party while still in an active party.`
               );
-              outerThis.partyState.wsIsConnected = true;
-              outerThis.ws.send(
-                JSON.stringify({
-                  type: "join",
-                  data: {
-                    guid: res.options.guid,
-                    partyId: outerThis.partyState.partyId,
-                    clientState: {
-                      clientName: outerThis.localPeerName,
-                      currentlyWatching: outerThis.partyState.magicLink,
-                      favicon: outerThis.partyState.favicon,
-                      videoState: {
-                        paused: true,
-                        currentTime: 0
-                      },
-                      avatarState: res.avatarState
-                    }
-                  }
-                })
-              );
-              outerThis.updateClientStateInterval = setInterval(
-                outerThis.updateClientState,
-                5000
-              );
-            };
-            outerThis.ws.onmessage = function(event) {
-              var msg = JSON.parse(event.data);
-              switch (msg.type) {
-                case "videoUpdate":
-                  // Reset event counter, based on the command we receive. We will not forward
-                  // events until we have dealt with the command to prevent infinite loops.
-                  outerThis.videoHandler.eventsToProcess = 0;
-                  // Find out which peer caused the event
-                  var peer = outerThis.partyState.peers.filter(
-                    peer => peer.uuid === msg.data.peer.uuid
-                  )[0].clientName;
-                  if (msg.data.variant === "play") {
-                    outerThis.playVideo(msg.data.tick);
-                    notyf.success(`${peer} played the video.`);
-                  } else if (msg.data.variant === "pause") {
-                    outerThis.pauseVideo(msg.data.tick);
-                    notyf.success(`${peer} paused the video.`);
-                  } else if (msg.data.variant === "seek") {
-                    outerThis.seek(msg.data.tick);
-                    notyf.success(`${peer} jumped to another location.`);
-                  }
-                  break;
-                case "partyStateUpdate":
-                  if (
-                    outerThis.partyState.peers.length >
-                    msg.data.partyState.peers.length
-                  ) {
-                    // Somebody left the party; Let's find out who
-                    let previousUUIDs = outerThis.partyState.peers.map(
-                      peer => peer.uuid
-                    );
-                    let newUUIDs = msg.data.partyState.peers.map(
-                      peer => peer.uuid
-                    );
-                    let peerWhoLeft = outerThis.partyState.peers.filter(
-                      peer =>
-                        peer.uuid === _difference(previousUUIDs, newUUIDs)[0]
-                    )[0];
-                    if (peerWhoLeft) {
-                      notyf.success(
-                        `${peerWhoLeft.clientName} left the party.`
-                      );
-                    }
-                  } else if (
-                    outerThis.partyState.peers.length <
-                    msg.data.partyState.peers.length
-                  ) {
-                    // Somebody joined the party
-                    let previousUUIDs = outerThis.partyState.peers.map(
-                      peer => peer.uuid
-                    );
-                    let newUUIDs = msg.data.partyState.peers.map(
-                      peer => peer.uuid
-                    );
-                    if (previousUUIDs.length === 0) {
-                      // Let's show all peers in the party
-                      for (const peer of msg.data.partyState.peers) {
-                        notyf.success(`${peer.clientName} joined the party.`);
-                      }
-                    } else {
-                      let peerWhoJoined = msg.data.partyState.peers.filter(
-                        peer =>
-                          peer.uuid === _difference(newUUIDs, previousUUIDs)[0]
-                      )[0];
-                      if (peerWhoJoined) {
-                        notyf.success(
-                          `${peerWhoJoined.clientName} joined the party.`
-                        );
-                      }
-                    }
-                  }
-                  outerThis.partyState = {
-                    ...outerThis.partyState,
-                    ...msg.data.partyState
-                  };
-                  // We must forward the new partyState to the Chat.
-                  outerThis.chatHandler.chatComponent.receivePartyStateUpdate(
-                    outerThis.partyState
-                  );
-                  break;
-                case "chatMessage":
-                  outerThis.chatHandler.chatComponent.receiveChatMessage(msg);
-                  break;
-                case "setUUID":
-                  outerThis.uuid = msg.data.uuid;
-                  outerThis.ws.uuid = msg.data.uuid;
+            } else {
+              this.admin = Boolean(start);
+              this.partyState.isActive = true;
+              this.partyState.partyId = start
+                ? generateRoomWithoutSeparator()
+                : partyId;
+              // Set the magic link
+              this.updateMagicLink();
+              var wsAddress = "";
+              switch (window.mode) {
+                case "staging":
+                  wsAddress = "wss://staging.jelly-party.com:8080";
                   break;
                 default:
-                  log.debug(
-                    `Jelly-Party: Received unknown message: ${JSON.stringify(
-                      msg
-                    )}`
-                  );
+                  wsAddress = "wss://ws.jelly-party.com:8080";
               }
-            };
-            outerThis.ws.onclose = function() {
-              log.debug("Jelly-Party: Disconnected from WebSocket-Server.");
-              clearInterval(outerThis.updateClientStateInterval);
-              outerThis.partyState.wsIsConnected = false;
-            };
-          }
-        });
+              log.debug(`Connecting to ${wsAddress}`);
+              this.ws = new WebSocket(wsAddress);
+              this.ws.onopen = function() {
+                log.debug("Jelly-Party: Connected to Jelly-Party Websocket.");
+                notyf.success("Connected to server!");
+                this.chatHandler.connectWebSocket(this.ws);
+                chrome.storage.sync.set(
+                  { lastPartyId: this.partyState.partyId },
+                  function() {
+                    log.debug(
+                      `Jelly-Party: Last Party Id set to ${this.partyState.partyId}`
+                    );
+                  }.bind(this)
+                );
+
+                this.partyState.wsIsConnected = true;
+                this.ws.send(
+                  JSON.stringify({
+                    type: "join",
+                    data: {
+                      guid: res.options.guid,
+                      partyId: this.partyState.partyId,
+                      clientState: {
+                        clientName: this.localPeerName,
+                        currentlyWatching: this.partyState.magicLink,
+                        favicon: this.partyState.favicon,
+                        videoState: {
+                          paused: true,
+                          currentTime: 0,
+                        },
+                        avatarState: res.avatarState,
+                      },
+                    },
+                  })
+                );
+                this.updateClientStateInterval = setInterval(
+                  this.updateClientState,
+                  5000
+                );
+              }.bind(this);
+              this.ws.onmessage = function(event) {
+                var msg = JSON.parse(event.data);
+                switch (msg.type) {
+                  case "videoUpdate":
+                    // Reset event counter, based on the command we receive. We will not forward
+                    // events until we have dealt with the command to prevent infinite loops.
+                    this.videoHandler.eventsToProcess = 0;
+                    // Find out which peer caused the event
+                    var peer = this.partyState.peers.filter(
+                      (peer) => peer.uuid === msg.data.peer.uuid
+                    )[0].clientName;
+                    if (msg.data.variant === "play") {
+                      this.playVideo(msg.data.tick);
+                      notyf.success(`${peer} played the video.`);
+                    } else if (msg.data.variant === "pause") {
+                      this.pauseVideo(msg.data.tick);
+                      notyf.success(`${peer} paused the video.`);
+                    } else if (msg.data.variant === "seek") {
+                      this.seek(msg.data.tick);
+                      notyf.success(`${peer} jumped to another location.`);
+                    }
+                    break;
+                  case "partyStateUpdate":
+                    if (
+                      this.partyState.peers.length >
+                      msg.data.partyState.peers.length
+                    ) {
+                      // Somebody left the party; Let's find out who
+                      let previousUUIDs = this.partyState.peers.map(
+                        (peer) => peer.uuid
+                      );
+                      let newUUIDs = msg.data.partyState.peers.map(
+                        (peer) => peer.uuid
+                      );
+                      let peerWhoLeft = this.partyState.peers.filter(
+                        (peer) =>
+                          peer.uuid === _difference(previousUUIDs, newUUIDs)[0]
+                      )[0];
+                      if (peerWhoLeft) {
+                        notyf.success(
+                          `${peerWhoLeft.clientName} left the party.`
+                        );
+                      }
+                    } else if (
+                      this.partyState.peers.length <
+                      msg.data.partyState.peers.length
+                    ) {
+                      // Somebody joined the party
+                      let previousUUIDs = this.partyState.peers.map(
+                        (peer) => peer.uuid
+                      );
+                      let newUUIDs = msg.data.partyState.peers.map(
+                        (peer) => peer.uuid
+                      );
+                      if (previousUUIDs.length === 0) {
+                        // Let's show all peers in the party
+                        for (const peer of msg.data.partyState.peers) {
+                          notyf.success(`${peer.clientName} joined the party.`);
+                        }
+                      } else {
+                        let peerWhoJoined = msg.data.partyState.peers.filter(
+                          (peer) =>
+                            peer.uuid ===
+                            _difference(newUUIDs, previousUUIDs)[0]
+                        )[0];
+                        if (peerWhoJoined) {
+                          notyf.success(
+                            `${peerWhoJoined.clientName} joined the party.`
+                          );
+                        }
+                      }
+                    }
+                    this.partyState = {
+                      ...this.partyState,
+                      ...msg.data.partyState,
+                    };
+                    // We must forward the new partyState to the Chat.
+                    this.chatHandler.chatComponent.receivePartyStateUpdate(
+                      this.partyState
+                    );
+                    break;
+                  case "chatMessage":
+                    this.chatHandler.chatComponent.receiveChatMessage(msg);
+                    break;
+                  case "setUUID":
+                    this.uuid = msg.data.uuid;
+                    this.ws.uuid = msg.data.uuid;
+                    break;
+                  default:
+                    log.debug(
+                      `Jelly-Party: Received unknown message: ${JSON.stringify(
+                        msg
+                      )}`
+                    );
+                }
+              }.bind(this);
+              this.ws.onclose = function() {
+                log.debug("Jelly-Party: Disconnected from WebSocket-Server.");
+                clearInterval(this.updateClientStateInterval);
+                this.partyState.wsIsConnected = false;
+              }.bind(this);
+            }
+          }.bind(this)
+        );
       }
 
       leaveParty() {
@@ -344,7 +350,7 @@ import "./libs/css/notyf.min.css";
       }
 
       filterPeer(skipPeer) {
-        return this.remotePeers.filter(e => e.connection.peer != skipPeer);
+        return this.remotePeers.filter((e) => e.connection.peer != skipPeer);
       }
 
       requestPeersToPlay() {
@@ -354,12 +360,12 @@ import "./libs/css/notyf.min.css";
             data: {
               variant: "play",
               tick: this.video.currentTime,
-              peer: { uuid: this.uuid }
-            }
+              peer: { uuid: this.uuid },
+            },
           };
           var serverCommand = {
             type: "forward",
-            data: { commandToForward: clientCommand }
+            data: { commandToForward: clientCommand },
           };
           this.ws.send(JSON.stringify(serverCommand));
         }
@@ -372,12 +378,12 @@ import "./libs/css/notyf.min.css";
             data: {
               variant: "pause",
               tick: this.video.currentTime,
-              peer: { uuid: this.uuid }
-            }
+              peer: { uuid: this.uuid },
+            },
           };
           var serverCommand = {
             type: "forward",
-            data: { commandToForward: clientCommand }
+            data: { commandToForward: clientCommand },
           };
           this.ws.send(JSON.stringify(serverCommand));
         }
@@ -390,12 +396,12 @@ import "./libs/css/notyf.min.css";
             data: {
               variant: "seek",
               tick: this.video.currentTime,
-              peer: { uuid: this.uuid }
-            }
+              peer: { uuid: this.uuid },
+            },
           };
           var serverCommand = {
             type: "forward",
-            data: { commandToForward: clientCommand }
+            data: { commandToForward: clientCommand },
           };
           this.ws.send(JSON.stringify(serverCommand));
         }
