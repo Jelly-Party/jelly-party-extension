@@ -196,7 +196,7 @@ import "./libs/css/notyf.min.css";
                 default:
                   wsAddress = "wss://ws.jelly-party.com:8080";
               }
-              log.debug(`Connecting to ${wsAddress}`);
+              log.debug(`Jelly-Party: Connecting to ${wsAddress}`);
               this.ws = new WebSocket(wsAddress);
               this.ws.onopen = function() {
                 log.debug("Jelly-Party: Connected to Jelly-Party Websocket.");
