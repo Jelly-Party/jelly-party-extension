@@ -15,7 +15,9 @@ chrome.tabs.query({ active: true, currentWindow: true }, async function(tabs) {
   var activeTabId = tabs[0].id;
   await injectContentScript(activeTabId);
   // TODO: Fix error that is thrown when first executing the script and listeners
-  // are not yet set up
+  // are not yet set up -> unfortunately this is complicated by the webpack bundle
+  // evaluating to an empty object rather than the last value of the script (i.e.
+  // true/false depending on whether contentScript has been injected already)
   getState();
 });
 // Periodically poll the content script for the new state

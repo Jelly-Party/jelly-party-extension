@@ -17,6 +17,11 @@ module.exports = {
       background: "./src/browser/background.js",
       contentScript: "./src/browser/contentScript.js"
     }
+    // TODO: see https://github.com/webpack/webpack/issues/1625
+    // output: {
+    //   library: "beta",
+    //   libraryTarget: "var"
+    // }
   },
   chainWebpack: config => {
     config.optimization.splitChunks(false);
