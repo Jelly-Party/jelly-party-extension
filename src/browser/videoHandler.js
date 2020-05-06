@@ -87,6 +87,19 @@ export default class VideoHandler {
         });
         break;
       case "www.disneyplus.com":
+        this.injectScript(() => {
+          let vid = document.querySelector("video");
+          let key = Object.keys(vid).find(elem =>
+            elem.includes("reactInternalInstance")
+          );
+          let playPause = vid[key]?.memoizedProps?.onPointerUp;
+          window.addEventListener("playPauseRequest", function() {
+            console.log(
+              "Jelly-Party: Disney+ Context: Received playPause request."
+            );
+            playPause();
+          });
+        });
         try {
           document
             .querySelector("#app_body_content")
@@ -113,6 +126,12 @@ export default class VideoHandler {
           window.dispatchEvent(new CustomEvent("playRequest"));
           await this.sleep(50);
         };
+      case "www.disneyplus.com": {
+        return async function() {
+          window.dispatchEvent(new CustomEvent("playPauseRequest"));
+          await this.sleep(50);
+        };
+      }
       default:
         return async function() {
           await this.video.play();
@@ -127,6 +146,12 @@ export default class VideoHandler {
           window.dispatchEvent(new CustomEvent("pauseRequest"));
           await this.sleep(50);
         };
+      case "www.disneyplus.com": {
+        return async function() {
+          window.dispatchEvent(new CustomEvent("playPauseRequest"));
+          await this.sleep(50);
+        };
+      }
       default:
         return async function() {
           await this.video.pause();

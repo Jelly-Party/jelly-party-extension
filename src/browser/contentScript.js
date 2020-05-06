@@ -46,10 +46,10 @@ import "./libs/css/notyf.min.css";
           background:
             "linear-gradient(to bottom right, #ff9494 0%, #ee64f6 100%)",
           icon: {
-            className: "jelly-party-icon",
-          },
-        },
-      ],
+            className: "jelly-party-icon"
+          }
+        }
+      ]
     });
 
     notyf.success("Jelly Party loaded!");
@@ -60,7 +60,7 @@ import "./libs/css/notyf.min.css";
       "https://www.amazon",
       "https://www.youtube.com",
       "https://vimeo.com",
-      "https://www.disneyplus.com",
+      "https://www.disneyplus.com"
     ];
     const websiteIsTested = (() => {
       for (const stableWebsite of stableWebsites) {
@@ -105,7 +105,7 @@ import "./libs/css/notyf.min.css";
               lastPartyId: result.lastPartyId,
               websiteIsTested: websiteIsTested,
               favicon: document.querySelector("link[rel=icon]")?.href,
-              video: this.partyState ? this.partyState : false,
+              video: this.partyState ? this.partyState : false
             };
             if (this.partyIdFromURL && !this.magicLinkUsed) {
               log.debug("Joining party once via magic link.");
@@ -141,10 +141,10 @@ import "./libs/css/notyf.min.css";
                   favicon: party.partyState.favicon,
                   videoState: {
                     paused: party.video.paused,
-                    currentTime: party.video.currentTime,
-                  },
-                },
-              },
+                    currentTime: party.video.currentTime
+                  }
+                }
+              }
             };
             party.ws.send(JSON.stringify(serverCommand));
           }
@@ -224,11 +224,11 @@ import "./libs/css/notyf.min.css";
                         favicon: this.partyState.favicon,
                         videoState: {
                           paused: true,
-                          currentTime: 0,
+                          currentTime: 0
                         },
-                        avatarState: res.avatarState,
-                      },
-                    },
+                        avatarState: res.avatarState
+                      }
+                    }
                   })
                 );
                 this.updateClientStateInterval = setInterval(
@@ -245,7 +245,7 @@ import "./libs/css/notyf.min.css";
                     this.videoHandler.eventsToProcess = 0;
                     // Find out which peer caused the event
                     var peer = this.partyState.peers.filter(
-                      (peer) => peer.uuid === msg.data.peer.uuid
+                      peer => peer.uuid === msg.data.peer.uuid
                     )[0].clientName;
                     if (msg.data.variant === "play") {
                       this.playVideo(msg.data.tick);
@@ -265,13 +265,13 @@ import "./libs/css/notyf.min.css";
                     ) {
                       // Somebody left the party; Let's find out who
                       let previousUUIDs = this.partyState.peers.map(
-                        (peer) => peer.uuid
+                        peer => peer.uuid
                       );
                       let newUUIDs = msg.data.partyState.peers.map(
-                        (peer) => peer.uuid
+                        peer => peer.uuid
                       );
                       let peerWhoLeft = this.partyState.peers.filter(
-                        (peer) =>
+                        peer =>
                           peer.uuid === _difference(previousUUIDs, newUUIDs)[0]
                       )[0];
                       if (peerWhoLeft) {
@@ -285,10 +285,10 @@ import "./libs/css/notyf.min.css";
                     ) {
                       // Somebody joined the party
                       let previousUUIDs = this.partyState.peers.map(
-                        (peer) => peer.uuid
+                        peer => peer.uuid
                       );
                       let newUUIDs = msg.data.partyState.peers.map(
-                        (peer) => peer.uuid
+                        peer => peer.uuid
                       );
                       if (previousUUIDs.length === 0) {
                         // Let's show all peers in the party
@@ -297,7 +297,7 @@ import "./libs/css/notyf.min.css";
                         }
                       } else {
                         let peerWhoJoined = msg.data.partyState.peers.filter(
-                          (peer) =>
+                          peer =>
                             peer.uuid ===
                             _difference(newUUIDs, previousUUIDs)[0]
                         )[0];
@@ -310,7 +310,7 @@ import "./libs/css/notyf.min.css";
                     }
                     this.partyState = {
                       ...this.partyState,
-                      ...msg.data.partyState,
+                      ...msg.data.partyState
                     };
                     // We must forward the new partyState to the Chat.
                     this.chatHandler.chatComponent.receivePartyStateUpdate(
@@ -350,7 +350,7 @@ import "./libs/css/notyf.min.css";
       }
 
       filterPeer(skipPeer) {
-        return this.remotePeers.filter((e) => e.connection.peer != skipPeer);
+        return this.remotePeers.filter(e => e.connection.peer != skipPeer);
       }
 
       requestPeersToPlay() {
@@ -360,12 +360,12 @@ import "./libs/css/notyf.min.css";
             data: {
               variant: "play",
               tick: this.video.currentTime,
-              peer: { uuid: this.uuid },
-            },
+              peer: { uuid: this.uuid }
+            }
           };
           var serverCommand = {
             type: "forward",
-            data: { commandToForward: clientCommand },
+            data: { commandToForward: clientCommand }
           };
           this.ws.send(JSON.stringify(serverCommand));
         }
@@ -378,12 +378,12 @@ import "./libs/css/notyf.min.css";
             data: {
               variant: "pause",
               tick: this.video.currentTime,
-              peer: { uuid: this.uuid },
-            },
+              peer: { uuid: this.uuid }
+            }
           };
           var serverCommand = {
             type: "forward",
-            data: { commandToForward: clientCommand },
+            data: { commandToForward: clientCommand }
           };
           this.ws.send(JSON.stringify(serverCommand));
         }
@@ -396,12 +396,12 @@ import "./libs/css/notyf.min.css";
             data: {
               variant: "seek",
               tick: this.video.currentTime,
-              peer: { uuid: this.uuid },
-            },
+              peer: { uuid: this.uuid }
+            }
           };
           var serverCommand = {
             type: "forward",
-            data: { commandToForward: clientCommand },
+            data: { commandToForward: clientCommand }
           };
           this.ws.send(JSON.stringify(serverCommand));
         }
@@ -413,10 +413,12 @@ import "./libs/css/notyf.min.css";
             "Jelly-Party: No video defined. I shouldn't be receiving commands.."
           );
         } else {
+          // If we're already playing, ignore playVideo request
+          if (!this.video.paused) return;
           // At the least, disable forwarding for the play event.
           // The seek event will handle itself.
-          this.videoHandler.eventsToProcess += 1;
           await this.seek(tick);
+          this.videoHandler.eventsToProcess += 1;
           await this.videoHandler.play();
         }
       }
@@ -427,10 +429,12 @@ import "./libs/css/notyf.min.css";
             "Jelly-Party: No video defined. I shouldn't be receiving commands.."
           );
         } else {
+          // If we're already paused, ignore pauseVideo request
+          if (this.video.paused) return;
           // At the least, disable forwarding for the pause event.
           // The seek event will handle itself.
-          this.videoHandler.eventsToProcess += 1;
           await this.seek(tick);
+          this.videoHandler.eventsToProcess += 1;
           await this.videoHandler.pause();
         }
       }
