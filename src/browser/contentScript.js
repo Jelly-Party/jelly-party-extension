@@ -414,7 +414,9 @@ import "./libs/css/notyf.min.css";
           );
         } else {
           // If we're already playing, ignore playVideo request
-          if (!this.video.paused) return;
+          if (!this.video.paused) {
+            return;
+          }
           // At the least, disable forwarding for the play event.
           // The seek event will handle itself.
           await this.seek(tick);
@@ -430,7 +432,9 @@ import "./libs/css/notyf.min.css";
           );
         } else {
           // If we're already paused, ignore pauseVideo request
-          if (this.video.paused) return;
+          if (this.video.paused) {
+            return;
+          }
           // At the least, disable forwarding for the pause event.
           // The seek event will handle itself.
           await this.seek(tick);

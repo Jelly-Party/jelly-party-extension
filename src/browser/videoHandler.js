@@ -88,16 +88,15 @@ export default class VideoHandler {
         break;
       case "www.disneyplus.com":
         this.injectScript(() => {
-          let vid = document.querySelector("video");
-          let key = Object.keys(vid).find(elem =>
-            elem.includes("reactInternalInstance")
-          );
-          let playPause = vid[key]?.memoizedProps?.onPointerUp;
           window.addEventListener("playPauseRequest", function() {
             console.log(
               "Jelly-Party: Disney+ Context: Received playPause request."
             );
-            playPause();
+            let vid = document.querySelector("video");
+            let key = Object.keys(vid).find(elem =>
+              elem.includes("reactInternalInstance")
+            );
+            vid[key]?.memoizedProps?.onPointerUp?.();
           });
         });
         try {
