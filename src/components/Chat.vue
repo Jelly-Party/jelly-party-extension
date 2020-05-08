@@ -37,7 +37,6 @@
       </template>
       <template v-slot:header>
         <p style="font-size: 16px">
-          🎥🎉🍿
           {{
             participants
               .filter(m => m.name !== "Jelly" && !m.left)
@@ -320,5 +319,9 @@ export default {
 
 .user-element {
   color: black !important;
+}
+
+.tooltip .tooltip-inner {
+  font-size: 16px;
 }
 </style>
