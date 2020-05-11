@@ -21,6 +21,13 @@
         />
       </b-col>
     </b-row>
+
+    <b-input-group prepend="Name" class="mt-3">
+      <b-form-input
+        size="lg"
+        v-model="sharedState.localPeerName"
+      ></b-form-input>
+    </b-input-group>
     <b-row>
       <b-col class="d-flex align-items-center">
         <b-button
@@ -33,13 +40,18 @@
         >
       </b-col>
     </b-row>
-    <b-input-group prepend="Name" class="mt-3">
-      <b-form-input
-        size="lg"
-        v-model="sharedState.localPeerName"
-        v-on:keyup="showConfirmation"
-      ></b-form-input>
-    </b-input-group>
+    <b-row>
+      <b-col class="d-flex align-items-center">
+        <b-button
+          block
+          size="lg"
+          class="mt-2"
+          variant="secondary"
+          @click="showConfirmation"
+          >Save options</b-button
+        >
+      </b-col>
+    </b-row>
     <b-collapse id="collapse-success" class="mt-2">
       <b-card>
         <p class="card-text">Your changes have been saved.</p>
@@ -52,7 +64,6 @@
 import store from "@/store.js";
 import BackButton from "@/components/BackButton.vue";
 import { getOptions, setOptions, getAvatarState } from "@/messaging.js";
-import { debounce as _debounce } from "lodash-es";
 import Avataaar from "@/browser/vuejs-avataaars/entry.js";
 
 export default {
@@ -74,12 +85,19 @@ export default {
           : "guest"
       );
     },
-    showConfirmation: _debounce(function() {
+    showConfirmation: function() {
+      this.saveOptions();
       this.$root.$emit("bv::toggle::collapse", "collapse-success");
+      window.setTimeout(() => {
+        window.scrollBy({
+          top: 1000,
+          behavior: "smooth"
+        });
+      }, 500);
       window.setTimeout(() => {
         this.$root.$emit("bv::toggle::collapse", "collapse-success");
       }, 1000);
-    }, 500),
+    },
     customizeAvatar() {
       this.$router.replace({ path: "customizeAvatar" });
     }
