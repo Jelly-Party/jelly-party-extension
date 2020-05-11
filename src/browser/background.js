@@ -1,6 +1,5 @@
 import { injectContentScript } from "./injectContentScript";
-
-console.log("Background run!!!");
+let scriptInjected = false;
 
 chrome.runtime.onInstalled.addListener(function() {
   function uuidv4() {
@@ -37,24 +36,44 @@ chrome.runtime.onInstalled.addListener(function() {
 });
 
 function redirectToParty(redirectURL) {
+  // We must get the currently active tab on every iteration
+  // Note: If the user switches tabs too quickly after opening
+  // a Jelly-Party link, the script will be injected into the
+  // wrong website
+  // TODO: Analyze how commonly this scenario occurs
+
+  // The root of the problem lies in the fact that chrome.tabs.update's
+  // callback function seems to execute before the tab's DOM content has been
+  // loaded. This leads to the content script sometimes disappearing into
+  // a void inbetween join.jelly-party.com and redirectURL
   chrome.tabs.update({ url: redirectURL }, () => {
-    chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
-      var activeTabId = tabs[0].id;
-      // Let's attempt to inject the content script until we have been successful
-      setTimeout(() => {
-        injectContentScript(activeTabId);
-      }, 1000);
-    });
+    let injectInterval = setInterval(() => {
+      chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
+        let activeTabId = tabs[0].id;
+        // Let's attempt to inject the content script until we have been successful
+        // As a fallback, we'll stop after a a maximum of 20 injection attempts.
+        let injectAttempts = 0;
+        let maxInjects = 20;
+        if (!scriptInjected && injectAttempts < maxInjects) {
+          console.log("Jelly-Party: Attempting content-script injection.");
+          injectContentScript(activeTabId);
+          injectAttempts += 1;
+        } else {
+          console.log("Jelly-Party: Clearing injection interval.");
+          clearInterval(injectInterval);
+        }
+      });
+    }, 1000);
   });
 }
 
 chrome.runtime.onMessageExternal.addListener(function(request, sender) {
-  console.log(request);
-  let redirectURL = new URL(request.redirectURL);
-  redirectURL.searchParams.append("jellyPartyId", request.jellyPartyId);
-  redirectURL = redirectURL.href;
-  console.log(redirectURL);
+  console.log(`Received external message: ${JSON.stringify(request)}`);
   if (request.type === "requestPermissions") {
+    let redirectURL = new URL(request.redirectURL);
+    redirectURL.searchParams.append("jellyPartyId", request.jellyPartyId);
+    redirectURL = redirectURL.href;
+    console.log(redirectURL);
     chrome.permissions.request(
       {
         origins: [request.permissionURL]
@@ -71,6 +90,10 @@ chrome.runtime.onMessageExternal.addListener(function(request, sender) {
       }
     );
   } else if (request.type === "requestRedirect") {
+    let redirectURL = new URL(request.redirectURL);
+    redirectURL.searchParams.append("jellyPartyId", request.jellyPartyId);
+    redirectURL = redirectURL.href;
+    console.log(redirectURL);
     if (sender.origin === "https://join.jelly-party.com") {
       chrome.permissions.contains(
         {
@@ -91,6 +114,19 @@ chrome.runtime.onMessageExternal.addListener(function(request, sender) {
         }
       );
     }
+  } else {
+    console.log("Jelly-Party: Received unknown request.");
+  }
+});
+
+chrome.runtime.onMessage.addListener(function(request, sender) {
+  if (request.type === "clearCSInjectionInterval") {
+    setTimeout(() => {
+      console.log(
+        "Jelly-Party: Received request to clear script injection interval."
+      );
+      scriptInjected = true;
+    }, 1200);
   } else {
     console.log("Jelly-Party: Received unknown request.");
   }

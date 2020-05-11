@@ -28,6 +28,15 @@ import "./libs/css/notyf.min.css";
         DEBUG = true;
     }
 
+    // Let's request the background script to clear the injection interval
+    let obj = {
+      type: "clearCSInjectionInterval"
+    };
+    console.log(
+      "Jelly-Party: Requesting clearing of content script injection."
+    );
+    chrome.runtime.sendMessage(obj);
+
     if (DEBUG) {
       log.enableAll();
     } else {
