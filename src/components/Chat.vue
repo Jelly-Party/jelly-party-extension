@@ -88,7 +88,16 @@ export default {
           type: "system",
           data: {
             text:
-              'You can use this chat to talk to people in your party. Type "#helpme" to open our FAQ in a new tab.',
+              'You can use this chat to talk to people in your party. Type "#helpme" to open the Jelly-Party FAQ in a new tab.',
+            timestamp: Date.now()
+          }
+        },
+        {
+          author: "jellyPartySupportBot",
+          type: "system",
+          data: {
+            text:
+              "Pro tip: Long-press the chat Icon and drag and drop the chat to where you want it.",
             timestamp: Date.now()
           }
         }
@@ -260,24 +269,47 @@ export default {
     }
   },
   mounted: function() {
+    this.moved = false;
+    this.timerIds = [];
+    let launcher = document.querySelector(".sc-launcher");
+
     const addListeners = function() {
-      document
-        .querySelector(".sc-launcher")
-        .addEventListener("mousedown", mouseDown, false);
+      launcher.addEventListener("mousedown", mouseDown, false);
       window.addEventListener("mouseup", mouseUp, false);
     }.bind(this);
 
-    function mouseUp() {
+    const mouseUp = function(e) {
+      for (const timerId of this.timerIds) {
+        clearTimeout(timerId);
+      }
+      this.timerIds = [];
+      document
+        .querySelector(".sc-launcher")
+        .classList.remove("drag-box-shadow");
       window.removeEventListener("mousemove", throttled, true);
-    }
+      if (!this.moved && e.target.id === "jellyPartyChatFab") {
+        // Only open/close the chat, if we didn't drag it
+        let event = new CustomEvent("toggle-open-close");
+        document.dispatchEvent(event);
+      }
+    }.bind(this);
 
-    function mouseDown(e) {
+    const mouseDown = function(e) {
       e.preventDefault();
-      window.addEventListener("mousemove", throttled, true);
-    }
+      this.moved = false;
+      this.timerIds.push(
+        setTimeout(() => {
+          document
+            .querySelector(".sc-launcher")
+            .classList.add("drag-box-shadow");
+          window.addEventListener("mousemove", throttled, true);
+        }, 1000)
+      );
+    }.bind(this);
 
     const throttled = _throttle(
       function(e) {
+        this.moved = true;
         [".sc-launcher", ".sc-open-icon", ".sc-closed-icon"].forEach(elem => {
           let style = document.querySelector(elem)?.style;
           if (style) {
@@ -292,7 +324,7 @@ export default {
         }
       }.bind(this),
       30
-    );
+    ).bind(this);
     addListeners();
   }
 };
@@ -323,5 +355,9 @@ export default {
 
 .tooltip .tooltip-inner {
   font-size: 16px;
+}
+
+.drag-box-shadow {
+  box-shadow: rgba(0, 0, 0, 0.5) 0px 0px 20px 10px !important;
 }
 </style>

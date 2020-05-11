@@ -4,7 +4,6 @@
       v-if="showLauncher"
       class="sc-launcher"
       :class="{ opened: isOpen }"
-      @click.prevent="isOpen ? close() : openAndFocus()"
       :style="{ background: colors.launcher.bg }"
     >
       <div
@@ -14,6 +13,7 @@
         {{ newMessagesCount }}
       </div>
       <img
+        id="jellyPartyChatFab"
         v-if="isOpen"
         class="sc-closed-icon"
         :src="icons.close.img"
@@ -21,6 +21,7 @@
       />
       <img
         v-else
+        id="jellyPartyChatFab"
         class="sc-open-icon"
         :src="icons.open.img"
         :alt="icons.open.name"
@@ -232,6 +233,14 @@ export default {
     openAndFocus() {
       this.open();
       this.$root.$emit("focusUserInput");
+    },
+    toggleOpenClose() {
+      if (this.isOpen) {
+        this.close();
+      } else {
+        this.open();
+        this.$root.$emit("focusUserInput");
+      }
     }
   },
   computed: {
@@ -251,6 +260,11 @@ export default {
   },
   components: {
     ChatWindow
+  },
+  mounted() {
+    document.addEventListener("toggle-open-close", () => {
+      this.toggleOpenClose();
+    });
   }
 };
 </script>
