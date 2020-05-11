@@ -80,6 +80,18 @@ import "./libs/css/notyf.min.css";
       return false;
     })();
 
+    const toHHMMSS = secs => {
+      let sec_num = parseInt(secs, 10);
+      let hours = Math.floor(sec_num / 3600);
+      let minutes = Math.floor(sec_num / 60) % 60;
+      let seconds = sec_num % 60;
+
+      return [hours, minutes, seconds]
+        .map(v => (v < 10 ? "0" + v : v))
+        .filter((v, i) => v !== "00" || i > 0)
+        .join(":");
+    };
+
     class JellyParty {
       constructor(localPeerName, video) {
         this.localPeerName = localPeerName;
@@ -264,7 +276,9 @@ import "./libs/css/notyf.min.css";
                       notyf.success(`${peer} paused the video.`);
                     } else if (msg.data.variant === "seek") {
                       this.seek(msg.data.tick);
-                      notyf.success(`${peer} jumped to another location.`);
+                      notyf.success(
+                        `${peer} jumped to ${toHHMMSS(msg.data.tick)}.`
+                      );
                     }
                     break;
                   case "partyStateUpdate":
