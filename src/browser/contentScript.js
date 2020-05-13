@@ -105,7 +105,7 @@ import "./libs/css/notyf.min.css";
         this.updateClientStateInterval = null;
         // The VideoHandler handles playing, pausing & seeking videos
         // on different websites. For most websites the generic video.play(),
-        // video.pause() & video.seek() will work, however some websites,
+        // video.pause() & video.currentTime= will work, however some websites,
         // such as Netflix, require direct access to video controllers.
         this.videoHandler = new VideoHandler(window.location.host, notyf, this);
         this.chatHandler = new ChatHandler(window.location.host);
