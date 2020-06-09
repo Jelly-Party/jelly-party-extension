@@ -18,7 +18,7 @@
     "vue-beautiful-chat": "^2.3.1",
     "vue-clipboard2": "^0.3.1",
     "vue-dompurify-html": "^2.1.1",
-    "vue-router": "^3.1.6"
+    "vue-router": "^3.3.2"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "~4.3.0",
@@ -31,7 +31,7 @@
     "eslint-plugin-prettier": "^3.1.1",
     "eslint-plugin-vue": "^6.2.2",
     "prettier": "^1.19.1",
-    "sass": "^1.26.5",
+    "sass": "^1.26.8",
     "sass-loader": "^8.0.2",
     "vue-cli-plugin-webpack-bundle-analyzer": "~2.0.0",
     "vue-svg-loader": "^0.16.0",
