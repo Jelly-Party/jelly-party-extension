@@ -3,10 +3,10 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "vue-cli-service build --watch --mode development",
-    "stage": "vue-cli-service build --watch --mode staging",
     "build": "vue-cli-service build --mode production",
-    "lint": "vue-cli-service lint"
+    "lint": "vue-cli-service lint",
+    "dev": "vue-cli-service build --watch --mode development",
+    "stage": "vue-cli-service build --watch --mode staging"
   },
   "dependencies": {
     "bootstrap": "^4.4.1",
@@ -15,15 +15,16 @@
     "lodash-es": "^4.17.15",
     "loglevel": "^1.6.8",
     "vue": "^2.6.11",
-    "vue-beautiful-chat": "^2.3.1",
     "vue-clipboard2": "^0.3.1",
     "vue-dompurify-html": "^2.1.1",
-    "vue-router": "^3.3.2"
+    "vue-router": "^3.3.2",
+    "vuex": "^3.4.0"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "~4.3.0",
     "@vue/cli-plugin-eslint": "~4.3.0",
     "@vue/cli-plugin-router": "~4.3.0",
+    "@vue/cli-plugin-vuex": "^4.4.1",
     "@vue/cli-service": "~4.3.0",
     "@vue/eslint-config-prettier": "^6.0.0",
     "babel-eslint": "^10.1.0",

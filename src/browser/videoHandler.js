@@ -23,7 +23,6 @@ export default class VideoHandler {
         this.video = document.querySelector("video");
         if (this.video) {
           clearInterval(this.findVideoInterval);
-          this.party.chatHandler.resetChat();
           this.party.video = this.video;
           this.party.partyState.video = true;
           if (this.party.ws?.readyState === 1) {
@@ -93,7 +92,7 @@ export default class VideoHandler {
               "Jelly-Party: Disney+ Context: Received playPause request."
             );
             let vid = document.querySelector("video");
-            let key = Object.keys(vid).find(elem =>
+            let key = Object.keys(vid).find((elem) =>
               elem.includes("reactInternalInstance")
             );
             vid[key]?.memoizedProps?.onPointerUp?.();
@@ -115,7 +114,7 @@ export default class VideoHandler {
   }
 
   sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   getPlayHook(host) {
