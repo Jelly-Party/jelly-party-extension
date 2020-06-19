@@ -1,9 +1,8 @@
-import { injectContentScript } from "./injectContentScript";
 let scriptInjected = false;
 
 chrome.runtime.onInstalled.addListener(function() {
   function uuidv4() {
-    return ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, c =>
+    return ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, (c) =>
       (
         c ^
         (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (c / 4)))
@@ -27,7 +26,7 @@ chrome.runtime.onInstalled.addListener(function() {
     hairColor: "Auburn",
     mouthType: "Twinkle",
     skinColor: "Light",
-    topType: "ShortHairShortCurly"
+    topType: "ShortHairShortCurly",
   };
   chrome.storage.sync.set({ avatarState: initialAvatar }, function() {
     console.log("Avatar has been initialized.");
@@ -56,7 +55,9 @@ function redirectToParty(redirectURL) {
         let maxInjects = 20;
         if (!scriptInjected && injectAttempts < maxInjects) {
           console.log("Jelly-Party: Attempting content-script injection.");
-          injectContentScript(activeTabId);
+          chrome.tabs.executeScript(activeTabId, {
+            file: "js/contentScript.js",
+          });
           injectAttempts += 1;
         } else {
           console.log("Jelly-Party: Clearing injection interval.");
@@ -76,7 +77,7 @@ chrome.runtime.onMessageExternal.addListener(function(request, sender) {
     console.log(redirectURL);
     chrome.permissions.request(
       {
-        origins: [request.permissionURL]
+        origins: [request.permissionURL],
       },
       function(granted) {
         if (granted) {
@@ -97,9 +98,9 @@ chrome.runtime.onMessageExternal.addListener(function(request, sender) {
     if (sender.origin === "https://join.jelly-party.com") {
       chrome.permissions.contains(
         {
-          origins: [request.permissionURL]
+          origins: [request.permissionURL],
         },
-        hasPermission => {
+        (hasPermission) => {
           if (hasPermission) {
             // We already have permission. Therefore we must redirect the user to the new website
             console.log(

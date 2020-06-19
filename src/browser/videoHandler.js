@@ -70,19 +70,19 @@ export default class VideoHandler {
             );
             getPlayer().pause();
           });
-          // We must move the .notyf Node inside the .sizing wrapper, to enable
-          // notyf notifications when Netflix is in full-screen mode.
-          // This is, because unlike most websites which request the entire
-          // html-document to be in fullscreen, netflix requests the
-          // sizing wrapper to be in fullscreen.
-          // See the fullscreen API: https://developer.mozilla.org/en-US/docs/Web/API/Fullscreen_API
-          try {
-            document
-              .querySelector(".sizing-wrapper")
-              .append(document.querySelector(".notyf"));
-          } catch {
-            console.log("Jelly-Party: Cannot reattach Notyf.");
-          }
+          // // We must move the .notyf Node inside the .sizing wrapper, to enable
+          // // notyf notifications when Netflix is in full-screen mode.
+          // // This is, because unlike most websites which request the entire
+          // // html-document to be in fullscreen, netflix requests the
+          // // sizing wrapper to be in fullscreen.
+          // // See the fullscreen API: https://developer.mozilla.org/en-US/docs/Web/API/Fullscreen_API
+          // try {
+          //   document
+          //     .querySelector(".sizing-wrapper")
+          //     .append(document.querySelector(".notyf"));
+          // } catch {
+          //   console.log("Jelly-Party: Cannot reattach Notyf.");
+          // }
         });
         break;
       case "www.disneyplus.com":

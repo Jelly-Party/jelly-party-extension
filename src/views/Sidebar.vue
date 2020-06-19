@@ -1,9 +1,21 @@
 <template>
-  <div></div>
+  <div id="wrapper">
+    <SidebarHeader />
+    <Tabs />
+  </div>
 </template>
 
 <script>
-export default {};
+import SidebarHeader from "@/components/SidebarHeader.vue";
+import Tabs from "@/views/Tabs.vue";
+
+export default {
+  name: "SideBar",
+  components: {
+    SidebarHeader,
+    Tabs,
+  },
+};
 </script>
 
 <style></style>

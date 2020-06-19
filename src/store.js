@@ -58,16 +58,53 @@ import Vue from "vue";
 import Vuex from "vuex";
 
 Vue.use(Vuex);
+Vue.config.devtools = process.env.NODE_ENV === "development";
 
-const store = new Vuex.Store({
+export default new Vuex.Store({
   state: {
-    count: 0,
+    sideBarMinimized: false,
+    connectedToServer: false,
+    connectingToServer: false,
+    appTitle: process.env.VUE_APP_TITLE,
+    partyState: {
+      isActive: false,
+      partyId: "",
+      peers: [],
+      wsIsConnected: false,
+      lastPartyId: "result.lastPartyId",
+      websiteIsTested: "websiteIsTested",
+      favicon: "",
+      video: "this.partyState ? this.partyState : false",
+    },
+    appMode: process.env.VUE_APP_MODE,
   },
   mutations: {
-    increment(state) {
-      state.count++;
+    toggleSideBar(state) {
+      state.sideBarMinimized = !state.sideBarMinimized;
+    },
+    toggleConnectingStatus(state) {
+      state.connectingToServer = !state.connectingToServer;
+    },
+    connectToServer(state) {
+      state.connectedToServer = true;
+    },
+    disconnectFromServer(state) {
+      state.connectedToServer = false;
     },
   },
+  actions: {
+    toggleSideBar(context) {
+      context.commit("toggleSideBar");
+    },
+    toggleConnectingStatus(context) {
+      context.commit("toggleConnectingStatus");
+    },
+    connectToServer(context) {
+      context.commit("connectToServer");
+    },
+    disconnectFromServer(context) {
+      context.commit("disconnectFromServer");
+    },
+  },
+  modules: {},
 });
-
-export default store;
