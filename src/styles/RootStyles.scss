@@ -1,0 +1,46 @@
+// These styles get applied at the window.top scope
+:root {
+  --jelly-party-sidebar-width: 350px;
+}
+
+body {
+  transition: all 1s ease;
+  width: 100%;
+}
+
+#jellyPartyWrapper {
+  z-index: 100000;
+}
+
+#jellyPartyFab {
+  cursor: pointer;
+  z-index: 100001;
+  transition: opacity 0.5s;
+  svg {
+    :hover {
+      filter: brightness(1.2);
+      transition: filter 0.5s;
+    }
+  }
+}
+#jellyPartyFab svg {
+  transition: all 0.5s;
+}
+#jellyPartyFab svg:hover {
+  filter: brightness(1.2);
+  transition: all 0.5s;
+}
+
+#jellyPartyRoot {
+  position: fixed;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: var(--jelly-party-sidebar-width);
+  transition: right 1s ease;
+  box-shadow: -5px 0px 50px 1px rgba(0, 0, 0, 0.75);
+  font-size: 16px;
+}
+.sideBarMinimized {
+  right: calc(-1 * var(--jelly-party-sidebar-width)) !important;
+}
