@@ -58,6 +58,7 @@ import Vue from "vue";
 import Vuex from "vuex";
 import initialOptions from "@/helpers/initialOptions.js";
 import { getField, updateField } from "vuex-map-fields";
+import { browser } from "webextension-polyfill-ts";
 
 Vue.use(Vuex);
 Vue.config.devtools = process.env.NODE_ENV === "development";
@@ -121,7 +122,7 @@ export default new Vuex.Store({
       state.options = Object.assign({}, state.options, options);
     },
     saveOptionsStateToChromeLocalStorage(state) {
-      chrome.storage.sync.set({ options: state.options }, function() {});
+      browser.storage.sync.set({ options: state.options }).then(function() {});
     },
     updateAvatarState(state, newAvatarState) {
       state.options.avatarState = Object.assign(
@@ -146,7 +147,7 @@ export default new Vuex.Store({
       context.commit("disconnectFromServer");
     },
     populateOptionsStateFromChromeLocalStorage(context) {
-      chrome.storage.sync.get(["options"], function(res) {
+      browser.storage.sync.get(["options"]).then(function(res) {
         console.log("Jelly-Party: Got options.");
         console.log(res.options);
         if (res.options) {
@@ -157,12 +158,14 @@ export default new Vuex.Store({
           );
         } else {
           console.log("Jelly-Party: No options found. Resetting options.");
-          chrome.storage.sync.set({ options: initialOptions }, function() {
-            context.commit(
-              "populateOptionsStateFromChromeLocalStorage",
-              initialOptions
-            );
-          });
+          browser.storage.sync
+            .set({ options: initialOptions })
+            .then(function() {
+              context.commit(
+                "populateOptionsStateFromChromeLocalStorage",
+                initialOptions
+              );
+            });
         }
       });
     },

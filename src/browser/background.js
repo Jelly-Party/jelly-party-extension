@@ -1,6 +1,8 @@
+import { browser } from "webextension-polyfill-ts";
+
 let scriptInjected = false;
 
-chrome.runtime.onInstalled.addListener(function() {
+browser.runtime.onInstalled.addListener(function() {
   function uuidv4() {
     return ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, (c) =>
       (
@@ -10,7 +12,7 @@ chrome.runtime.onInstalled.addListener(function() {
     );
   }
   let options = { localPeerName: "guest", guid: uuidv4() };
-  chrome.storage.sync.set({ options: options }, function() {
+  browser.storage.sync.set({ options: options }).then(function() {
     console.log("Options have been initialized.");
     console.log(options);
   });
@@ -28,7 +30,7 @@ chrome.runtime.onInstalled.addListener(function() {
     skinColor: "Light",
     topType: "ShortHairShortCurly",
   };
-  chrome.storage.sync.set({ avatarState: initialAvatar }, function() {
+  browser.storage.sync.set({ avatarState: initialAvatar }).then(function() {
     console.log("Avatar has been initialized.");
     console.log(initialAvatar);
   });
@@ -41,41 +43,43 @@ function redirectToParty(redirectURL) {
   // wrong website
   // TODO: Analyze how commonly this scenario occurs
 
-  // The root of the problem lies in the fact that chrome.tabs.update's
+  // The root of the problem lies in the fact that browser.tabs.update's
   // callback function seems to execute before the tab's DOM content has been
   // loaded. This leads to the content script sometimes disappearing into
   // a void inbetween join.jelly-party.com and redirectURL
-  chrome.tabs.update({ url: redirectURL }, () => {
+  browser.tabs.update({ url: redirectURL }, () => {
     let injectInterval = setInterval(() => {
-      chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
-        let activeTabId = tabs[0].id;
-        // Let's attempt to inject the content script until we have been successful
-        // As a fallback, we'll stop after a a maximum of 20 injection attempts.
-        let injectAttempts = 0;
-        let maxInjects = 20;
-        if (!scriptInjected && injectAttempts < maxInjects) {
-          console.log("Jelly-Party: Attempting content-script injection.");
-          chrome.tabs.executeScript(activeTabId, {
-            file: "js/contentScript.js",
-          });
-          injectAttempts += 1;
-        } else {
-          console.log("Jelly-Party: Clearing injection interval.");
-          clearInterval(injectInterval);
-        }
-      });
+      browser.tabs
+        .query({ active: true, currentWindow: true })
+        .then(function(tabs) {
+          let activeTabId = tabs[0].id;
+          // Let's attempt to inject the content script until we have been successful
+          // As a fallback, we'll stop after a a maximum of 20 injection attempts.
+          let injectAttempts = 0;
+          let maxInjects = 20;
+          if (!scriptInjected && injectAttempts < maxInjects) {
+            console.log("Jelly-Party: Attempting content-script injection.");
+            browser.tabs.executeScript(activeTabId, {
+              file: "js/contentScript.js",
+            });
+            injectAttempts += 1;
+          } else {
+            console.log("Jelly-Party: Clearing injection interval.");
+            clearInterval(injectInterval);
+          }
+        });
     }, 1000);
   });
 }
 
-chrome.runtime.onMessageExternal.addListener(function(request, sender) {
+browser.runtime.onMessageExternal.addListener(function(request, sender) {
   console.log(`Received external message: ${JSON.stringify(request)}`);
   if (request.type === "requestPermissions") {
     let redirectURL = new URL(request.redirectURL);
     redirectURL.searchParams.append("jellyPartyId", request.jellyPartyId);
     redirectURL = redirectURL.href;
     console.log(redirectURL);
-    chrome.permissions.request(
+    browser.permissions.request(
       {
         origins: [request.permissionURL],
       },
@@ -96,7 +100,7 @@ chrome.runtime.onMessageExternal.addListener(function(request, sender) {
     redirectURL = redirectURL.href;
     console.log(redirectURL);
     if (sender.origin === "https://join.jelly-party.com") {
-      chrome.permissions.contains(
+      browser.permissions.contains(
         {
           origins: [request.permissionURL],
         },
@@ -120,7 +124,7 @@ chrome.runtime.onMessageExternal.addListener(function(request, sender) {
   }
 });
 
-chrome.runtime.onMessage.addListener(function(request, sender) {
+browser.runtime.onMessage.addListener(function(request, sender) {
   if (request.type === "clearCSInjectionInterval") {
     setTimeout(() => {
       console.log(

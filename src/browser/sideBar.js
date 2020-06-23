@@ -10,6 +10,7 @@ import {
   jellyFishToArrow,
   arrowToJellyFish,
 } from "./jellyPartyFab.js";
+import { browser } from "webextension-polyfill-ts";
 
 if (process.env.NODE_ENV === "development") {
   console.log("Jelly-Party: Connecting to devtools");
@@ -189,8 +190,11 @@ class SideBar {
     let IFrameHead = document.querySelector("#jellyPartyRoot").contentWindow
       .document.head;
     [
-      { head: RootHead, styles: chrome.runtime.getURL("js/RootStyles.js") },
-      { head: IFrameHead, styles: chrome.runtime.getURL("js/IFrameStyles.js") },
+      { head: RootHead, styles: browser.runtime.getURL("js/RootStyles.js") },
+      {
+        head: IFrameHead,
+        styles: browser.runtime.getURL("js/IFrameStyles.js"),
+      },
     ].forEach((elem) => {
       let styleScript = document.createElement("script");
       styleScript.type = "text/javascript";

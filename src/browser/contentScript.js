@@ -6,6 +6,7 @@ import Notyf from "./libs/js/notyf.min.js";
 import store from "@/store.js";
 import toHHMMSS from "./toHHMMSS.js";
 import "./libs/css/notyf.min.css";
+import { browser } from "webextension-polyfill-ts";
 
 let DEBUG = store.state.appMode;
 
@@ -14,7 +15,7 @@ let DEBUG = store.state.appMode;
 //   type: "clearCSInjectionInterval",
 // };
 // console.log("Jelly-Party: Requesting clearing of content script injection.");
-// chrome.runtime.sendMessage(obj);
+// browser.runtime.sendMessage(obj);
 
 if (DEBUG) {
   log.enableAll();
@@ -141,8 +142,7 @@ export default class JellyParty {
     this.connectToPartyHelper(partyId);
   }
   connectToPartyHelper(partyId = "") {
-    chrome.storage.sync.get(
-      ["options", "avatarState"],
+    browser.storage.sync.get(["options", "avatarState"]).then(
       function(res) {
         // Start a new party if no partyId is given, else join an existing party
         var start = partyId ? false : true;
@@ -183,14 +183,13 @@ export default class JellyParty {
             store.dispatch("connectToServer");
             log.debug("Jelly-Party: Connected to Jelly-Party Websocket.");
             notyf.success("Connected to server!");
-            chrome.storage.sync.set(
-              { lastPartyId: this.partyState.partyId },
-              function() {
+            browser.storage.sync
+              .set({ lastPartyId: this.partyState.partyId })
+              .then(function() {
                 log.debug(
                   `Jelly-Party: Last Party Id set to ${this.partyState.partyId}`
                 );
-              }.bind(this)
-            );
+              });
 
             this.partyState.wsIsConnected = true;
             this.ws.send(

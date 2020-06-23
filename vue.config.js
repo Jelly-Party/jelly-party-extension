@@ -5,7 +5,7 @@ module.exports = {
   lintOnSave: true,
   pages: {
     index: {
-      entry: "src/main.js",
+      entry: "src/main.ts",
       template: "public/index.html",
       filename: "index.html",
       title: "Jelly-Party App",
