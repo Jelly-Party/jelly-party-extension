@@ -1,5 +1,5 @@
 <template>
-  <div id="wrapper">
+  <div id="wrapper" :class="{ darkMode: options.darkMode }">
     <SidebarHeader />
     <Tabs />
   </div>
@@ -8,12 +8,17 @@
 <script>
 import SidebarHeader from "@/components/SidebarHeader.vue";
 import Tabs from "@/views/Tabs.vue";
+import { mapState } from "vuex";
 
 export default {
   name: "SideBar",
   components: {
     SidebarHeader,
     Tabs,
+  },
+  computed: mapState(["options"]),
+  mounted: function() {
+    this.$store.dispatch("populateOptionsStateFromChromeLocalStorage");
   },
 };
 </script>

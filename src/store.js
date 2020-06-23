@@ -56,6 +56,8 @@
 
 import Vue from "vue";
 import Vuex from "vuex";
+import initialOptions from "@/helpers/initialOptions.js";
+import { getField, updateField } from "vuex-map-fields";
 
 Vue.use(Vuex);
 Vue.config.devtools = process.env.NODE_ENV === "development";
@@ -77,6 +79,30 @@ export default new Vuex.Store({
       video: "this.partyState ? this.partyState : false",
     },
     appMode: process.env.VUE_APP_MODE,
+    options: {
+      clientName: "guest",
+      darkMode: true,
+      onlyIHaveControls: true,
+      statusNotificationsInChat: true,
+      statusNotificationsNotyf: true,
+      avatarState: {
+        accessoriesType: "",
+        clotheType: "",
+        clotheColor: "",
+        eyebrowType: "",
+        eyeType: "",
+        facialHairColor: "",
+        facialHairType: "",
+        graphicType: "'Hola'",
+        hairColor: "",
+        mouthType: "",
+        skinColor: "",
+        topType: "",
+      },
+    },
+  },
+  getters: {
+    getField,
   },
   mutations: {
     toggleSideBar(state) {
@@ -91,6 +117,20 @@ export default new Vuex.Store({
     disconnectFromServer(state) {
       state.connectedToServer = false;
     },
+    populateOptionsStateFromChromeLocalStorage(state, options) {
+      state.options = Object.assign({}, state.options, options);
+    },
+    saveOptionsStateToChromeLocalStorage(state) {
+      chrome.storage.sync.set({ options: state.options }, function() {});
+    },
+    updateAvatarState(state, newAvatarState) {
+      state.options.avatarState = Object.assign(
+        {},
+        state.avatarState,
+        newAvatarState
+      );
+    },
+    updateField,
   },
   actions: {
     toggleSideBar(context) {
@@ -104,6 +144,36 @@ export default new Vuex.Store({
     },
     disconnectFromServer(context) {
       context.commit("disconnectFromServer");
+    },
+    populateOptionsStateFromChromeLocalStorage(context) {
+      chrome.storage.sync.get(["options"], function(res) {
+        console.log("Jelly-Party: Got options.");
+        console.log(res.options);
+        if (res.options) {
+          console.log("Jelly-Party: Loading options from chrome storage.");
+          context.commit(
+            "populateOptionsStateFromChromeLocalStorage",
+            res.options
+          );
+        } else {
+          console.log("Jelly-Party: No options found. Resetting options.");
+          chrome.storage.sync.set({ options: initialOptions }, function() {
+            context.commit(
+              "populateOptionsStateFromChromeLocalStorage",
+              initialOptions
+            );
+          });
+        }
+      });
+    },
+    saveOptionsStateToChromeLocalStorage(context) {
+      context.commit("saveOptionsStateToChromeLocalStorage");
+    },
+    updateAvatarState(context, { stateKey, newState }) {
+      let newAvatarState = { ...this.state.options.avatarState };
+      newAvatarState[stateKey] = newState;
+      context.commit("updateAvatarState", newAvatarState);
+      console.log(this.state.options.avatarState);
     },
   },
   modules: {},

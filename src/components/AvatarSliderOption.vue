@@ -1,9 +1,9 @@
 <template>
-  <div>
+  <div class="text-center">
     <small>{{ readableoptionsKey }}</small>
     <div class="avatar-slider-option mb-2 w-100 d-flex align-items-center">
       <b-btn
-        style="border-top-right-radius: 0px; border-bottom-right-radius: 0px;"
+        class="avatar-slider-button avatar-slider-button--left"
         @click="previousOption"
         ><b-icon-arrow-left-short
           class="font-weight-bold"
@@ -15,7 +15,7 @@
         <span class="font-weight-bold">{{ avatarState[this.optionsKey] }}</span>
       </div>
       <b-btn
-        style="border-top-left-radius: 0px; border-bottom-left-radius: 0px;"
+        class="avatar-slider-button avatar-slider-button--right"
         @click="nextOption"
       >
         <b-icon-arrow-right-short
@@ -27,7 +27,8 @@
 </template>
 
 <script>
-import store from "@/store.js";
+import allOptions from "@/helpers/avatarOptions.js";
+
 const readableOptions = {
   accessoriesType: "Accessories",
   clotheColor: "Clothes color",
@@ -40,69 +41,66 @@ const readableOptions = {
   hairColor: "Hair color",
   mouthType: "Mouth",
   skinColor: "Skin color",
-  topType: "Top"
+  topType: "Top",
 };
 
 export default {
   props: {
-    options: {
-      type: Array,
-      default: function() {
-        return ["White", "Pink", "Yellow"];
-      }
-    },
     optionsKey: {
       type: String,
-      default: "accessoriesType"
-    }
-  },
-  data: function() {
-    return {
-      avatarState: store.avatarState
-    };
+      required: true,
+    },
   },
   methods: {
     nextOption: function() {
-      let index = this.options.indexOf(this.avatarState[this.optionsKey]);
-      let newState = "";
-      if (index >= 0 && index < this.options.length - 1) {
-        newState = this.options[index + 1];
+      let index = this.optionsValues.indexOf(this.avatarState[this.optionsKey]);
+      let newOption = "";
+      if (index >= 0 && index < this.optionsValues.length - 1) {
+        newOption = this.optionsValues[index + 1];
       } else {
-        newState = this.options[0];
+        newOption = this.optionsValues[0];
       }
-      let update = {};
-      update[this.optionsKey] = newState;
-      store.updateAvatarState(update);
+      this.$store.dispatch("updateAvatarState", {
+        stateKey: this.optionsKey,
+        newState: newOption,
+      });
     },
     previousOption: function() {
-      let index = this.options.indexOf(this.avatarState[this.optionsKey]);
-      let newState = "";
-      if (index >= 1 && index < this.options.length) {
-        newState = this.options[index - 1];
+      let index = this.optionsValues.indexOf(this.avatarState[this.optionsKey]);
+      let newOption = "";
+      if (index >= 1 && index < this.optionsValues.length) {
+        newOption = this.optionsValues[index - 1];
       } else {
-        newState = this.options[this.options.length - 1];
+        newOption = this.optionsValues[this.optionsValues.length - 1];
       }
-      let update = {};
-      update[this.optionsKey] = newState;
-      store.updateAvatarState(update);
-    }
+      this.$store.dispatch("updateAvatarState", {
+        stateKey: this.optionsKey,
+        newState: newOption,
+      });
+    },
   },
   computed: {
     readableoptionsKey: function() {
       return readableOptions[this.optionsKey];
-    }
-  }
+    },
+    optionsValues: function() {
+      let key = this.optionsKey;
+      switch (this.optionsKey) {
+        case "facialHairColor":
+          key = "hairColor";
+          break;
+        case "clotheColor":
+          key = "hatAndShirtColor";
+          break;
+      }
+      let values = allOptions[key];
+      return values;
+    },
+    avatarState() {
+      return this.$store.state.options.avatarState;
+    },
+  },
 };
 </script>
 
-<style>
-.avatar-slider-option {
-  height: 100%;
-  justify-content: space-between;
-}
-.option-inline-text {
-  border-top: 2px solid gray;
-  border-bottom: 2px solid gray;
-  height: 38px;
-}
-</style>
+<style></style>

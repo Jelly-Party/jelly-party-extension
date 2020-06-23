@@ -1,7 +1,7 @@
 // These styles get applied at the iFrame scope
 @import "~bootstrap/scss/bootstrap";
 @import "~bootstrap-vue/dist/bootstrap-vue.css";
-
+@import url("https://fonts.googleapis.com/css2?family=Roboto&display=swap");
 :root {
   --jelly-party-sidebar-width: 350px;
 }
@@ -11,12 +11,23 @@
     to right bottom,
     rgb(255, 148, 148) 0%,
     rgb(238, 100, 246) 100%
-  ) !important;
-  height: 100vh;
+  );
+  min-height: 100vh;
+  transition: background-color 300ms ease;
+}
+
+.darkMode {
+  background: black !important;
+}
+
+a {
+  text-decoration: none !important;
 }
 
 body {
+  font-family: "Roboto", sans-serif;
   color: white;
+  text-align: justify;
 }
 
 #jelly-party-heading-text {
@@ -54,4 +65,82 @@ $jellyPartyOrange: #ff9494;
 
 .jelly-party-party-timestamp {
   font-size: 12px;
+}
+
+html {
+  --scrollbarBG: #cfd8dc;
+  --thumbBG: #90a4ae;
+}
+body::-webkit-scrollbar {
+  width: 11px;
+}
+body {
+  color: white;
+  margin: 0;
+  scrollbar-width: thin;
+  scrollbar-color: var(--thumbBG) var(--scrollbarBG);
+}
+body::-webkit-scrollbar-track {
+  background: var(--scrollbarBG);
+}
+body::-webkit-scrollbar-thumb {
+  background-color: var(--thumbBG);
+  border-radius: 6px;
+  border: 3px solid var(--scrollbarBG);
+}
+
+.qa-collapse {
+  color: black;
+  text-align: justify;
+}
+
+#patreon-button {
+  height: 40px;
+  border-radius: 20px;
+  background-color: #f86753;
+  color: white;
+  font-family: sans-serif;
+  font-size: 14px;
+  overflow: hidden;
+  padding: 0 20px 0 10px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 100ms ease;
+  border: 2px solid transparent;
+  font-weight: bold;
+  margin: 1em;
+}
+
+#patreon-button:hover {
+  border: 2px solid white;
+}
+
+.avatar-slider-option {
+  justify-content: space-between;
+}
+.option-inline-text {
+  border-top: 2px solid gray;
+  border-bottom: 2px solid gray;
+  height: 38px;
+}
+
+.avatar-slider-button {
+  padding: calc(0.375rem + 2px) 0.75rem;
+  &--right {
+    border-top-left-radius: 0px;
+    border-bottom-left-radius: 0px;
+  }
+  &--left {
+    border-top-right-radius: 0px;
+    border-bottom-right-radius: 0px;
+  }
+}
+
+.nav-tabs .nav-link {
+  border: none;
+  color: white;
+}
+
+:focus {
+  outline: none !important;
 }

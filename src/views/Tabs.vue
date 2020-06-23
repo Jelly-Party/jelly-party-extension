@@ -8,7 +8,7 @@
     >
       <b-tab title="Party" active><PartyTab /></b-tab>
       <b-tab title="Help"><HelpTab /></b-tab>
-      <b-tab title="Settings"><SettingsTab /></b-tab>
+      <b-tab title="Customize"><SettingsTab /></b-tab>
     </b-tabs>
   </div>
 </template>
@@ -26,14 +26,4 @@ export default {
 };
 </script>
 
-<style>
-.no-border ul li a {
-  border: 0px !important;
-  color: white;
-  outline: none;
-}
-.no-border ul li a:hover {
-  border: 0px !important;
-  text-decoration: none;
-}
-</style>
+<style></style>

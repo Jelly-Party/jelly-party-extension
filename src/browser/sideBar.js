@@ -1,3 +1,4 @@
+import devtools from "@vue/devtools";
 import Vue from "vue";
 import Sidebar from "@/views/Sidebar.vue";
 import { debounce as _debounce, throttle as _throttle } from "lodash-es";
@@ -9,6 +10,11 @@ import {
   jellyFishToArrow,
   arrowToJellyFish,
 } from "./jellyPartyFab.js";
+
+if (process.env.NODE_ENV === "development") {
+  console.log("Jelly-Party: Connecting to devtools");
+  devtools.connect(/* host, port */);
+}
 
 // Install BootstrapVue & BootstrapVue icon components
 Vue.use(BootstrapVue);
