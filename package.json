@@ -9,6 +9,7 @@
     "stage": "concurrently --kill-others \"vue-cli-service build --watch --mode staging\" \"npx vue-devtools\""
   },
   "dependencies": {
+    "@typescript-eslint/eslint-plugin": "^3.4.0",
     "bootstrap": "^4.5.0",
     "bootstrap-vue": "^2.15.0",
     "core-js": "^3.6.4",
@@ -26,13 +27,12 @@
     "vuex-map-fields": "^1.4.0"
   },
   "devDependencies": {
-    "@typescript-eslint/eslint-plugin": "^2.26.0",
     "@typescript-eslint/parser": "^2.26.0",
     "@vue/cli-plugin-babel": "~4.3.0",
     "@vue/cli-plugin-eslint": "~4.3.0",
     "@vue/cli-plugin-router": "~4.3.0",
-    "@vue/cli-plugin-typescript": "^4.4.5",
-    "@vue/cli-plugin-vuex": "^4.4.4",
+    "@vue/cli-plugin-typescript": "^4.4.6",
+    "@vue/cli-plugin-vuex": "^4.4.6",
     "@vue/cli-service": "~4.3.0",
     "@vue/devtools": "^5.3.3",
     "@vue/eslint-config-prettier": "^6.0.0",
@@ -40,10 +40,10 @@
     "babel-eslint": "^10.1.0",
     "concurrently": "^5.2.0",
     "eslint": "^6.7.2",
-    "eslint-plugin-prettier": "^3.1.3",
+    "eslint-plugin-prettier": "^3.1.4",
     "eslint-plugin-vue": "^6.2.2",
     "prettier": "^1.19.1",
-    "sass": "^1.26.8",
+    "sass": "^1.26.9",
     "sass-loader": "^8.0.2",
     "typescript": "~3.9.3",
     "vue-cli-plugin-webpack-bundle-analyzer": "~2.0.0",

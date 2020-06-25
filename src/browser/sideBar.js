@@ -3,7 +3,7 @@ import Vue from "vue";
 import Sidebar from "@/views/Sidebar.vue";
 import { debounce as _debounce, throttle as _throttle } from "lodash-es";
 import { BootstrapVue, IconsPlugin } from "bootstrap-vue";
-import store from "@/store.js";
+import store from "@/store/store.ts";
 import JellyParty from "./contentScript.js";
 import {
   baseSVG,

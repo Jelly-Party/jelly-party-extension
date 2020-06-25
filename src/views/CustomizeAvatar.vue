@@ -45,7 +45,7 @@
 </template>
 
 <script>
-import store from "@/store.js";
+import store from "@/store.ts";
 import BackButton from "@/components/BackButton.vue";
 import Avataaar from "../browser/vuejs-avataaars/entry.js";
 import AvatarSliderOption from "@/components/AvatarSliderOption.vue";
@@ -63,7 +63,7 @@ export default {
   components: {
     AvatarSliderOption,
     Avataaar,
-    BackButton
+    BackButton,
   },
   data: function() {
     return {
@@ -91,7 +91,7 @@ export default {
         "PastelYellow",
         "Pink",
         "Red",
-        "White"
+        "White",
       ],
       hairColors: [
         "Auburn",
@@ -103,7 +103,7 @@ export default {
         "PastelPink",
         "Platinum",
         "Red",
-        "SilverGray"
+        "SilverGray",
       ],
       skinColors: [
         "Tanned",
@@ -112,8 +112,8 @@ export default {
         "Light",
         "Brown",
         "DarkBrown",
-        "Black"
-      ]
+        "Black",
+      ],
     };
   },
   mounted: function() {
@@ -122,7 +122,7 @@ export default {
   beforeDestroy: function() {
     console.log("Jelly-Party: Saving avatar state!");
     setAvatarState(store.avatarState);
-  }
+  },
 };
 </script>
 

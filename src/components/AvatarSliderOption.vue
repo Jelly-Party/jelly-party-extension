@@ -60,7 +60,7 @@ export default {
       } else {
         newOption = this.optionsValues[0];
       }
-      this.$store.dispatch("updateAvatarState", {
+      this.$store.dispatch("options/updateAvatarState", {
         stateKey: this.optionsKey,
         newState: newOption,
       });
@@ -73,7 +73,7 @@ export default {
       } else {
         newOption = this.optionsValues[this.optionsValues.length - 1];
       }
-      this.$store.dispatch("updateAvatarState", {
+      this.$store.dispatch("options/updateAvatarState", {
         stateKey: this.optionsKey,
         newState: newOption,
       });

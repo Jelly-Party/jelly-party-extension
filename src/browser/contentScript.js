@@ -3,7 +3,7 @@ import { difference as _difference } from "lodash-es";
 import log from "loglevel";
 import generateRoomWithoutSeparator from "./randomName.js";
 import Notyf from "./libs/js/notyf.min.js";
-import store from "@/store.js";
+import store from "@/store/store.ts";
 import toHHMMSS from "./toHHMMSS.js";
 import "./libs/css/notyf.min.css";
 import { browser } from "webextension-polyfill-ts";

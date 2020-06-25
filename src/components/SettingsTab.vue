@@ -64,7 +64,7 @@
   </b-container>
 </template>
 
-<script>
+<script lang="js">
 import { mapFields } from "vuex-map-fields";
 import JellyPartyPrimaryButton from "@/components/JellyPartyPrimaryButton.vue";
 import AvatarCustomizer from "@/components/AvatarCustomizer.vue";
@@ -87,14 +87,9 @@ export default {
   },
   methods: {
     showConfirmation: function() {
-      this.$store.dispatch("saveOptionsStateToChromeLocalStorage");
+      console.log("Jelly-Party: Saving options to chrome local storage.");
+      this.$store.dispatch("options/saveOptionsStateToChromeLocalStorage");
       this.$root.$emit("bv::toggle::collapse", "collapse-success");
-      // window.setTimeout(() => {
-      //   window.scrollBy({
-      //     top: 1000,
-      //     behavior: "smooth",
-      //   });
-      // }, 500);
       window.setTimeout(() => {
         this.$root.$emit("bv::toggle::collapse", "collapse-success");
       }, 1000);

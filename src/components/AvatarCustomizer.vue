@@ -41,7 +41,6 @@
 <script>
 import Avataaar from "@/browser/vuejs-avataaars/entry.js";
 import AvatarSliderOption from "@/components/AvatarSliderOption.vue";
-
 import { mapFields } from "vuex-map-fields";
 
 export default {
@@ -53,20 +52,20 @@ export default {
     // When using nested data structures, the string
     // after the last dot (e.g. `firstName`) is used
     // for defining the name of the computed property.
-    ...mapFields([
-      "options.clientName",
-      "options.avatarState.accessoriesType",
-      "options.avatarState.clotheType",
-      "options.avatarState.clotheColor",
-      "options.avatarState.eyebrowType",
-      "options.avatarState.eyeType",
-      "options.avatarState.facialHairColor",
-      "options.avatarState.facialHairType",
-      "options.avatarState.graphicType",
-      "options.avatarState.hairColor",
-      "options.avatarState.mouthType",
-      "options.avatarState.skinColor",
-      "options.avatarState.topType",
+    ...mapFields("options", [
+      "clientName",
+      "avatarState.accessoriesType",
+      "avatarState.clotheType",
+      "avatarState.clotheColor",
+      "avatarState.eyebrowType",
+      "avatarState.eyeType",
+      "avatarState.facialHairColor",
+      "avatarState.facialHairType",
+      "avatarState.graphicType",
+      "avatarState.hairColor",
+      "avatarState.mouthType",
+      "avatarState.skinColor",
+      "avatarState.topType",
     ]),
   },
 };

@@ -1,5 +1,5 @@
 <template>
-  <div id="wrapper" :class="{ darkMode: options.darkMode }">
+  <div id="wrapper" :class="{ darkMode: darkMode }">
     <SidebarHeader />
     <Tabs />
   </div>
@@ -16,9 +16,9 @@ export default {
     SidebarHeader,
     Tabs,
   },
-  computed: mapState(["options"]),
+  computed: mapState("options", ["darkMode"]),
   mounted: function() {
-    this.$store.dispatch("populateOptionsStateFromChromeLocalStorage");
+    this.$store.dispatch("options/populateOptionsStateFromChromeLocalStorage");
   },
 };
 </script>
