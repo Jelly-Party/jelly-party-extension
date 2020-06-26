@@ -6,6 +6,8 @@ import uuidv4 from "@/helpers/uuidv4.js";
 import { getField, updateField } from "vuex-map-fields";
 import { browser } from "webextension-polyfill-ts";
 
+// OptionsState is permanent (stored in Chrome Storage)
+
 export const state: OptionsState = {
   clientName: "guest",
   darkMode: true,
@@ -30,7 +32,7 @@ export const state: OptionsState = {
   },
 };
 
-const namespaced: boolean = true;
+const namespaced = true;
 
 export const options: Module<OptionsState, RootState> = {
   namespaced,
@@ -64,7 +66,7 @@ export const options: Module<OptionsState, RootState> = {
       context,
       { stateKey, newState }: { stateKey: keyof AvatarState; newState: string }
     ) {
-      let newAvatarState: AvatarState = { ...state.avatarState };
+      const newAvatarState: AvatarState = { ...state.avatarState };
       newAvatarState[stateKey] = newState;
       context.commit("updateAvatarState", newAvatarState);
       console.log(state.avatarState);
@@ -75,7 +77,7 @@ export const options: Module<OptionsState, RootState> = {
       Object.assign(state, options);
     },
     saveOptionsStateToChromeLocalStorage(state) {
-      browser.storage.sync.set({ options: state }).then(function() {});
+      browser.storage.sync.set({ options: state });
     },
     updateAvatarState(state, newAvatarState) {
       Object.assign(state.avatarState, newAvatarState);

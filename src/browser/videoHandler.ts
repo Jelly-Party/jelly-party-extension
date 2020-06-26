@@ -1,30 +1,29 @@
+import JellyParty from "./JellyParty";
+
 export default class VideoHandler {
-  constructor(host, notyf, party) {
+  host: string;
+  notyf: any;
+  party: JellyParty;
+  eventsToProcess: number;
+  findVideoInterval: number | undefined;
+  video: HTMLVideoElement | null;
+  findVideoAndAttach: () => void;
+  play: () => Promise<void>;
+  pause: () => Promise<void>;
+  seek: (tick: number) => Promise<void>;
+  constructor(host: string, notyf: any, party: JellyParty) {
     this.host = host;
     this.notyf = notyf;
     this.party = party;
     this.eventsToProcess = 0;
-    this.findVideoInterval = null;
-    this.findVideoAndAttach = null;
-    this.boundPlayListener = this.playListener.bind(this);
-    this.boundPauseListener = this.pauseListener.bind(this);
-    this.boundSeekingListener = this.seekingListener.bind(this);
-    this.boundEmptiedListener = this.emptiedListener.bind(this);
-    this.initialize(host);
-    this.play = this.getPlayHook(host);
-    this.pause = this.getPauseHook(host);
-    this.seek = this.getSeekHook(host);
-  }
-
-  initialize(host) {
+    this.findVideoInterval;
+    this.video = null;
     this.findVideoAndAttach = () => {
       if (!this.video) {
         console.log("Jelly-Party: Scanning for video to attach to.");
         this.video = document.querySelector("video");
         if (this.video) {
           clearInterval(this.findVideoInterval);
-          this.party.video = this.video;
-          this.party.partyState.video = true;
           if (this.party.ws?.readyState === 1) {
             this.party.updateMagicLink();
             this.party.updateClientState();
@@ -32,28 +31,35 @@ export default class VideoHandler {
           console.log("Jelly-Party: Found video. Attaching to video..");
           this.notyf.success("Video detected!");
 
-          this.video.addEventListener("play", this.boundPlayListener);
-          this.video.addEventListener("pause", this.boundPauseListener);
-          this.video.addEventListener("seeking", this.boundSeekingListener);
-          this.video.addEventListener("emptied", this.boundEmptiedListener);
+          this.video.addEventListener("play", this.playListener);
+          this.video.addEventListener("pause", this.pauseListener);
+          this.video.addEventListener("seeking", this.seekingListener);
+          this.video.addEventListener("emptied", this.emptiedListener);
         }
       } else {
         console.log("Jelly-Party: Checking if video source has changed..");
       }
     };
+    this.initialize(host);
+    this.play = this.getPlayHook(host);
+    this.pause = this.getPauseHook(host);
+    this.seek = this.getSeekHook(host);
+  }
+
+  initialize(host: string) {
     this.findVideoInterval = setInterval(this.findVideoAndAttach, 1000);
     switch (host) {
       case "www.netflix.com":
         this.injectScript(() => {
           console.log("Jelly-Party: Injecting Netflix hack for seeking..");
           const getPlayer = () => {
-            const videoPlayer = window.netflix.appContext.state.playerApp.getAPI()
+            const videoPlayer = (window as any).netflix.appContext.state.playerApp.getAPI()
               .videoPlayer;
             return videoPlayer.getVideoPlayerBySessionId(
               videoPlayer.getAllPlayerSessionIds()[0]
             );
           };
-          window.addEventListener("seekRequest", function(e) {
+          window.addEventListener("seekRequest", function(e: any) {
             console.log("Jelly-Party: Netflix Context: Received seek request");
             console.log(e);
             const tick = e.detail * 1000;
@@ -70,19 +76,6 @@ export default class VideoHandler {
             );
             getPlayer().pause();
           });
-          // // We must move the .notyf Node inside the .sizing wrapper, to enable
-          // // notyf notifications when Netflix is in full-screen mode.
-          // // This is, because unlike most websites which request the entire
-          // // html-document to be in fullscreen, netflix requests the
-          // // sizing wrapper to be in fullscreen.
-          // // See the fullscreen API: https://developer.mozilla.org/en-US/docs/Web/API/Fullscreen_API
-          // try {
-          //   document
-          //     .querySelector(".sizing-wrapper")
-          //     .append(document.querySelector(".notyf"));
-          // } catch {
-          //   console.log("Jelly-Party: Cannot reattach Notyf.");
-          // }
         });
         break;
       case "www.disneyplus.com":
@@ -91,20 +84,17 @@ export default class VideoHandler {
             console.log(
               "Jelly-Party: Disney+ Context: Received playPause request."
             );
-            let vid = document.querySelector("video");
-            let key = Object.keys(vid).find((elem) =>
-              elem.includes("reactInternalInstance")
-            );
-            vid[key]?.memoizedProps?.onPointerUp?.();
+            const vid: any = document.querySelector("video");
+            if (vid) {
+              const key: any = Object.keys(vid).find((elem) =>
+                elem.includes("reactInternalInstance")
+              );
+              if (key) {
+                vid[key]?.memoizedProps?.onPointerUp?.();
+              }
+            }
           });
         });
-        try {
-          document
-            .querySelector("#app_body_content")
-            .append(document.querySelector(".notyf"));
-        } catch {
-          console.log("Jelly-Party: Cannot reattach Notyf.");
-        }
         break;
       default:
         console.log(
@@ -113,79 +103,82 @@ export default class VideoHandler {
     }
   }
 
-  sleep(ms) {
+  sleep(ms: number) {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
-  getPlayHook(host) {
+  getPlayHook(host: string) {
     switch (host) {
-      case "www.netflix.com":
-        return async function() {
+      case "www.netflix.com": {
+        return async function(this: VideoHandler) {
           window.dispatchEvent(new CustomEvent("playRequest"));
           await this.sleep(50);
         };
+      }
       case "www.disneyplus.com": {
-        return async function() {
+        return async function(this: VideoHandler) {
           window.dispatchEvent(new CustomEvent("playPauseRequest"));
           await this.sleep(50);
         };
       }
       default:
-        return async function() {
-          await this.video.play();
+        return async function(this: VideoHandler) {
+          await this.video?.play();
         };
     }
   }
 
-  getPauseHook(host) {
+  getPauseHook(host: string) {
     switch (host) {
       case "www.netflix.com":
-        return async function() {
+        return async function(this: VideoHandler) {
           window.dispatchEvent(new CustomEvent("pauseRequest"));
           await this.sleep(50);
         };
       case "www.disneyplus.com": {
-        return async function() {
+        return async function(this: VideoHandler) {
           window.dispatchEvent(new CustomEvent("playPauseRequest"));
           await this.sleep(50);
         };
       }
       default:
-        return async function() {
-          await this.video.pause();
+        return async function(this: VideoHandler) {
+          await this.video?.pause();
         };
     }
   }
 
-  getSeekHook(host) {
+  getSeekHook(host: string) {
     switch (host) {
       case "www.netflix.com":
-        return async function(tick) {
+        return async function(this: VideoHandler, tick: number) {
           window.dispatchEvent(
-            new CustomEvent("seekRequest", { detail: tick })
+            new CustomEvent<number>("seekRequest", { detail: tick })
           );
           await this.sleep(50);
         };
       default:
-        return async function(tick) {
-          this.video.currentTime = tick;
-          await this.sleep(50);
+        return async function(this: VideoHandler, tick: number) {
+          if (this.video?.currentTime) {
+            this.video.currentTime = tick;
+            await this.sleep(50);
+          }
         };
     }
   }
 
-  injectScript(func) {
+  injectScript(func: () => void) {
     // See https://stackoverflow.com/questions/9515704/insert-code-into-the-page-context-using-a-content-script
     // This takes a function as an argument and injects + executes it in the current tab, with full access to the global window object
-    var actualCode = "(" + func + ")();";
-    var script = document.createElement("script");
+    const actualCode = "(" + func + ")();";
+    const script = document.createElement("script");
     script.textContent = actualCode;
     (document.head || document.documentElement).appendChild(script);
     script.remove();
   }
 
-  playListener() {
-    console.log({ type: "play", tick: this.video.currentTime });
+  playListener = function(this: VideoHandler) {
+    console.log({ type: "play", tick: this.video?.currentTime });
     if (this.eventsToProcess > 0) {
       // Somebody else is asking us to play
       // We must not forward the event, otherwise we'll end up in an infinite "play now" loop
@@ -198,10 +191,10 @@ export default class VideoHandler {
       this.party.requestPeersToPlay();
     }
     this.eventsToProcess -= 1;
-  }
+  }.bind(this);
 
   pauseListener() {
-    console.log({ type: "pause", tick: this.video.currentTime });
+    console.log({ type: "pause", tick: this.video?.currentTime });
     if (this.eventsToProcess > 0) {
       // Somebody else is asking us to pause
       // We must not forward the event, otherwise we'll end up in an infinite "pause now" loop
@@ -217,7 +210,7 @@ export default class VideoHandler {
   }
 
   seekingListener() {
-    console.log({ type: "seek", tick: this.video.currentTime });
+    console.log({ type: "seek", tick: this.video?.currentTime });
     if (this.eventsToProcess > 0) {
       // Somebody else is asking us to seek
       // We must not forward the event, otherwise we'll end up in an infinite seek loop
@@ -231,16 +224,21 @@ export default class VideoHandler {
     this.eventsToProcess -= 1;
   }
 
-  // TODO: Decide if switch to mutation observer is sensible
   emptiedListener() {
     this.notyf.success("Video lost! Rescanning for video..");
     // Remove open event listeners
-    this.video.removeEventListener("play", this.boundPlayListener);
-    this.video.removeEventListener("pause", this.boundPauseListener);
-    this.video.removeEventListener("seeked", this.boundSeekingListener);
-    this.video.removeEventListener("emptied", this.boundEmptiedListener);
+    this.video?.removeEventListener("play", this.playListener);
+    this.video?.removeEventListener("pause", this.pauseListener);
+    this.video?.removeEventListener("seeked", this.seekingListener);
+    this.video?.removeEventListener("emptied", this.emptiedListener);
     this.video = null;
-    this.party.partyState.video = false;
     this.findVideoInterval = setInterval(this.findVideoAndAttach, 1000);
+  }
+
+  getVideoState(): {
+    paused: boolean | undefined;
+    currentTime: number | undefined;
+  } | null {
+    return { paused: this.video?.paused, currentTime: this.video?.currentTime };
   }
 }

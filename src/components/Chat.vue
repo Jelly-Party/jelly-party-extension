@@ -148,7 +148,7 @@ export default {
         message.me = true;
         this.messageList = [...this.messageList, message];
         // send message to server
-        let serverCommand = {
+        const serverCommand = {
           type: "forward",
           data: {
             commandToForward: {
@@ -218,12 +218,12 @@ export default {
     receivePartyStateUpdate(newPartyState) {
       // Let's add any new clients. We must remember old clients so that chat messages
       // show correctly even after a client has left the party.
-      let newUUIDs = newPartyState.peers.map((peer) => peer.uuid);
-      let previousUUIDs = this.participants
+      const newUUIDs = newPartyState.peers.map((peer) => peer.uuid);
+      const previousUUIDs = this.participants
         .filter((p) => p.id !== "jellyPartySupportBot")
         .map((participant) => participant.id);
-      let addUUIDs = _difference(newUUIDs, previousUUIDs);
-      let markLeftUUIDs = _difference(previousUUIDs, newUUIDs);
+      const addUUIDs = _difference(newUUIDs, previousUUIDs);
+      const markLeftUUIDs = _difference(previousUUIDs, newUUIDs);
       for (const addUUID of addUUIDs) {
         this.participants.push(
           newPartyState.peers
@@ -241,16 +241,16 @@ export default {
       // Mark everybody who's left, since we must keep participants list
       // (some state is maintained in this.participants)
       for (const markLeftUUID of markLeftUUIDs) {
-        let participant = this.participants.find(
+        const participant = this.participants.find(
           (participant) => participant.id === markLeftUUID
         );
         participant.left = true;
       }
     },
     timeStampToDateString(ts) {
-      var date = new Date(ts);
-      var hours = date.getHours();
-      var minutes = "0" + date.getMinutes();
+      const date = new Date(ts);
+      const hours = date.getHours();
+      const minutes = "0" + date.getMinutes();
       return `${hours}:${minutes.substr(-2)}`;
     },
     repositionChat() {
@@ -260,7 +260,7 @@ export default {
         ".sc-closed-icon",
         ".sc-chat-window",
       ].forEach((elem) => {
-        let style = document.querySelector(elem)?.style;
+        const style = document.querySelector(elem)?.style;
         if (style) {
           style.top = "";
           style.left = "";
@@ -271,7 +271,7 @@ export default {
   mounted: function() {
     this.moved = false;
     this.timerIds = [];
-    let launcher = document.querySelector(".sc-launcher");
+    const launcher = document.querySelector(".sc-launcher");
 
     const addListeners = function() {
       launcher.addEventListener("mousedown", mouseDown, false);
@@ -289,7 +289,7 @@ export default {
       window.removeEventListener("mousemove", throttled, true);
       if (!this.moved && e.target.id === "jellyPartyChatFab") {
         // Only open/close the chat, if we didn't drag it
-        let event = new CustomEvent("toggle-open-close");
+        const event = new CustomEvent("toggle-open-close");
         document.dispatchEvent(event);
       }
     }.bind(this);
@@ -311,13 +311,13 @@ export default {
       function(e) {
         this.moved = true;
         [".sc-launcher", ".sc-open-icon", ".sc-closed-icon"].forEach((elem) => {
-          let style = document.querySelector(elem)?.style;
+          const style = document.querySelector(elem)?.style;
           if (style) {
             style.top = ((e.clientY - 30) / window.innerHeight) * 100 + "vh";
             style.left = ((e.clientX - 30) / window.innerWidth) * 100 + "vw";
           }
         });
-        let chatStyle = document.querySelector(".sc-chat-window")?.style;
+        const chatStyle = document.querySelector(".sc-chat-window")?.style;
         if (chatStyle) {
           chatStyle.top = ((e.clientY - 640) / window.innerHeight) * 100 + "vh";
           chatStyle.left = ((e.clientX - 225) / window.innerWidth) * 100 + "vw";

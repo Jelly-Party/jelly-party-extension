@@ -13,7 +13,7 @@ export interface AvatarState {
   topType: string;
 }
 
-interface previousParty {
+export interface PreviousParty {
   partyId: string;
   members: Array<string>;
   dateInfo: object;
@@ -27,5 +27,5 @@ export interface OptionsState {
   statusNotificationsNotyf: boolean;
   guid: string;
   avatarState: AvatarState;
-  previousParties: Array<previousParty>;
+  previousParties: Array<PreviousParty>;
 }

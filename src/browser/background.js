@@ -11,12 +11,12 @@ browser.runtime.onInstalled.addListener(function() {
       ).toString(16)
     );
   }
-  let options = { localPeerName: "guest", guid: uuidv4() };
+  const options = { localPeerName: "guest", guid: uuidv4() };
   browser.storage.sync.set({ options: options }).then(function() {
     console.log("Options have been initialized.");
     console.log(options);
   });
-  let initialAvatar = {
+  const initialAvatar = {
     accessoriesType: "Round",
     clotheType: "ShirtScoopNeck",
     clotheColor: "White",
@@ -48,15 +48,15 @@ function redirectToParty(redirectURL) {
   // loaded. This leads to the content script sometimes disappearing into
   // a void inbetween join.jelly-party.com and redirectURL
   browser.tabs.update({ url: redirectURL }, () => {
-    let injectInterval = setInterval(() => {
+    const injectInterval = setInterval(() => {
       browser.tabs
         .query({ active: true, currentWindow: true })
         .then(function(tabs) {
-          let activeTabId = tabs[0].id;
+          const activeTabId = tabs[0].id;
           // Let's attempt to inject the content script until we have been successful
           // As a fallback, we'll stop after a a maximum of 20 injection attempts.
           let injectAttempts = 0;
-          let maxInjects = 20;
+          const maxInjects = 20;
           if (!scriptInjected && injectAttempts < maxInjects) {
             console.log("Jelly-Party: Attempting content-script injection.");
             browser.tabs.executeScript(activeTabId, {

@@ -29,14 +29,11 @@ const store: StoreOptions<RootState> = {
     toggleSideBar(state) {
       state.sideBarMinimized = !state.sideBarMinimized;
     },
-    toggleConnectingStatus(state) {
-      state.connectingToServer = !state.connectingToServer;
+    setConnectingToServer(state, bool: boolean) {
+      state.connectingToServer = bool;
     },
-    connectToServer(state) {
-      state.connectedToServer = true;
-    },
-    disconnectFromServer(state) {
-      state.connectedToServer = false;
+    setConnectedToServer(state, bool: boolean) {
+      state.connectedToServer = bool;
     },
     updateField,
   },
@@ -44,14 +41,11 @@ const store: StoreOptions<RootState> = {
     toggleSideBar(context) {
       context.commit("toggleSideBar");
     },
-    toggleConnectingStatus(context) {
-      context.commit("toggleConnectingStatus");
+    setConnectingToServer(context, bool: boolean) {
+      context.commit("setConnectingToServer", bool);
     },
-    connectToServer(context) {
-      context.commit("connectToServer");
-    },
-    disconnectFromServer(context) {
-      context.commit("disconnectFromServer");
+    setConnectedToServer(context, bool: boolean) {
+      context.commit("setConnectedToServer", bool);
     },
   },
 };

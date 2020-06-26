@@ -14,6 +14,8 @@
   );
   min-height: 100vh;
   transition: background-color 300ms ease;
+  display: flex;
+  flex-direction: column;
 }
 
 .darkMode {
@@ -28,6 +30,7 @@ body {
   font-family: "Roboto", sans-serif;
   color: white;
   text-align: justify;
+  box-sizing: border-box !important;
 }
 
 #jelly-party-heading-text {

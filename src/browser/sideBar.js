@@ -4,7 +4,7 @@ import Sidebar from "@/views/Sidebar.vue";
 import { debounce as _debounce, throttle as _throttle } from "lodash-es";
 import { BootstrapVue, IconsPlugin } from "bootstrap-vue";
 import store from "@/store/store.ts";
-import JellyParty from "./contentScript.js";
+import JellyParty from "./JellyParty.ts";
 import {
   baseSVG,
   jellyFishToArrow,
@@ -12,7 +12,7 @@ import {
 } from "./jellyPartyFab.js";
 import { browser } from "webextension-polyfill-ts";
 
-if (process.env.NODE_ENV === "development") {
+if (["staging", "development"].includes(process.env.NODE_ENV)) {
   console.log("Jelly-Party: Connecting to devtools");
   devtools.connect(/* host, port */);
 }
@@ -133,24 +133,24 @@ class SideBar {
   }
 
   insertSideBar() {
-    let jellyPartyWrapper = document.createElement("div");
+    const jellyPartyWrapper = document.createElement("div");
     jellyPartyWrapper.setAttribute(
       "style",
       "position: fixed; right: 0; top: 0; bottom: 0; width: var(--jelly-party-sidebar-width); transition: right 300ms ease; margin: 0px;height: 100vh;"
     );
     jellyPartyWrapper.id = "jellyPartyWrapper";
-    let jellyPartyRoot = document.createElement("iframe");
+    const jellyPartyRoot = document.createElement("iframe");
     jellyPartyRoot.id = "jellyPartyRoot";
     jellyPartyRoot.frameBorder = 0;
     jellyPartyRoot.style.zIndex = "99999";
-    let jellyPartyApp = document.createElement("div");
+    const jellyPartyApp = document.createElement("div");
     jellyPartyApp.id = "jellyPartyApp";
     jellyPartyWrapper.appendChild(jellyPartyRoot);
     this.IFrameTarget.appendChild(jellyPartyWrapper);
     jellyPartyRoot.contentDocument.body.appendChild(jellyPartyApp);
     jellyPartyRoot.style.margin = "0";
     jellyPartyRoot.style.height = "100vh";
-    let root = document
+    const root = document
       .querySelector("#jellyPartyRoot")
       .contentDocument.body.querySelector("#jellyPartyApp");
     this.app = new Vue({
@@ -172,13 +172,13 @@ class SideBar {
   }
 
   initFullscreenHandler() {
-    let fullscreenHandler = function() {
-      let fullscreenElement = document.fullscreenElement;
+    const fullscreenHandler = function() {
+      const fullscreenElement = document.fullscreenElement;
       fullscreenElement.appendChild(document.querySelector(".notyf"));
       // Unfortunately, we cannot move an IFrame in the DOM without losing its state, see
       // https://stackoverflow.com/questions/8318264/how-to-move-an-iframe-in-the-dom-without-losing-its-state
-      // Therefore we cannot dynamically move the IFrame around like this (otherwise this might allow for
-      // removing the need to manually have to specify this.IFrameTarget)
+      // Therefore we cannot dynamically move the IFrame around like this — otherwise this might allow for
+      // removing the need to manually have to specify this.IFrameTarget by using:
       // fullscreenElement.appendChild(document.querySelector("#jellyPartyRoot"));
       document.removeEventListener("fullscreenchange", fullscreenHandler);
     };
@@ -186,8 +186,8 @@ class SideBar {
   }
 
   insertStyles() {
-    let RootHead = document.head;
-    let IFrameHead = document.querySelector("#jellyPartyRoot").contentWindow
+    const RootHead = document.head;
+    const IFrameHead = document.querySelector("#jellyPartyRoot").contentWindow
       .document.head;
     [
       { head: RootHead, styles: browser.runtime.getURL("js/RootStyles.js") },
@@ -196,7 +196,7 @@ class SideBar {
         styles: browser.runtime.getURL("js/IFrameStyles.js"),
       },
     ].forEach((elem) => {
-      let styleScript = document.createElement("script");
+      const styleScript = document.createElement("script");
       styleScript.type = "text/javascript";
       styleScript.charset = "utf-8";
       styleScript.src = elem.styles;
@@ -205,11 +205,28 @@ class SideBar {
   }
 
   attachParty(party) {
+    console.log("attaching party");
     this.app.$party = party;
+    console.log(this.app);
+    console.log(this.app.$party);
+  }
+
+  showJellyPartyFab() {
+    const jellyPartyFab = document.querySelector("#jellyPartyFab");
+    jellyPartyFab.style.display = "";
+    jellyPartyFab.style.opacity = 1;
+  }
+
+  hideJellyPartyFab() {
+    const jellyPartyFab = document.querySelector("#jellyPartyFab");
+    jellyPartyFab.style.opacity = 0;
+    setTimeout(() => {
+      jellyPartyFab.style.display = "none";
+    }, 600);
   }
 
   setupSideBarToggle() {
-    let jellyPartyFab = document.createElement("div");
+    const jellyPartyFab = document.createElement("div");
     jellyPartyFab.id = "jellyPartyFab";
     jellyPartyFab.innerHTML = baseSVG;
     jellyPartyFab.setAttribute(
@@ -228,7 +245,7 @@ class SideBar {
       "mousemove",
       _throttle(() => {
         if (this.sideBarHidden) {
-          showJellyPartyFab();
+          this.showJellyPartyFab();
           this.jellyPartyFabTimer = Date.now();
         }
       }, 300).bind(this)
@@ -236,28 +253,14 @@ class SideBar {
     window.setInterval(() => {
       if (this.sideBarHidden) {
         if (Date.now() - this.jellyPartyFabTimer > 5000) {
-          hideJellyPartyFab();
+          this.hideJellyPartyFab();
         }
       }
     }, 1000);
-
-    function showJellyPartyFab() {
-      let jellyPartyFab = document.querySelector("#jellyPartyFab");
-      jellyPartyFab.style.display = "";
-      jellyPartyFab.style.opacity = 1;
-    }
-
-    function hideJellyPartyFab() {
-      let jellyPartyFab = document.querySelector("#jellyPartyFab");
-      jellyPartyFab.style.opacity = 0;
-      setTimeout(() => {
-        jellyPartyFab.style.display = "none";
-      }, 600);
-    }
   }
 
   toggleSideBar() {
-    let jellyPartyRoot = document.querySelector("#jellyPartyRoot");
+    const jellyPartyRoot = document.querySelector("#jellyPartyRoot");
     if (this.sideBarHidden) {
       // Switch to showing sidebar
       this.sideBarHidden = false;
@@ -274,7 +277,7 @@ class SideBar {
   }
 }
 
-let jellyPartySideBar = new SideBar(window.location.host);
+const jellyPartySideBar = new SideBar(window.location.host);
 console.log(jellyPartySideBar);
-let party = new JellyParty("somebody");
+const party = new JellyParty("somebody");
 jellyPartySideBar.attachParty(party);

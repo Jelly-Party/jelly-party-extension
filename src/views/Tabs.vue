@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div style="flex-grow: 1;">
     <b-tabs
       nav-wrapper-class="no-border"
       class="mt-3"

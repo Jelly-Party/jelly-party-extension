@@ -5,7 +5,7 @@ import { browser } from "webextension-polyfill-ts";
 // Execute the content script. Nothing will happen, if we
 // execute it again.
 browser.tabs.query({ active: true, currentWindow: true }).then(function(tabs) {
-  var activeTabId = tabs[0].id;
+  const activeTabId = tabs[0].id;
   browser.tabs.executeScript(activeTabId, {
     file: "js/sideBar.js",
   });

@@ -9,7 +9,8 @@
     "stage": "concurrently --kill-others \"vue-cli-service build --watch --mode staging\" \"npx vue-devtools\""
   },
   "dependencies": {
-    "@typescript-eslint/eslint-plugin": "^3.4.0",
+    "@popperjs/core": "^2.4.2",
+    "@types/lodash-es": "^4.17.3",
     "bootstrap": "^4.5.0",
     "bootstrap-vue": "^2.15.0",
     "core-js": "^3.6.4",
@@ -27,7 +28,8 @@
     "vuex-map-fields": "^1.4.0"
   },
   "devDependencies": {
-    "@typescript-eslint/parser": "^2.26.0",
+    "@typescript-eslint/eslint-plugin": "2.33.0",
+    "@typescript-eslint/parser": "2.33.0",
     "@vue/cli-plugin-babel": "~4.3.0",
     "@vue/cli-plugin-eslint": "~4.3.0",
     "@vue/cli-plugin-router": "~4.3.0",
@@ -45,7 +47,7 @@
     "prettier": "^1.19.1",
     "sass": "^1.26.9",
     "sass-loader": "^8.0.2",
-    "typescript": "~3.9.3",
+    "typescript": "^3.9.5",
     "vue-cli-plugin-webpack-bundle-analyzer": "~2.0.0",
     "vue-svg-loader": "^0.16.0",
     "vue-template-compiler": "^2.6.11",
