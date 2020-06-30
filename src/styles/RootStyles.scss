@@ -1,7 +1,4 @@
-// These styles get applied at the window.top scope
-:root {
-  --jelly-party-sidebar-width: 350px;
-}
+@import "./_variables.scss";
 
 body {
   transition: all 1s ease;
@@ -10,6 +7,7 @@ body {
 
 #jellyPartyWrapper {
   z-index: 100000;
+  transition: all 1s ease;
 }
 
 #jellyPartyFab {
@@ -32,12 +30,11 @@ body {
 }
 
 #jellyPartyRoot {
-  position: fixed;
   right: 0;
   top: 0;
   bottom: 0;
   width: var(--jelly-party-sidebar-width);
-  transition: right 1s ease;
+  transition: all 1s ease;
   box-shadow: -5px 0px 50px 1px rgba(0, 0, 0, 0.75);
   font-size: 16px;
 }

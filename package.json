@@ -9,7 +9,6 @@
     "stage": "concurrently --kill-others \"vue-cli-service build --watch --mode staging\" \"npx vue-devtools\""
   },
   "dependencies": {
-    "@popperjs/core": "^2.4.2",
     "@types/lodash-es": "^4.17.3",
     "bootstrap": "^4.5.0",
     "bootstrap-vue": "^2.15.0",
@@ -18,6 +17,7 @@
     "flubber": "^0.4.2",
     "lodash-es": "^4.17.15",
     "loglevel": "^1.6.8",
+    "v-emoji-picker": "^2.2.0",
     "vue": "^2.6.11",
     "vue-class-component": "^7.2.3",
     "vue-clipboard2": "^0.3.1",

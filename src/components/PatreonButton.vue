@@ -40,4 +40,25 @@
 export default {};
 </script>
 
-<style></style>
+<style lang="scss">
+#patreon-button {
+  height: 40px;
+  border-radius: 20px;
+  background-color: #f86753;
+  color: white;
+  font-family: sans-serif;
+  font-size: 14px;
+  overflow: hidden;
+  padding: 0 20px 0 10px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 100ms ease;
+  border: 2px solid transparent;
+  font-weight: bold;
+  margin: 1em;
+}
+
+#patreon-button:hover {
+  border: 2px solid white;
+}
+</style>

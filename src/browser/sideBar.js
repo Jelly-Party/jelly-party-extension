@@ -1,10 +1,10 @@
-import devtools from "@vue/devtools";
-import Vue from "vue";
-import Sidebar from "@/views/Sidebar.vue";
 import { debounce as _debounce, throttle as _throttle } from "lodash-es";
-import { BootstrapVue, IconsPlugin } from "bootstrap-vue";
-import store from "@/store/store.ts";
-import JellyParty from "./JellyParty.ts";
+// import devtools from "@vue/devtools";
+// import Vue from "vue";
+// import Sidebar from "@/views/Sidebar.vue";
+// import { BootstrapVue, IconsPlugin } from "bootstrap-vue";
+// import store from "@/store/store.ts";
+// import JellyParty from "./JellyParty.ts";
 import {
   baseSVG,
   jellyFishToArrow,
@@ -12,15 +12,15 @@ import {
 } from "./jellyPartyFab.js";
 import { browser } from "webextension-polyfill-ts";
 
-if (["staging", "development"].includes(process.env.NODE_ENV)) {
-  console.log("Jelly-Party: Connecting to devtools");
-  devtools.connect(/* host, port */);
-}
+// if (["staging", "development"].includes(process.env.NODE_ENV)) {
+//   console.log("Jelly-Party: Connecting to devtools");
+//   devtools.connect(/* host, port */);
+// }
 
 // Install BootstrapVue & BootstrapVue icon components
-Vue.use(BootstrapVue);
-Vue.use(IconsPlugin);
-Vue.config.devtools = process.env.NODE_ENV === "development";
+// Vue.use(BootstrapVue);
+// Vue.use(IconsPlugin);
+// Vue.config.devtools = process.env.NODE_ENV === "development";
 console.log(`Jelly-Party: Mode is ${process.env.NODE_ENV}`);
 
 class SideBar {
@@ -136,27 +136,28 @@ class SideBar {
     const jellyPartyWrapper = document.createElement("div");
     jellyPartyWrapper.setAttribute(
       "style",
-      "position: fixed; right: 0; top: 0; bottom: 0; width: var(--jelly-party-sidebar-width); transition: right 300ms ease; margin: 0px;height: 100vh;"
+      "position: fixed; right: 0; top: 0; bottom: 0; width: var(--jelly-party-sidebar-width); transition: all 1s ease; margin: 0px;height: 100vh;"
     );
     jellyPartyWrapper.id = "jellyPartyWrapper";
     const jellyPartyRoot = document.createElement("iframe");
     jellyPartyRoot.id = "jellyPartyRoot";
     jellyPartyRoot.frameBorder = 0;
     jellyPartyRoot.style.zIndex = "99999";
-    const jellyPartyApp = document.createElement("div");
-    jellyPartyApp.id = "jellyPartyApp";
+    jellyPartyRoot.style.height = "100vh";
+    jellyPartyRoot.style.width = "var(--jelly-party-sidebar-width)";
+    jellyPartyRoot.src = browser.runtime.getURL("iframe.html");
+    // const jellyPartyApp = document.createElement("div");
+    // jellyPartyApp.id = "jellyPartyApp";
     jellyPartyWrapper.appendChild(jellyPartyRoot);
     this.IFrameTarget.appendChild(jellyPartyWrapper);
-    jellyPartyRoot.contentDocument.body.appendChild(jellyPartyApp);
-    jellyPartyRoot.style.margin = "0";
-    jellyPartyRoot.style.height = "100vh";
-    const root = document
-      .querySelector("#jellyPartyRoot")
-      .contentDocument.body.querySelector("#jellyPartyApp");
-    this.app = new Vue({
-      store,
-      render: (h) => h(Sidebar),
-    }).$mount(root);
+    // jellyPartyRoot.contentDocument.body.appendChild(jellyPartyApp);
+    // jellyPartyRoot.style.margin = "0";
+    // jellyPartyRoot.style.height = "100vh";
+    // const root = document.querySelector("#jellyPartyRoot").contentDocument.body;
+    // this.app = new Vue({
+    //   store,
+    //   render: (h) => h(Sidebar),
+    // }).$mount(root.querySelector("#jellyPartyApp"));
     // Check if vue-devtools should be enabled or not
     // if (["staging", "development"].includes(store.state.appMode)) {
     //   console.log("Jelly-Party: Enabling devtools.");
@@ -187,14 +188,14 @@ class SideBar {
 
   insertStyles() {
     const RootHead = document.head;
-    const IFrameHead = document.querySelector("#jellyPartyRoot").contentWindow
-      .document.head;
+    // const IFrameHead = document.querySelector("#jellyPartyRoot").contentWindow
+    //   .document.head;
     [
       { head: RootHead, styles: browser.runtime.getURL("js/RootStyles.js") },
-      {
-        head: IFrameHead,
-        styles: browser.runtime.getURL("js/IFrameStyles.js"),
-      },
+      // {
+      //   head: IFrameHead,
+      //   styles: browser.runtime.getURL("js/IFrameStyles.js"),
+      // },
     ].forEach((elem) => {
       const styleScript = document.createElement("script");
       styleScript.type = "text/javascript";
@@ -202,11 +203,27 @@ class SideBar {
       styleScript.src = elem.styles;
       elem.head.appendChild(styleScript);
     });
+
+    // Poopper.js
+    // const styleScript1 = document.createElement("script");
+    // styleScript1.type = "text/javascript";
+    // styleScript1.charset = "utf-8";
+    // styleScript1.src = "https://unpkg.com/@popperjs/core@2";
+    // IFrameHead.appendChild(styleScript1);
+    // // Bootstrap-vue
+    // const styleScript2 = document.createElement("script");
+    // styleScript2.type = "text/javascript";
+    // styleScript2.charset = "utf-8";
+    // styleScript2.src =
+    //   "https://unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.min.js";
+    // IFrameHead.appendChild(styleScript2);
   }
 
   attachParty(party) {
-    console.log("attaching party");
+    console.log("Jelly-Party: Attaching party");
+    const root = document.querySelector("#jellyPartyRoot").contentDocument.body;
     this.app.$party = party;
+    this.app.$IFrame = root;
     console.log(this.app);
     console.log(this.app.$party);
   }
@@ -260,18 +277,18 @@ class SideBar {
   }
 
   toggleSideBar() {
-    const jellyPartyRoot = document.querySelector("#jellyPartyRoot");
+    const jellyPartyWrapper = document.querySelector("#jellyPartyWrapper");
     if (this.sideBarHidden) {
       // Switch to showing sidebar
       this.sideBarHidden = false;
       this.fixWebsiteDisplay();
-      jellyPartyRoot.classList.remove("sideBarMinimized");
+      jellyPartyWrapper.classList.remove("sideBarMinimized");
       jellyFishToArrow();
     } else {
       // Switch to hiding sidebar
       this.sideBarHidden = true;
       this.fixWebsiteDisplay();
-      jellyPartyRoot.classList.add("sideBarMinimized");
+      jellyPartyWrapper.classList.add("sideBarMinimized");
       arrowToJellyFish();
     }
   }
@@ -279,5 +296,5 @@ class SideBar {
 
 const jellyPartySideBar = new SideBar(window.location.host);
 console.log(jellyPartySideBar);
-const party = new JellyParty("somebody");
-jellyPartySideBar.attachParty(party);
+// const party = new JellyParty("somebody");
+// jellyPartySideBar.attachParty(party);

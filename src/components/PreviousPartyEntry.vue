@@ -16,4 +16,15 @@ export default {
 };
 </script>
 
-<style></style>
+<style lang="scss">
+.jelly-party-party-timestamp {
+  font-size: 12px;
+}
+.previous-party-wrapper {
+  border-radius: 3em;
+  background-color: $jellyPartyOrange;
+  padding: 1.5em;
+  margin: 1em;
+  color: white;
+}
+</style>

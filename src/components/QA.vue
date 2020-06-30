@@ -17,4 +17,9 @@ export default {
 };
 </script>
 
-<style></style>
+<style lang="scss">
+.qa-collapse {
+  color: black;
+  text-align: justify;
+}
+</style>

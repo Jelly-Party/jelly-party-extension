@@ -10,6 +10,12 @@ module.exports = {
       filename: "index.html",
       title: "Jelly-Party App",
     },
+    IFrame: {
+      entry: "src/IFrame.ts",
+      template: "public/index.html",
+      filename: "iframe.html",
+      title: "Jelly-Party IFrame",
+    },
   },
   pluginOptions: {
     webpackBundleAnalyzer: {
@@ -21,10 +27,11 @@ module.exports = {
     entry: {
       background: "./src/browser/background.js",
       sideBar: "./src/browser/sideBar.js",
-      IFrameStyles: "./src/styles/IFrameStyles.scss",
       RootStyles: "./src/styles/RootStyles.scss",
     },
-    devtool: process.env.NODE_ENV === "development" ? "source-map" : "",
+    devtool: ["development", "staging"].includes(process.env.NODE_ENV)
+      ? "eval-source-map"
+      : "",
     // TODO: see https://github.com/webpack/webpack/issues/1625
     // output: {
     //   library: "beta",
@@ -45,8 +52,15 @@ module.exports = {
       .rule("images")
       .use("url-loader")
       .loader("url-loader")
-      .tap((options) => Object.assign(options, { limit: 10240 }));
+      .tap((options) => Object.assign(options, { limit: 100240 }));
   },
   // TODO: Look into webpack's side effects: https://github.com/vuejs/vue-cli/issues/1287
-  css: { extract: false },
+  // css: { extract: false },
+  css: {
+    loaderOptions: {
+      sass: {
+        prependData: `@import "~@/styles/_variables.scss";`,
+      },
+    },
+  },
 };

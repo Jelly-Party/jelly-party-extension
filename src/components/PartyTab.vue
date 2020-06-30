@@ -1,6 +1,8 @@
 <template>
   <div>
-    <div v-if="!store.state.connectingToServer">
+    <div
+      v-if="!store.state.connectingToServer && !store.state.connectedToServer"
+    >
       <h3 class="text-white text-center">Start something new</h3>
       <div class="d-flex flex-column mr-5 ml-5 mt-4">
         <JellyPartyPrimaryButton v-on:click.native="startNewParty">
@@ -14,7 +16,7 @@
       <div id="videoIframe" />
     </div>
     <div
-      v-else
+      v-if="store.state.connectingToServer"
       style="display:flex; align-items:center; justify-content:center;"
     >
       <div>
@@ -29,16 +31,46 @@
         </div>
       </div>
     </div>
+    <div v-if="store.state.connectedToServer">
+      <div>
+        <InfoBox
+          heading="Party Id"
+          text="easy-thieves-walk-quickly"
+          copyTargetId="copy-party-id"
+        />
+        <InfoBox
+          heading="Magic link"
+          text="https://join.jelly-party-com/?partyId=this-is-a-test-id-and-it-should-be-long-enough-plus-there'll-be-more-information"
+          copyTargetId="copy-party-magic-link"
+        />
+        <div class="text-center">
+          <small
+            >Share this magic link to let other people join your party.</small
+          >
+        </div>
+        <hr style="background-color: white;" />
+      </div>
+      <div>
+        <ChatMessenger />
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
 import JellyPartyPrimaryButton from "@/components/JellyPartyPrimaryButton.vue";
 import PreviousPartyList from "@/components/PreviousPartyList.vue";
+import ChatMessenger from "@/components/ChatMessenger.vue";
+import InfoBox from "@/components/InfoBox.vue";
 import store from "@/store/store";
 
 export default {
-  components: { JellyPartyPrimaryButton, PreviousPartyList },
+  components: {
+    JellyPartyPrimaryButton,
+    PreviousPartyList,
+    InfoBox,
+    ChatMessenger,
+  },
   data: function() {
     return {
       store,

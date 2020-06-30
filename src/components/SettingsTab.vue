@@ -44,6 +44,7 @@
       <b-icon
         icon="question-circle-fill"
         v-b-tooltip.hover
+        id="testooltip"
         title="Toggle this option to enable popup status notifications, e.g. when somebody play or pauses the video."
       >
       </b-icon>

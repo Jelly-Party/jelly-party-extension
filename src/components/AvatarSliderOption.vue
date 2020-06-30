@@ -53,7 +53,9 @@ export default {
   },
   methods: {
     nextOption: function() {
-      const index = this.optionsValues.indexOf(this.avatarState[this.optionsKey]);
+      const index = this.optionsValues.indexOf(
+        this.avatarState[this.optionsKey]
+      );
       let newOption = "";
       if (index >= 0 && index < this.optionsValues.length - 1) {
         newOption = this.optionsValues[index + 1];
@@ -66,7 +68,9 @@ export default {
       });
     },
     previousOption: function() {
-      const index = this.optionsValues.indexOf(this.avatarState[this.optionsKey]);
+      const index = this.optionsValues.indexOf(
+        this.avatarState[this.optionsKey]
+      );
       let newOption = "";
       if (index >= 1 && index < this.optionsValues.length) {
         newOption = this.optionsValues[index - 1];
@@ -103,4 +107,24 @@ export default {
 };
 </script>
 
-<style></style>
+<style lang="scss">
+.avatar-slider-option {
+  justify-content: space-between;
+}
+.avatar-slider-button {
+  padding: calc(0.375rem + 2px) 0.75rem;
+  &--right {
+    border-top-left-radius: 0px;
+    border-bottom-left-radius: 0px;
+  }
+  &--left {
+    border-top-right-radius: 0px;
+    border-bottom-right-radius: 0px;
+  }
+}
+.option-inline-text {
+  border-top: 2px solid gray;
+  border-bottom: 2px solid gray;
+  height: 38px;
+}
+</style>

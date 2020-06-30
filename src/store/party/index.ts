@@ -14,17 +14,22 @@ const initalPartyState: PartyState = {
   lastPartyId: "",
   websiteIsTested: false,
   magicLink: "",
+  chatMessages: [
+    {
+      type: "chatMessage",
+      peer: { uuid: "jellyPartySupportBot" },
+      data: {
+        type: "system",
+        data: {
+          text: "Welcome to Jelly-Party, friend!",
+          timestamp: Date.now(),
+        },
+      },
+    },
+  ],
 };
 
-export const state: PartyState = {
-  isActive: false,
-  partyId: "",
-  peers: [],
-  wsIsConnected: false,
-  lastPartyId: "",
-  websiteIsTested: false,
-  magicLink: "",
-};
+export const state: PartyState = { ...initalPartyState };
 
 const namespaced = true;
 
@@ -33,6 +38,9 @@ export const party: Module<PartyState, RootState> = {
   state,
   getters: {
     getField,
+    getPeer: (state) => (uuid: string) => {
+      return state.peers.find((peer) => peer.uuid === uuid);
+    },
   },
   mutations: {
     updateField,

@@ -53,4 +53,11 @@ export default {
 };
 </script>
 
-<style></style>
+<style lang="scss">
+#jelly-party-heading-text {
+  text-align: center;
+  padding-top: 10px;
+  color: white;
+  display: "inline-block";
+}
+</style>
