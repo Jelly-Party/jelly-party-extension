@@ -28,11 +28,11 @@ const arrowToJellyFish = function() {
     });
   d3.select("#jellyPartyFab")
     .transition()
-    .style("position", "fixed")
+    .style("position", "absolute")
     .style("top", "")
     .style("bottom", "100px")
-    .style("right", "30px")
-    .style("left", "")
+    .style("right", "")
+    .style("left", "-70px")
     .duration(1000);
   d3.select("#path850")
     .transition()

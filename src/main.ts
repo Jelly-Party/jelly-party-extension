@@ -7,7 +7,7 @@ import { browser } from "webextension-polyfill-ts";
 browser.tabs.query({ active: true, currentWindow: true }).then(function(tabs) {
   const activeTabId = tabs[0].id;
   browser.tabs.executeScript(activeTabId, {
-    file: "js/sideBar.js",
+    file: "js/mainFrame.js",
   });
 });
 new Vue({

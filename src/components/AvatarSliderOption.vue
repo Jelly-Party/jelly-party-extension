@@ -114,12 +114,12 @@ export default {
 .avatar-slider-button {
   padding: calc(0.375rem + 2px) 0.75rem;
   &--right {
-    border-top-left-radius: 0px;
-    border-bottom-left-radius: 0px;
+    border-top-left-radius: 0px !important;
+    border-bottom-left-radius: 0px !important;
   }
   &--left {
-    border-top-right-radius: 0px;
-    border-bottom-right-radius: 0px;
+    border-top-right-radius: 0px !important;
+    border-bottom-right-radius: 0px !important;
   }
 }
 .option-inline-text {

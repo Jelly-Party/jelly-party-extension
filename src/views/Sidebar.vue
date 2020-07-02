@@ -64,7 +64,6 @@ body::-webkit-scrollbar-thumb {
   transition: background-color 300ms ease;
   display: flex;
   flex-direction: column;
-  width: var(--jelly-party-sidebar-width);
   margin-left: auto; // for displaying chrome-extension://...
 }
 

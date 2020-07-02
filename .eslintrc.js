@@ -22,7 +22,8 @@ module.exports = {
     "@typescript-eslint/ban-ts-ignore": "off",
     "@typescript-eslint/no-unused-vars": [
       "error",
-      { vars: "all", args: "after-used", ignoreRestSiblings: false },
+      { vars: "all", args: "none", ignoreRestSiblings: false },
     ],
+    "@typescript-eslint/no-explicit-any": 0,
   },
 };

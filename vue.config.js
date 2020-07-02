@@ -26,11 +26,11 @@ module.exports = {
   configureWebpack: {
     entry: {
       background: "./src/browser/background.js",
-      sideBar: "./src/browser/sideBar.js",
+      mainFrame: "./src/browser/mainFrame.ts",
       RootStyles: "./src/styles/RootStyles.scss",
     },
     devtool: ["development", "staging"].includes(process.env.NODE_ENV)
-      ? "eval-source-map"
+      ? "source-map"
       : "",
     // TODO: see https://github.com/webpack/webpack/issues/1625
     // output: {

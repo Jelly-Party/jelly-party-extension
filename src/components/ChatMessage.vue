@@ -97,7 +97,7 @@ export default {
   border-radius: 2em;
   background-color: $jellyPartyPurple;
   color: white;
-  text-align: justify;
+  text-align: center;
   padding: 1em;
   flex-grow: 1;
   margin: 0em 0em 0em 1em;

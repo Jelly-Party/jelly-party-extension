@@ -1,9 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import VideoHandler from "./videoHandler";
 import { difference as _difference } from "lodash-es";
 import log from "loglevel";
 import generateRoomWithoutSeparator from "./randomName.js";
-import Notyf from "./libs/js/notyf.min.js";
 // @ts-ignore
 import toHHMMSS from "./toHHMMSS.js";
 import "./libs/css/notyf.min.css";
@@ -15,13 +13,9 @@ import { PartyState as PartyStateType } from "@/store/party/types";
 import { state as optionsState } from "@/store/options/index";
 import { state as partyState } from "@/store/party/index";
 import { stableWebsites } from "@/helpers/stableWebsites";
-
-// Let's request the background script to clear the injection interval
-// let obj = {
-//   type: "clearCSInjectionInterval",
-// };
-// console.log("Jelly-Party: Requesting clearing of content script injection.");
-// browser.runtime.sendMessage(obj);
+import { IFrameMessenger, DataFrame } from "@/browser/Messenger";
+import { DataFrameType, DataFrameMediaVariantType } from "@/browser/Messenger";
+import { VideoState } from "./videoHandler.js";
 
 export default class JellyParty {
   // Root State
@@ -34,10 +28,12 @@ export default class JellyParty {
   partyIdFromURL: string | null;
   magicLinkUsed: boolean;
   updateClientStateInterval: number | undefined;
-  videoHandler: VideoHandler;
   ws!: WebSocket & { uuid?: string };
   notyf: any;
   stableWebsite!: boolean;
+  iFrameMessenger: IFrameMessenger;
+  videoState!: VideoState;
+  resolveVideoState!: (arg0: VideoState) => VideoState;
 
   constructor() {
     this.rootState = store.state;
@@ -56,29 +52,6 @@ export default class JellyParty {
       log.debug(`partyIdFromURL is ${this.partyIdFromURL}`);
     }
     this.updateClientStateInterval = undefined;
-    // The VideoHandler handles playing, pausing & seeking videos
-    // on different websites. For most websites the generic video.play(),
-    // video.pause() & video.currentTime= will work, however some websites,
-    // such as Netflix, require direct access to video controllers.
-    this.notyf = new (Notyf())({
-      duration: 3000,
-      position: { x: "center", y: "top" },
-      types: [
-        {
-          type: "success",
-          background:
-            "linear-gradient(to bottom right, #ff9494 0%, #ee64f6 100%)",
-          icon: {
-            className: "jelly-party-icon",
-          },
-        },
-      ],
-    });
-    this.videoHandler = new VideoHandler(
-      window.location.host,
-      this.notyf,
-      this
-    );
     if (["staging", "development"].includes(this.rootState.appMode)) {
       log.enableAll();
     } else {
@@ -96,11 +69,10 @@ export default class JellyParty {
       this.magicLinkUsed = true;
       this.joinParty(this.partyIdFromURL);
     }
-    this.notyf.success("Jelly Party loaded!");
+    this.iFrameMessenger = new IFrameMessenger(this);
     log.debug("Jelly-Party: Global JellyParty Object");
     log.debug(this);
   }
-
   resetPartyState() {
     store.dispatch("party/resetPartyState");
   }
@@ -117,27 +89,21 @@ export default class JellyParty {
     store.dispatch("party/setMagicLink", magicLink);
   }
 
-  updateClientState = function(this: JellyParty) {
+  updateClientState = async function(this: JellyParty) {
     // Request a client state update
     // without "bind", "this" is bound to window, see 'The "this" problem' @ https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/setInterval
     try {
       // We craft a command to let the server know about our new client state
-      if (this.videoHandler.video) {
-        const serverCommand = {
-          type: "clientUpdate",
-          data: {
-            newClientState: {
-              currentlyWatching: this.partyState.magicLink,
-              videoState: this.videoHandler.getVideoState(),
-            },
+      const serverCommand = {
+        type: "clientUpdate",
+        data: {
+          newClientState: {
+            currentlyWatching: this.partyState.magicLink,
+            videoState: await this.getVideoState(),
           },
-        };
-        this.ws.send(JSON.stringify(serverCommand));
-      } else {
-        log.info(
-          "Jelly-Party: Trying to udpate clientState, but no video found."
-        );
-      }
+        },
+      };
+      this.ws.send(JSON.stringify(serverCommand));
     } catch (error) {
       log.debug("Jelly-Party: Error updating client state..");
       log.error(error);
@@ -151,6 +117,18 @@ export default class JellyParty {
   joinParty(partyId: string) {
     this.connectToPartyHelper(partyId);
   }
+
+  displayNotification(notificationText: string) {
+    const notyfDataFrame = {
+      type: "notyf" as "notyf",
+      payload: {
+        type: "notification" as "notification",
+        message: notificationText,
+      },
+    };
+    this.iFrameMessenger.sendData(notyfDataFrame);
+  }
+
   connectToPartyHelper = function(this: JellyParty, partyId = "") {
     // Start a new party if no partyId is given, else join an existing party
     const start = partyId ? false : true;
@@ -189,7 +167,7 @@ export default class JellyParty {
       store.dispatch("setConnectingToServer", false);
       store.dispatch("setConnectedToServer", true);
       log.debug("Jelly-Party: Connected to Jelly-Party Websocket.");
-      this.notyf.success("Connected to server!");
+      this.displayNotification("Connected to server!");
       // this.lastPartyId = this.partyId;
       // log.debug(`Jelly-Party: Last Party Id set to ${this.optionsState.lastPartyId}`);
 
@@ -202,7 +180,7 @@ export default class JellyParty {
             clientState: {
               clientName: this.optionsState.clientName,
               currentlyWatching: this.partyState.magicLink,
-              videoState: this.videoHandler.getVideoState(),
+              videoState: {},
               avatarState: this.optionsState.avatarState,
             },
           },
@@ -218,23 +196,28 @@ export default class JellyParty {
       const msg = JSON.parse(event.data);
       switch (msg.type) {
         case "videoUpdate": {
-          // Reset event counter, based on the command we receive. We will not forward
-          // events until we have dealt with the command to prevent infinite loops.
-          this.videoHandler.eventsToProcess = 0;
           // Find out which peer caused the event
           const peer = this.partyState.peers.filter(
             (peer) => peer.uuid === msg.data.peer.uuid
           )[0].clientName;
-          if (msg.data.variant === "play") {
-            this.playVideo(msg.data.tick);
-            this.notyf.success(`${peer} played the video.`);
-          } else if (msg.data.variant === "pause") {
-            this.pauseVideo(msg.data.tick);
-            this.notyf.success(`${peer} paused the video.`);
-          } else if (msg.data.variant === "seek") {
-            this.seek(msg.data.tick);
-            this.notyf.success(`${peer} jumped to ${toHHMMSS(msg.data.tick)}.`);
-          }
+          const mediaDataFrame = {
+            type: "media" as DataFrameType,
+            payload: {
+              type: "videoUpdate" as "videoUpdate",
+              data: {
+                variant: msg.data.variant as DataFrameMediaVariantType,
+                tick: msg.data.tick,
+              },
+            },
+          };
+          this.iFrameMessenger.sendData(mediaDataFrame);
+          const notificationText =
+            msg.data.variant === "play"
+              ? `${peer} played the video.`
+              : msg.data.variant === "pause"
+              ? `${peer} paused the video.`
+              : `${peer} jumped to ${toHHMMSS(msg.data.tick)}.`;
+          this.displayNotification(notificationText);
           break;
         }
         case "partyStateUpdate": {
@@ -251,7 +234,9 @@ export default class JellyParty {
                 peer.uuid === _difference(previousUUIDs, newUUIDs)[0]
             )[0];
             if (peerWhoLeft) {
-              this.notyf.success(`${peerWhoLeft.clientName} left the party.`);
+              this.displayNotification(
+                `${peerWhoLeft.clientName} left the party.`
+              );
             }
           } else if (
             this.partyState.peers.length < msg.data.partyState.peers.length
@@ -266,7 +251,9 @@ export default class JellyParty {
             if (previousUUIDs.length === 0) {
               // Let's show all peers in the party
               for (const peer of msg.data.partyState.peers) {
-                this.notyf.success(`${peer.clientName} joined the party.`);
+                this.displayNotification(
+                  `${peer.clientName} joined the party.`
+                );
               }
             } else {
               // Show only the peer that joined
@@ -275,7 +262,7 @@ export default class JellyParty {
                   peer.uuid === _difference(newUUIDs, previousUUIDs)[0]
               )[0];
               if (peerWhoJoined) {
-                this.notyf.success(
+                this.displayNotification(
                   `${peerWhoJoined.clientName} joined the party.`
                 );
               }
@@ -311,117 +298,142 @@ export default class JellyParty {
     log.info("Jelly-Party: Leaving current party.");
     this.ws.close();
     this.resetPartyState();
-    this.notyf.success("You left the party!");
+    this.displayNotification("You left the party!");
   }
 
-  requestPeersToPlay() {
-    if (this.partyState.isActive) {
-      const clientCommand = {
-        type: "videoUpdate",
-        data: {
-          variant: "play",
-          tick: this.videoHandler.getVideoState()?.currentTime,
-          peer: { uuid: this.ws.uuid },
-        },
-      };
-      const serverCommand = {
-        type: "forward",
-        data: { commandToForward: clientCommand },
-      };
-      this.ws.send(JSON.stringify(serverCommand));
+  requestPeersToPlay(tick: number | undefined) {
+    if (tick) {
+      if (this.partyState.isActive) {
+        const clientCommand = {
+          type: "videoUpdate",
+          data: {
+            variant: "play",
+            tick: tick,
+            peer: { uuid: this.ws.uuid },
+          },
+        };
+        const serverCommand = {
+          type: "forward",
+          data: { commandToForward: clientCommand },
+        };
+        this.ws.send(JSON.stringify(serverCommand));
+      }
+    } else {
+      console.log(`Jelly-Party: Invalid tick of ${tick}`);
     }
   }
 
-  requestPeersToPause() {
-    if (this.partyState.isActive) {
-      const clientCommand = {
-        type: "videoUpdate",
-        data: {
-          variant: "pause",
-          tick: this.videoHandler.getVideoState()?.currentTime,
-          peer: { uuid: this.ws.uuid },
-        },
-      };
-      const serverCommand = {
-        type: "forward",
-        data: { commandToForward: clientCommand },
-      };
-      this.ws.send(JSON.stringify(serverCommand));
+  requestPeersToPause(tick: number | undefined) {
+    if (tick) {
+      if (this.partyState.isActive) {
+        const clientCommand = {
+          type: "videoUpdate",
+          data: {
+            variant: "pause",
+            tick: tick,
+            peer: { uuid: this.ws.uuid },
+          },
+        };
+        const serverCommand = {
+          type: "forward",
+          data: { commandToForward: clientCommand },
+        };
+        this.ws.send(JSON.stringify(serverCommand));
+      }
+    } else {
+      console.log(`Jelly-Party: Invalid tick of ${tick}`);
     }
   }
 
-  requestPeersToSeek() {
-    if (this.partyState.isActive) {
-      const clientCommand = {
-        type: "videoUpdate",
-        data: {
-          variant: "seek",
-          tick: this.videoHandler.getVideoState()?.currentTime,
-          peer: { uuid: this.ws.uuid },
-        },
-      };
-      const serverCommand = {
-        type: "forward",
-        data: { commandToForward: clientCommand },
-      };
-      this.ws.send(JSON.stringify(serverCommand));
+  requestPeersToSeek(tick: number | undefined) {
+    if (tick) {
+      if (this.partyState.isActive) {
+        const clientCommand = {
+          type: "videoUpdate",
+          data: {
+            variant: "seek",
+            tick: tick,
+            peer: { uuid: this.ws.uuid },
+          },
+        };
+        const serverCommand = {
+          type: "forward",
+          data: { commandToForward: clientCommand },
+        };
+        this.ws.send(JSON.stringify(serverCommand));
+      }
+    } else {
+      console.log(`Jelly-Party: Invalid tick of ${tick}`);
     }
   }
 
   async playVideo(tick: number) {
-    if (!this.videoHandler.getVideoState()) {
-      log.warn(
-        "Jelly-Party: No video defined. I shouldn't be receiving commands.."
-      );
-    } else {
-      // If we're already playing, ignore playVideo request
-      if (!this.videoHandler.getVideoState()?.paused) {
-        return;
-      }
-      // At the least, disable forwarding for the play event.
-      // The seek event will handle itself.
-      await this.seek(tick);
-      this.videoHandler.eventsToProcess += 1;
-      await this.videoHandler.play();
-    }
+    // if (!this.videoHandler.getVideoState()) {
+    //   log.warn(
+    //     "Jelly-Party: No video defined. I shouldn't be receiving commands.."
+    //   );
+    // } else {
+    //   // If we're already playing, ignore playVideo request
+    //   if (!this.videoHandler.getVideoState()?.paused) {
+    //     return;
+    //   }
+    //   // At the least, disable forwarding for the play event.
+    //   // The seek event will handle itself.
+    //   await this.seek(tick);
+    //   this.videoHandler.eventsToProcess += 1;
+    //   await this.videoHandler.play();
+    // }
   }
 
   async pauseVideo(tick: number) {
-    if (!this.videoHandler.getVideoState()) {
-      log.warn(
-        "Jelly-Party: No video defined. I shouldn't be receiving commands.."
-      );
-    } else {
-      // If we're already paused, ignore pauseVideo request
-      if (this.videoHandler.getVideoState()?.paused) {
-        return;
-      }
-      // At the least, disable forwarding for the pause event.
-      // The seek event will handle itself.
-      await this.seek(tick);
-      this.videoHandler.eventsToProcess += 1;
-      await this.videoHandler.pause();
-    }
+    // if (!this.videoHandler.getVideoState()) {
+    //   log.warn(
+    //     "Jelly-Party: No video defined. I shouldn't be receiving commands.."
+    //   );
+    // } else {
+    //   // If we're already paused, ignore pauseVideo request
+    //   if (this.videoHandler.getVideoState()?.paused) {
+    //     return;
+    //   }
+    //   // At the least, disable forwarding for the pause event.
+    //   // The seek event will handle itself.
+    //   await this.seek(tick);
+    //   this.videoHandler.eventsToProcess += 1;
+    //   await this.videoHandler.pause();
+    // }
   }
 
   async seek(tick: number) {
-    const videoState = this.videoHandler.getVideoState();
-    if (!videoState?.currentTime || !videoState?.paused) {
-      log.warn(
-        "Jelly-Party: No video defined. I shouldn't be receiving commands.."
-      );
-    } else {
-      const timeDelta = Math.abs(tick - videoState?.currentTime);
-      if (timeDelta > 0.5) {
-        // Seeking is actually worth it. We're off by more than half a second.
-        // Disable forwarding for the upcoming seek event.
-        this.videoHandler.eventsToProcess += 1;
-        await this.videoHandler.seek(tick);
-      } else {
-        log.debug(
-          "Jelly-Party: Not actually seeking. Almost at same time already."
-        );
-      }
-    }
+    // const videoState = this.videoHandler.getVideoState();
+    // if (!videoState?.currentTime || !videoState?.paused) {
+    //   log.warn(
+    //     "Jelly-Party: No video defined. I shouldn't be receiving commands.."
+    //   );
+    // } else {
+    //   const timeDelta = Math.abs(tick - videoState?.currentTime);
+    //   if (timeDelta > 0.5) {
+    //     // Seeking is actually worth it. We're off by more than half a second.
+    //     // Disable forwarding for the upcoming seek event.
+    //     this.videoHandler.eventsToProcess += 1;
+    //     await this.videoHandler.seek(tick);
+    //   } else {
+    //     log.debug(
+    //       "Jelly-Party: Not actually seeking. Almost at same time already."
+    //     );
+    //   }
+    // }
+  }
+  async getVideoState() {
+    const dataframe: DataFrame = {
+      type: "videoStateRequest",
+      payload: {},
+    };
+    this.iFrameMessenger.sendData(dataframe);
+    // We must await the asynchronous response. We do this by exposing the resolve method
+    // to the JellyParty object, so that the Messenger (which has access to JellyParty)
+    // can call resolve, once it has received the response
+    return new Promise((resolve, reject) => {
+      this.resolveVideoState = resolve as (arg0: VideoState) => VideoState;
+    });
   }
 }

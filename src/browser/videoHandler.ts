@@ -1,9 +1,19 @@
-import JellyParty from "./JellyParty";
+import { MainFrameMessenger, DataFrame } from "@/browser/Messenger";
+
+// The VideoHandler handles playing, pausing & seeking videos
+// on different websites. For most websites the generic video.play(),
+// video.pause() & video.currentTime= will work, however some websites,
+// such as Netflix, require direct access to video controllers.
+
+export interface VideoState {
+  paused: boolean | undefined;
+  currentTime: number | undefined;
+}
 
 export default class VideoHandler {
   host: string;
   notyf: any;
-  party: JellyParty;
+  mainFrameMessenger: MainFrameMessenger;
   eventsToProcess: number;
   findVideoInterval: number | undefined;
   video: HTMLVideoElement | null;
@@ -11,25 +21,29 @@ export default class VideoHandler {
   play: () => Promise<void>;
   pause: () => Promise<void>;
   seek: (tick: number) => Promise<void>;
-  constructor(host: string, notyf: any, party: JellyParty) {
+  constructor(
+    host: string,
+    // notyf: any,
+    mainFrameMessenger: MainFrameMessenger
+  ) {
     this.host = host;
-    this.notyf = notyf;
-    this.party = party;
+    // this.notyf = notyf;
     this.eventsToProcess = 0;
     this.findVideoInterval;
     this.video = null;
+    this.mainFrameMessenger = mainFrameMessenger;
     this.findVideoAndAttach = () => {
       if (!this.video) {
         console.log("Jelly-Party: Scanning for video to attach to.");
         this.video = document.querySelector("video");
         if (this.video) {
           clearInterval(this.findVideoInterval);
-          if (this.party.ws?.readyState === 1) {
-            this.party.updateMagicLink();
-            this.party.updateClientState();
-          }
+          // if (this.party.ws?.readyState === 1) {
+          //   this.party.updateMagicLink();
+          //   this.party.updateClientState();
+          // }
           console.log("Jelly-Party: Found video. Attaching to video..");
-          this.notyf.success("Video detected!");
+          // this.notyf.success("Video detected!");
 
           this.video.addEventListener("play", this.playListener);
           this.video.addEventListener("pause", this.pauseListener);
@@ -86,7 +100,7 @@ export default class VideoHandler {
             );
             const vid: any = document.querySelector("video");
             if (vid) {
-              const key: any = Object.keys(vid).find((elem) =>
+              const key: string | undefined = Object.keys(vid).find((elem) =>
                 elem.includes("reactInternalInstance")
               );
               if (key) {
@@ -188,7 +202,17 @@ export default class VideoHandler {
     } else {
       // We triggered the PlayPause button, so forward it to everybody
       // Trigger play (will sync as well)
-      this.party.requestPeersToPlay();
+      const dataframe: DataFrame = {
+        type: "media",
+        payload: {
+          type: "videoUpdate",
+          data: {
+            variant: "play",
+            tick: this.video?.currentTime,
+          },
+        },
+      };
+      this.mainFrameMessenger.sendData(dataframe);
     }
     this.eventsToProcess -= 1;
   }.bind(this);
@@ -204,7 +228,17 @@ export default class VideoHandler {
     } else {
       // We triggered the PlayPause button, so forward it to everybody
       // Trigger pause (will sync as well)
-      this.party.requestPeersToPause();
+      const dataframe: DataFrame = {
+        type: "media",
+        payload: {
+          type: "videoUpdate",
+          data: {
+            variant: "pause",
+            tick: this.video?.currentTime,
+          },
+        },
+      };
+      this.mainFrameMessenger.sendData(dataframe);
     }
     this.eventsToProcess -= 1;
   }
@@ -219,13 +253,23 @@ export default class VideoHandler {
       );
     } else {
       // We triggered the seek, so forward it to everybody
-      this.party.requestPeersToSeek();
+      const dataframe: DataFrame = {
+        type: "media",
+        payload: {
+          type: "videoUpdate",
+          data: {
+            variant: "seek",
+            tick: this.video?.currentTime,
+          },
+        },
+      };
+      this.mainFrameMessenger.sendData(dataframe);
     }
     this.eventsToProcess -= 1;
   }
 
   emptiedListener() {
-    this.notyf.success("Video lost! Rescanning for video..");
+    // this.notyf.success("Video lost! Rescanning for video..");
     // Remove open event listeners
     this.video?.removeEventListener("play", this.playListener);
     this.video?.removeEventListener("pause", this.pauseListener);
@@ -235,10 +279,7 @@ export default class VideoHandler {
     this.findVideoInterval = setInterval(this.findVideoAndAttach, 1000);
   }
 
-  getVideoState(): {
-    paused: boolean | undefined;
-    currentTime: number | undefined;
-  } | null {
+  getVideoState(): VideoState {
     return { paused: this.video?.paused, currentTime: this.video?.currentTime };
   }
 }
