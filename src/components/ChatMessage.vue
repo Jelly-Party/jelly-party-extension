@@ -2,22 +2,29 @@
   <b-container class="pb-4">
     <div class="chatMessage-container">
       <Avataaar
+        v-b-tooltip.hover
+        :title="getPeer.clientName"
         v-if="!systemMessage"
         style="height:3.5em; width: 3.5em;"
-        :accessoriesType="getPeer().avatarState.accessoriesType"
-        :clotheType="getPeer().avatarState.clotheType"
-        :clotheColor="getPeer().avatarState.clotheColor"
-        :eyebrowType="getPeer().avatarState.eyebrowType"
-        :eyeType="getPeer().avatarState.eyeType"
-        :facialHairColor="getPeer().avatarState.facialHairColor"
-        :facialHairType="getPeer().avatarState.facialHairType"
+        :accessoriesType="getPeer.avatarState.accessoriesType"
+        :clotheType="getPeer.avatarState.clotheType"
+        :clotheColor="getPeer.avatarState.clotheColor"
+        :eyebrowType="getPeer.avatarState.eyebrowType"
+        :eyeType="getPeer.avatarState.eyeType"
+        :facialHairColor="getPeer.avatarState.facialHairColor"
+        :facialHairType="getPeer.avatarState.facialHairType"
         :graphicType="'Hola'"
-        :hairColor="getPeer().avatarState.hairColor"
-        :mouthType="getPeer().avatarState.mouthType"
-        :skinColor="getPeer().avatarState.skinColor"
-        :topType="getPeer().avatarState.topType"
+        :hairColor="getPeer.avatarState.hairColor"
+        :mouthType="getPeer.avatarState.mouthType"
+        :skinColor="getPeer.avatarState.skinColor"
+        :topType="getPeer.avatarState.topType"
       />
-      <div v-else style="height:3.5em; width: 3.5em;">
+      <div
+        v-else
+        style="height:3.5em; width: 3.5em;"
+        v-b-tooltip.hover
+        title="JP"
+      >
         <img
           src="@/assets/circular-logo.png"
           style="width: 3.5em; height:3.5em;"
@@ -55,16 +62,10 @@ export default {
       JellyPartySVG,
     };
   },
-  //   methods: {
-  //     getPeer() {
-  //       const peer = partyStore.getters.getPeer(this.chatMessage.peer.uuid);
-  //       return peer;
-  //     },
-  //   },
   computed: {
     getPeer: function() {
       if (this.systemMessage) {
-        return { clientName: "Jelly-Party Bot" };
+        return { clientName: "JP" };
       } else {
         const peer = partyStore.state.peers.find(
           (peer) => this.chatMessage.peer.uuid === peer.uuid
@@ -91,14 +92,13 @@ export default {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  // padding: 1em;
 }
 .chatMessage {
   border-radius: 2em;
   background-color: $jellyPartyPurple;
   color: white;
-  text-align: center;
-  padding: 1em;
+  text-align: left;
+  padding: 0.5em 1em;
   flex-grow: 1;
   margin: 0em 0em 0em 1em;
 }

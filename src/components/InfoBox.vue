@@ -4,14 +4,12 @@
       <div class="jelly-party-minibox text-white">
         <p class="m-0" style="white-space: nowrap">{{ heading }}</p>
       </div>
-      <span
-        :id="copyTargetId"
-        style="white-space: nowrap; overflow: hidden; margin: 0em 0.5em"
-        >{{ text }}</span
-      >
+      <span style="white-space: nowrap; overflow: hidden; margin: 0em 0.5em">{{
+        text
+      }}</span>
       <div class="p-1">
         <svg
-          @click="updateClipboard(text)"
+          :data-clipboard-text="text"
           width="16"
           height="16"
           xmlns="http://www.w3.org/2000/svg"
@@ -22,6 +20,7 @@
           class="copy-button"
           role="img"
           viewBox="0 0 448 512"
+          @click="showConfirmation"
         >
           <path
             fill="currentColor"
@@ -32,6 +31,9 @@
       <div class="p-1">
         <b-icon icon="question-circle-fill"></b-icon>
       </div>
+    </div>
+    <div class="text-center">
+      <p class="m-0" v-if="showSuccessText">{{ heading }} copied.</p>
     </div>
   </b-container>
 </template>
@@ -47,30 +49,18 @@ export default {
       type: String,
       required: true,
     },
-    copyTargetId: {
-      type: String,
-      required: true,
-    },
+  },
+  data: function() {
+    return {
+      showSuccessText: false,
+    };
   },
   methods: {
-    updateClipboard(newClip) {
-      if (window.isSecureContext) {
-        // We should be able to use the navigator.clipboard API
-        window.navigator.clipboard.writeText(newClip).then(
-          function() {
-            /* clipboard successfully set */
-            console.log("Jelly-Party: Copied to clipboard!");
-          },
-          function(e) {
-            /* clipboard write failed */
-            console.log("Jelly-Party: Error while copying to clipboard!");
-            console.log(e);
-          }
-        );
-      } else {
-        // Fallback alert
-        alert("Website not in a secure browing context. Please copy manually.");
-      }
+    showConfirmation() {
+      this.showSuccessText = true;
+      setTimeout(() => {
+        this.showSuccessText = false;
+      }, 1000);
     },
   },
 };

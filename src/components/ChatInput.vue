@@ -11,13 +11,14 @@
     ></b-form-textarea>
     <VEmojiPicker
       @select="selectEmoji"
-      style="position: absolute; top:1em; right: 1em"
+      style="position: absolute; top: -28em; right: 0.7em;"
     />
   </b-container>
 </template>
 
 <script>
 import VEmojiPicker from "v-emoji-picker";
+import ClipboardJS from "clipboard";
 
 export default {
   components: {
@@ -32,6 +33,9 @@ export default {
     selectEmoji(emoji) {
       console.log(emoji);
     },
+  },
+  mounted: function() {
+    new ClipboardJS(".copy-button");
   },
 };
 </script>

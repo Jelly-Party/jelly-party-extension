@@ -33,15 +33,10 @@
     </div>
     <div v-if="store.state.connectedToServer">
       <div>
-        <InfoBox
-          heading="Party Id"
-          text="easy-thieves-walk-quickly"
-          copyTargetId="copy-party-id"
-        />
+        <InfoBox heading="Party Id" text="easy-thieves-walk-quickly" />
         <InfoBox
           heading="Magic link"
           text="https://join.jelly-party-com/?partyId=this-is-a-test-id-and-it-should-be-long-enough-plus-there'll-be-more-information"
-          copyTargetId="copy-party-magic-link"
         />
         <div class="text-center">
           <small
