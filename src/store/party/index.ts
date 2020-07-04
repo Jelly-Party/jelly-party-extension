@@ -1,5 +1,5 @@
 import { Module } from "vuex";
-import { PartyState } from "./types";
+import { PartyState, ChatMessage } from "./types";
 import { RootState } from "../types";
 // @ts-ignore
 import { getField, updateField } from "vuex-map-fields";
@@ -14,19 +14,18 @@ const initalPartyState: PartyState = {
   lastPartyId: "",
   websiteIsTested: false,
   magicLink: "",
+  selfUUID: "",
   chatMessages: [
     {
       type: "chatMessage",
       peer: { uuid: "jellyPartySupportBot" },
       data: {
-        type: "system",
-        data: {
-          text: "Welcome to Jelly-Party, friend!",
-          timestamp: Date.now(),
-        },
+        text: "Welcome to Jelly-Party, friend!",
+        timestamp: Date.now(),
       },
     },
   ],
+  maxChatMessagesDisplay: 200,
 };
 
 export const state: PartyState = { ...initalPartyState };
@@ -53,8 +52,17 @@ export const party: Module<PartyState, RootState> = {
     setActive(state, bool: boolean) {
       state.isActive = bool;
     },
+    setSelfUUID(state, uuid: string) {
+      state.selfUUID = uuid;
+    },
     setPartyId(state, partyId: string) {
       state.partyId = partyId;
+    },
+    addChatMessage(state, chatMessage: ChatMessage) {
+      while (state.chatMessages.length >= state.maxChatMessagesDisplay) {
+        state.chatMessages.shift();
+      }
+      state.chatMessages.push(chatMessage);
     },
   },
   actions: {

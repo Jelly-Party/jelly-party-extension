@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="h-100">
     <div
       v-if="!store.state.connectingToServer && !store.state.connectedToServer"
     >
@@ -31,23 +31,21 @@
         </div>
       </div>
     </div>
-    <div v-if="store.state.connectedToServer">
-      <div>
+    <div v-if="store.state.connectedToServer" class="h-100 d-flex flex-column">
+      <div style="height: 185px">
         <InfoBox heading="Party Id" text="easy-thieves-walk-quickly" />
         <InfoBox
           heading="Magic link"
           text="https://join.jelly-party-com/?partyId=this-is-a-test-id-and-it-should-be-long-enough-plus-there'll-be-more-information"
         />
         <div class="text-center">
-          <small
+          <small class="text-white"
             >Share this magic link to let other people join your party.</small
           >
         </div>
         <hr style="background-color: white;" />
       </div>
-      <div>
-        <ChatMessenger />
-      </div>
+      <ChatMessenger class="text-white" style="height: calc(100% - 185px)" />
     </div>
   </div>
 </template>
@@ -73,7 +71,6 @@ export default {
   },
   methods: {
     startNewParty() {
-      console.log(this);
       this.$root.$party.startParty();
     },
   },

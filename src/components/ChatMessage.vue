@@ -2,10 +2,10 @@
   <b-container class="pb-4">
     <div class="chatMessage-container">
       <Avataaar
-        v-b-tooltip.hover
-        :title="getPeer.clientName"
         v-if="!systemMessage"
+        v-b-tooltip.hover
         style="height:3.5em; width: 3.5em;"
+        :title="getPeer.clientName"
         :accessoriesType="getPeer.avatarState.accessoriesType"
         :clotheType="getPeer.avatarState.clotheType"
         :clotheColor="getPeer.avatarState.clotheColor"
@@ -31,7 +31,8 @@
         />
       </div>
       <div class="chatMessage">
-        <p class="m-0">{{ chatMessage.data.data.text }}</p>
+        <!-- :style="{ order: messageFromSelf ? '2' : '1' }" -->
+        <p class="m-0">{{ chatMessage.data.text }}</p>
         <hr
           style="background-color: white; width: 30%; text-align: left; margin: 0.3em 0em;"
         />
@@ -59,6 +60,7 @@ export default {
   data: function() {
     return {
       systemMessage: this.chatMessage.peer.uuid === "jellyPartySupportBot",
+      messageFromSelf: this.chatMessage.peer.uuid === partyStore.state.selfUUID,
       JellyPartySVG,
     };
   },
@@ -70,12 +72,11 @@ export default {
         const peer = partyStore.state.peers.find(
           (peer) => this.chatMessage.peer.uuid === peer.uuid
         );
-        console.log(peer);
         return peer;
       }
     },
     timestamp: function() {
-      const date = new Date(this.chatMessage.data.data.timestamp);
+      const date = new Date(this.chatMessage.data.timestamp);
       const padZero = (i) => (String(i).length === 2 ? String(i) : `0${i}`);
       const hours = padZero(date.getHours());
       const minutes = padZero(date.getMinutes());

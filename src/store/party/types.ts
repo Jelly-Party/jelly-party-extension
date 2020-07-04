@@ -1,11 +1,11 @@
 import { AvatarState } from "@/store/options/types";
 
 export interface ChatMessage {
-  type: string;
-  peer: { uuid: string };
+  type: "chatMessage";
+  peer?: { uuid: string };
   data: {
-    type: string;
-    data: { text: string; timestamp: number };
+    text: string;
+    timestamp: number;
   };
 }
 
@@ -28,7 +28,9 @@ export interface PartyState {
   lastPartyId: string;
   websiteIsTested: boolean;
   magicLink: string;
+  selfUUID: string;
   chatMessages: Array<ChatMessage>;
+  maxChatMessagesDisplay: number;
 }
 
 // The video state is not stored in the PartyState, since it updates all the time,

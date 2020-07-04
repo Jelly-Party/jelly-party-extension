@@ -1,16 +1,16 @@
 <template>
-  <div class="d-flex flex-column">
+  <div id="chatMessengerDiv" class="d-flex flex-column">
     <!-- All Chat Messenges -->
-    <div style="margin-bottom: 180px;">
+    <div id="chatMessagesContainer" style="overflow: auto;">
       <ChatMessage
         style="flex-grow: 1;"
         v-for="chatMessage in chatMessages"
-        :key="chatMessage.data.data.timestamp"
+        :key="chatMessage.data.timestamp"
         :chatMessage="chatMessage"
       />
-      <!-- Text input -->
-      <ChatInput style="position: absolute; bottom: 1em;" />
     </div>
+    <!-- Text input -->
+    <ChatInput />
   </div>
 </template>
 
@@ -33,4 +33,9 @@ export default {
 };
 </script>
 
-<style></style>
+<style lang="scss">
+#chatMessengerDiv {
+  flex-grow: 1;
+  justify-content: space-between;
+}
+</style>

@@ -29,6 +29,6 @@ const app = new Vue({
   store,
   render: (h) => h(Sidebar),
 }).$mount("#app");
-
+console.log(`Vue instance created: ${app}`);
 const party = new JellyParty();
 app.$party = party;

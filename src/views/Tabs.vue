@@ -1,5 +1,5 @@
 <template>
-  <div style="flex-grow: 1;">
+  <div id="jellyPartyTabsContainer">
     <b-tabs
       nav-wrapper-class="no-border"
       class="mt-3"
@@ -26,4 +26,24 @@ export default {
 };
 </script>
 
-<style></style>
+<style lang="scss">
+#jellyPartyTabsContainer {
+  flex-grow: 1;
+  overflow: auto;
+}
+.tabs {
+  height: calc(100% - 1em);
+}
+
+.nav.nav-tabs.nav-justified {
+  height: 42px;
+}
+
+.tab-content {
+  height: calc(100% - 42px - 1em);
+}
+
+.tab-pane.active {
+  height: 100%;
+}
+</style>

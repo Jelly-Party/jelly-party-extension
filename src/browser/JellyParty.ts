@@ -5,7 +5,7 @@ import generateRoomWithoutSeparator from "./randomName.js";
 // @ts-ignore
 import toHHMMSS from "./toHHMMSS.js";
 import "./libs/css/notyf.min.css";
-import { Peer as PeerType } from "@/store/party/types";
+import { Peer as PeerType, ChatMessage } from "@/store/party/types";
 import store from "@/store/store";
 import { RootState as RootStateType } from "@/store/types";
 import { OptionsState as OptionsStateType } from "@/store/options/types";
@@ -152,7 +152,7 @@ export default class JellyParty {
     // Set the magic link
     this.updateMagicLink();
     let wsAddress = "";
-    console.log(`APPMODE IS: ${this.rootState.appMode}`);
+    log.log(`APPMODE IS: ${this.rootState.appMode}`);
     switch (this.rootState.appMode) {
       case "staging":
         wsAddress = "wss://staging.jelly-party.com:8080";
@@ -276,7 +276,7 @@ export default class JellyParty {
           break;
         }
         case "setUUID": {
-          this.ws.uuid = msg.data.uuid;
+          store.commit("party/setSelfUUID", msg.data.uuid);
           break;
         }
         default: {
@@ -301,6 +301,32 @@ export default class JellyParty {
     this.displayNotification("You left the party!");
   }
 
+  sendChatMessage(text: string) {
+    if (text.length > 0) {
+      const chatMessage: ChatMessage = {
+        type: "chatMessage",
+        // peer: { uuid: partyState.selfUUID }, // will be added by server
+        data: {
+          text: text,
+          timestamp: Date.now(),
+        },
+      };
+      const serverCommand = {
+        type: "forward",
+        data: {
+          commandToForward: chatMessage,
+        },
+      };
+      this.ws.send(JSON.stringify(serverCommand));
+      store.commit("party/addChatMessage", {
+        peer: { uuid: partyState.selfUUID }, // for ourself, we must add the UUID
+        ...chatMessage,
+      });
+    } else {
+      log.log(`Jelly-Party: Not sending empty chat message.`);
+    }
+  }
+
   requestPeersToPlay(tick: number | undefined) {
     if (tick) {
       if (this.partyState.isActive) {
@@ -309,7 +335,7 @@ export default class JellyParty {
           data: {
             variant: "play",
             tick: tick,
-            peer: { uuid: this.ws.uuid },
+            peer: { uuid: partyState.selfUUID },
           },
         };
         const serverCommand = {
@@ -319,7 +345,7 @@ export default class JellyParty {
         this.ws.send(JSON.stringify(serverCommand));
       }
     } else {
-      console.log(`Jelly-Party: Invalid tick of ${tick}`);
+      log.log(`Jelly-Party: Invalid tick of ${tick}`);
     }
   }
 
@@ -331,7 +357,7 @@ export default class JellyParty {
           data: {
             variant: "pause",
             tick: tick,
-            peer: { uuid: this.ws.uuid },
+            peer: { uuid: partyState.selfUUID },
           },
         };
         const serverCommand = {
@@ -341,7 +367,7 @@ export default class JellyParty {
         this.ws.send(JSON.stringify(serverCommand));
       }
     } else {
-      console.log(`Jelly-Party: Invalid tick of ${tick}`);
+      log.log(`Jelly-Party: Invalid tick of ${tick}`);
     }
   }
 
@@ -353,7 +379,7 @@ export default class JellyParty {
           data: {
             variant: "seek",
             tick: tick,
-            peer: { uuid: this.ws.uuid },
+            peer: { uuid: partyState.selfUUID },
           },
         };
         const serverCommand = {
@@ -363,7 +389,7 @@ export default class JellyParty {
         this.ws.send(JSON.stringify(serverCommand));
       }
     } else {
-      console.log(`Jelly-Party: Invalid tick of ${tick}`);
+      log.log(`Jelly-Party: Invalid tick of ${tick}`);
     }
   }
 

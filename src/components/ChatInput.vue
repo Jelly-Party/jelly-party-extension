@@ -1,7 +1,7 @@
 <template>
-  <b-container>
-    <!-- <input type="text" style="height: 200px; width: 100%; border-radius: 1em" /> -->
+  <b-container style="position: relative" class="pb-2 pt-2">
     <b-form-textarea
+      v-on:keyup.enter="sendChatMessage"
       id="textarea"
       v-model="text"
       placeholder="Enter something..."
@@ -9,7 +9,7 @@
       max-rows="6"
       style="resize: none; padding: 0.375rem 3rem 0.375rem 0.75rem;"
     ></b-form-textarea>
-    <div id="sendMessageButton">
+    <div id="sendMessageButton" @click="sendChatMessage">
       <svg
         height="2em"
         width="2em"
@@ -85,6 +85,17 @@ export default {
         picker.style.display = "none";
         // Remove the event listener
         document.removeEventListener("click", this.customEventListener);
+      }
+    },
+    sendChatMessage() {
+      // Only send text messages that contain, well, text
+      // (1 is for the enter key)
+      if (this.text.length > 1) {
+        this.$root.$party.sendChatMessage(this.text);
+        this.text = "";
+      } else {
+        // reset so that return keys don't add up..
+        this.text = "";
       }
     },
   },

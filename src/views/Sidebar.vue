@@ -28,30 +28,37 @@ export default {
 
 :root {
   --jelly-party-sidebar-width: 350px;
+  --scrollbarBG: #cfd8dc;
+  --thumbBG: #90a4ae;
+}
+@mixin scrollbars() {
+  // For Google Chrome
+  &::-webkit-scrollbar {
+    width: 0.5em;
+    height: 0.5em;
+  }
+  &::-webkit-scrollbar-thumb {
+    background-color: var(--thumbBG);
+    border-radius: 6px;
+    border: 3px solid var(--scrollbarBG);
+  }
+  &::-webkit-scrollbar-track {
+    background: var(--scrollbarBG);
+  }
+}
+body {
+  color: white !important;
+  @include scrollbars();
+}
+#chatMessagesContainer {
+  @include scrollbars();
+}
+#jellyPartyTabsContainer {
+  @include scrollbars();
 }
 html {
   --scrollbarBG: #cfd8dc;
   --thumbBG: #90a4ae;
-}
-body::-webkit-scrollbar {
-  width: 11px;
-}
-body {
-  color: white !important;
-  margin: 0;
-  scrollbar-width: thin;
-  scrollbar-color: var(--thumbBG) var(--scrollbarBG);
-  font-family: "Roboto", sans-serif;
-  text-align: justify;
-  box-sizing: border-box !important;
-}
-body::-webkit-scrollbar-track {
-  background: var(--scrollbarBG);
-}
-body::-webkit-scrollbar-thumb {
-  background-color: var(--thumbBG);
-  border-radius: 6px;
-  border: 3px solid var(--scrollbarBG);
 }
 
 #wrapper {
@@ -60,11 +67,12 @@ body::-webkit-scrollbar-thumb {
     rgb(255, 148, 148) 0%,
     rgb(238, 100, 246) 100%
   );
-  min-height: 100vh;
+  height: 100vh;
   transition: background-color 300ms ease;
   display: flex;
   flex-direction: column;
   margin-left: auto; // for displaying chrome-extension://...
+  overflow: hidden;
 }
 
 .darkMode {
