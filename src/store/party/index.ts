@@ -15,6 +15,7 @@ const initalPartyState: PartyState = {
   websiteIsTested: false,
   magicLink: "",
   selfUUID: "",
+  paused: false,
   chatMessages: [
     {
       type: "chatMessage",

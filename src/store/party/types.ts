@@ -31,6 +31,7 @@ export interface PartyState {
   selfUUID: string;
   chatMessages: Array<ChatMessage>;
   maxChatMessagesDisplay: number;
+  paused: boolean;
 }
 
 // The video state is not stored in the PartyState, since it updates all the time,

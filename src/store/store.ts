@@ -8,7 +8,6 @@ import { getField, updateField } from "vuex-map-fields";
 // import { browser } from "webextension-polyfill-ts";
 
 Vue.config.devtools = ["development", "staging"].includes(process.env.NODE_ENV);
-console.log(`Vue.config.devtools = ${Vue.config.devtools}`);
 Vue.use(Vuex);
 
 const store: StoreOptions<RootState> = {

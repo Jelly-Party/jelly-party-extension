@@ -9,10 +9,11 @@ import { MainFrameMessenger } from "@/browser/Messenger";
 import VideoHandler from "@/browser/videoHandler";
 import Notyf from "./libs/js/notyf.min.js";
 import "./libs/css/notyf.min.css";
+import { JoinPartyCommandFrame } from "@/browser/Messenger";
 
 console.log(`Jelly-Party: Mode is ${process.env.NODE_ENV}`);
 
-class MainFrame {
+export class MainFrame {
   host: string;
   sideBarHidden: boolean;
   IFrameTarget!: HTMLElement | null;
@@ -20,6 +21,8 @@ class MainFrame {
   videoHandler: VideoHandler;
   mainFrameMessenger: MainFrameMessenger;
   notyf: any;
+  magicLinkUsed: boolean;
+  partyIdFromURL: string | null;
   getVideo!: () => HTMLVideoElement | null;
   getControls!: () => HTMLElement | null;
   fixWebsiteDisplay!: () => void;
@@ -42,8 +45,15 @@ class MainFrame {
         },
       ],
     });
+    this.magicLinkUsed = false;
+    this.partyIdFromURL = new URLSearchParams(window.location.search).get(
+      "jellyPartyId"
+    );
     this.showNotification = (msg: string) => this.notyf.success(msg);
-    this.mainFrameMessenger = new MainFrameMessenger(this.showNotification);
+    this.mainFrameMessenger = new MainFrameMessenger(
+      this.showNotification,
+      this
+    );
     this.videoHandler = new VideoHandler(
       window.location.host,
       this.mainFrameMessenger
@@ -73,13 +83,6 @@ class MainFrame {
         };
         this.fixWebsiteDisplay = function() {
           console.log("Jelly-Party: Fixing website Display");
-          console.log(
-            `Jelly-Party: this.sideBarHidden is ${
-              this.sideBarHidden
-            }; document.fullscreenElement is ${Boolean(
-              document.fullscreenElement
-            )}`
-          );
           const video = this.getVideo();
           const controls = this.getControls();
           if (!(video && controls && this.IFrameTarget)) {
@@ -210,6 +213,7 @@ class MainFrame {
       this.initFullscreenHandler();
       this.insertStyles();
       this.setupSideBarToggle();
+      (window as any).jellyPartyLoaded = true;
     } else {
       console.error(
         `Jelly-Party: Error attaching IFrame. this.IFrameTarget not found.`
@@ -342,7 +346,22 @@ class MainFrame {
       }
     }
   }
+
+  autojoin() {
+    if (this.partyIdFromURL && !this.magicLinkUsed) {
+      console.log("Jelly-Party: Joining party once via magic link.");
+      this.magicLinkUsed = true;
+      const msg: JoinPartyCommandFrame = {
+        type: "joinPartyCommand",
+        payload: {
+          partyId: this.partyIdFromURL,
+        },
+      };
+      this.mainFrameMessenger.sendData(msg);
+    }
+  }
 }
 
-const mainFrameScript = new MainFrame(window.location.host);
-console.log(mainFrameScript);
+if (!(window as any).jellyPartyLoaded) {
+  new MainFrame(window.location.host);
+}

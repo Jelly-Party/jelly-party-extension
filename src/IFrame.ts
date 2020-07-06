@@ -28,7 +28,6 @@ Vue.directive("click-outside", {
 });
 
 Vue.config.devtools = ["development", "staging"].includes(process.env.NODE_ENV);
-console.log(`Vue.config.devtools = ${Vue.config.devtools}`);
 
 if (["staging", "development"].includes(process.env.NODE_ENV)) {
   console.log("Jelly-Party: Connecting to devtools");

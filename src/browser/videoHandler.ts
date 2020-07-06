@@ -121,22 +121,34 @@ export default class VideoHandler {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
+  togglePlayPause() {
+    this.eventsToProcess += 1;
+    if (this.video?.paused) {
+      this.play();
+    } else {
+      this.pause();
+    }
+  }
+
   getPlayHook(host: string) {
     switch (host) {
       case "www.netflix.com": {
         return async function(this: VideoHandler) {
+          this.eventsToProcess += 1;
           window.dispatchEvent(new CustomEvent("playRequest"));
           await this.sleep(50);
         };
       }
       case "www.disneyplus.com": {
         return async function(this: VideoHandler) {
+          this.eventsToProcess += 1;
           window.dispatchEvent(new CustomEvent("playPauseRequest"));
           await this.sleep(50);
         };
       }
       default:
         return async function(this: VideoHandler) {
+          this.eventsToProcess += 1;
           await this.video?.play();
         };
     }
@@ -146,17 +158,20 @@ export default class VideoHandler {
     switch (host) {
       case "www.netflix.com":
         return async function(this: VideoHandler) {
+          this.eventsToProcess += 1;
           window.dispatchEvent(new CustomEvent("pauseRequest"));
           await this.sleep(50);
         };
       case "www.disneyplus.com": {
         return async function(this: VideoHandler) {
+          this.eventsToProcess += 1;
           window.dispatchEvent(new CustomEvent("playPauseRequest"));
           await this.sleep(50);
         };
       }
       default:
         return async function(this: VideoHandler) {
+          this.eventsToProcess += 1;
           await this.video?.pause();
         };
     }
@@ -166,16 +181,32 @@ export default class VideoHandler {
     switch (host) {
       case "www.netflix.com":
         return async function(this: VideoHandler, tick: number) {
-          window.dispatchEvent(
-            new CustomEvent<number>("seekRequest", { detail: tick })
+          const timeDelta = Math.abs(
+            tick - (this.getVideoState().currentTime ?? tick)
           );
-          await this.sleep(50);
+          if (timeDelta > 0.5) {
+            // Seeking is actually worth it. We're off by more than half a second.
+            // Disable forwarding for the upcoming seek event.
+            this.eventsToProcess += 1;
+            window.dispatchEvent(
+              new CustomEvent<number>("seekRequest", { detail: tick })
+            );
+            await this.sleep(50);
+          }
         };
       default:
         return async function(this: VideoHandler, tick: number) {
           if (this.video?.currentTime) {
-            this.video.currentTime = tick;
-            await this.sleep(50);
+            const timeDelta = Math.abs(
+              tick - (this.getVideoState().currentTime ?? tick)
+            );
+            if (timeDelta > 0.5) {
+              // Seeking is actually worth it. We're off by more than half a second.
+              // Disable forwarding for the upcoming seek event.
+              this.eventsToProcess += 1;
+              this.video.currentTime = tick;
+              await this.sleep(50);
+            }
           }
         };
     }
@@ -191,7 +222,7 @@ export default class VideoHandler {
     script.remove();
   }
 
-  playListener = function(this: VideoHandler) {
+  playListener = () => {
     console.log({ type: "play", tick: this.video?.currentTime });
     if (this.eventsToProcess > 0) {
       // Somebody else is asking us to play
@@ -215,9 +246,9 @@ export default class VideoHandler {
       this.mainFrameMessenger.sendData(dataframe);
     }
     this.eventsToProcess -= 1;
-  }.bind(this);
+  };
 
-  pauseListener() {
+  pauseListener = () => {
     console.log({ type: "pause", tick: this.video?.currentTime });
     if (this.eventsToProcess > 0) {
       // Somebody else is asking us to pause
@@ -241,9 +272,9 @@ export default class VideoHandler {
       this.mainFrameMessenger.sendData(dataframe);
     }
     this.eventsToProcess -= 1;
-  }
+  };
 
-  seekingListener() {
+  seekingListener = () => {
     console.log({ type: "seek", tick: this.video?.currentTime });
     if (this.eventsToProcess > 0) {
       // Somebody else is asking us to seek
@@ -266,7 +297,7 @@ export default class VideoHandler {
       this.mainFrameMessenger.sendData(dataframe);
     }
     this.eventsToProcess -= 1;
-  }
+  };
 
   emptiedListener() {
     // this.notyf.success("Video lost! Rescanning for video..");

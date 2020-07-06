@@ -1,8 +1,13 @@
 <template>
   <b-container class="mt-3 mb-3">
     <div id="jelly-party-controls-bar">
-      <div v-b-modal.modal-center class="jelly-party-navbar-button">
+      <div
+        v-b-modal.modal-center
+        class="jelly-party-navbar-button"
+        @click="togglePlayingStatus()"
+      >
         <svg
+          v-if="!paused"
           width="1em"
           height="1em"
           xmlns="http://www.w3.org/2000/svg"
@@ -17,6 +22,24 @@
           <path
             fill="currentColor"
             d="M424.4 214.7L72.4 6.6C43.8-10.3 0 6.1 0 47.9V464c0 37.5 40.7 60.1 72.4 41.3l352-208c31.4-18.5 31.5-64.1 0-82.6z"
+          />
+        </svg>
+        <svg
+          v-else
+          width="1em"
+          height="1em"
+          xmlns="http://www.w3.org/2000/svg"
+          aria-hidden="true"
+          focusable="false"
+          data-prefix="fas"
+          data-icon="pause"
+          class="svg-inline--fa fa-pause fa-w-14"
+          role="img"
+          viewBox="0 0 448 512"
+        >
+          <path
+            fill="currentColor"
+            d="M144 479H48c-26.5 0-48-21.5-48-48V79c0-26.5 21.5-48 48-48h96c26.5 0 48 21.5 48 48v352c0 26.5-21.5 48-48 48zm304-48V79c0-26.5-21.5-48-48-48h-96c-26.5 0-48 21.5-48 48v352c0 26.5 21.5 48 48 48h96c26.5 0 48-21.5 48-48z"
           />
         </svg>
       </div>
@@ -103,6 +126,14 @@
         ok-title="Leave party"
       >
         <p class="my-4">Are you sure you want to leave this party?</p>
+        <template v-slot:modal-footer="{ ok, cancel }">
+          <b-button variant="secondary" @click="ok()">
+            Cancel
+          </b-button>
+          <b-button variant="primary" @click="leaveParty(cancel)">
+            Leave party
+          </b-button>
+        </template>
       </b-modal>
     </div>
   </b-container>
@@ -120,11 +151,22 @@ export default {
     peers() {
       return partyStore.state.peers;
     },
+    paused() {
+      return partyStore.state.paused;
+    },
   },
   methods: {
-    getPeer: function(uuid) {
+    getPeer(uuid) {
       const peer = partyStore.state.peers.find((peer) => uuid === peer.uuid);
       return peer;
+    },
+    leaveParty(cancel) {
+      console.log("Jelly-Party: Leaving party");
+      this.$root.$party.leaveParty();
+      cancel();
+    },
+    togglePlayingStatus() {
+      console.log("Jelly-Party: Toggling playing status.");
     },
   },
 };

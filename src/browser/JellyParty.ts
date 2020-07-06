@@ -13,8 +13,12 @@ import { PartyState as PartyStateType } from "@/store/party/types";
 import { state as optionsState } from "@/store/options/index";
 import { state as partyState } from "@/store/party/index";
 import { stableWebsites } from "@/helpers/stableWebsites";
-import { IFrameMessenger, DataFrame } from "@/browser/Messenger";
-import { DataFrameType, DataFrameMediaVariantType } from "@/browser/Messenger";
+import { IFrameMessenger } from "@/browser/Messenger";
+import {
+  DataFrameMediaVariantType,
+  MediaCommandFrame,
+  SimpleRequestFrame,
+} from "@/browser/Messenger";
 import { VideoState } from "./videoHandler.js";
 
 export default class JellyParty {
@@ -25,8 +29,6 @@ export default class JellyParty {
   // Party State
   readonly partyState: PartyStateType;
   // Local state
-  partyIdFromURL: string | null;
-  magicLinkUsed: boolean;
   updateClientStateInterval: number | undefined;
   ws!: WebSocket & { uuid?: string };
   notyf: any;
@@ -39,17 +41,10 @@ export default class JellyParty {
     this.rootState = store.state;
     this.optionsState = optionsState;
     this.partyState = partyState;
-    this.magicLinkUsed = false;
     for (const stableWebsite of stableWebsites) {
       if (window.location.href.includes(stableWebsite)) {
         this.stableWebsite = true;
       }
-    }
-    this.partyIdFromURL = new URLSearchParams(window.location.search).get(
-      "jellyPartyId"
-    );
-    if (this.partyIdFromURL) {
-      log.debug(`partyIdFromURL is ${this.partyIdFromURL}`);
     }
     this.updateClientStateInterval = undefined;
     if (["staging", "development"].includes(this.rootState.appMode)) {
@@ -64,14 +59,11 @@ export default class JellyParty {
           : "disabled"
       }.`
     );
-    if (this.partyIdFromURL && !this.magicLinkUsed) {
-      log.debug("Joining party once via magic link.");
-      this.magicLinkUsed = true;
-      this.joinParty(this.partyIdFromURL);
-    }
     this.iFrameMessenger = new IFrameMessenger(this);
     log.debug("Jelly-Party: Global JellyParty Object");
     log.debug(this);
+    // Let's request autojoin
+    this.iFrameMessenger.sendData({ type: "joinPartyRequest" });
   }
   resetPartyState() {
     store.dispatch("party/resetPartyState");
@@ -94,16 +86,18 @@ export default class JellyParty {
     // without "bind", "this" is bound to window, see 'The "this" problem' @ https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/setInterval
     try {
       // We craft a command to let the server know about our new client state
-      const serverCommand = {
-        type: "clientUpdate",
-        data: {
-          newClientState: {
-            currentlyWatching: this.partyState.magicLink,
-            videoState: await this.getVideoState(),
-          },
-        },
-      };
-      this.ws.send(JSON.stringify(serverCommand));
+      const videoState: VideoState = (await this.getVideoState()) as VideoState;
+      // const serverCommand = {
+      //   type: "clientUpdate",
+      //   data: {
+      //     newClientState: {
+      //       currentlyWatching: this.partyState.magicLink,
+      //       videoState: videoState,
+      //     },
+      //   },
+      // };
+      // this.ws.send(JSON.stringify(serverCommand));
+      partyState.paused = videoState.paused ?? true;
     } catch (error) {
       log.debug("Jelly-Party: Error updating client state..");
       log.error(error);
@@ -186,10 +180,7 @@ export default class JellyParty {
           },
         })
       );
-      this.updateClientStateInterval = setInterval(
-        this.updateClientState,
-        5000
-      );
+      this.updateClientStateInterval = setInterval(this.updateClientState, 200);
     }.bind(this);
 
     this.ws.onmessage = function(this: JellyParty, event: any) {
@@ -200,10 +191,10 @@ export default class JellyParty {
           const peer = this.partyState.peers.filter(
             (peer) => peer.uuid === msg.data.peer.uuid
           )[0].clientName;
-          const mediaDataFrame = {
-            type: "media" as DataFrameType,
+          const mediaDataFrame: MediaCommandFrame = {
+            type: "media",
             payload: {
-              type: "videoUpdate" as "videoUpdate",
+              type: "videoUpdate",
               data: {
                 variant: msg.data.variant as DataFrameMediaVariantType,
                 tick: msg.data.tick,
@@ -394,6 +385,20 @@ export default class JellyParty {
   }
 
   async playVideo(tick: number) {
+    ["seek", "play"].forEach((variant) => {
+      const msg: MediaCommandFrame = {
+        type: "media",
+        payload: {
+          type: "videoUpdate",
+          data: {
+            variant: variant as DataFrameMediaVariantType,
+            tick: tick,
+          },
+        },
+      };
+      this.iFrameMessenger.sendData(msg);
+    });
+
     // if (!this.videoHandler.getVideoState()) {
     //   log.warn(
     //     "Jelly-Party: No video defined. I shouldn't be receiving commands.."
@@ -412,6 +417,19 @@ export default class JellyParty {
   }
 
   async pauseVideo(tick: number) {
+    ["seek", "pause"].forEach((variant) => {
+      const msg: MediaCommandFrame = {
+        type: "media",
+        payload: {
+          type: "videoUpdate",
+          data: {
+            variant: variant as DataFrameMediaVariantType,
+            tick: tick,
+          },
+        },
+      };
+      this.iFrameMessenger.sendData(msg);
+    });
     // if (!this.videoHandler.getVideoState()) {
     //   log.warn(
     //     "Jelly-Party: No video defined. I shouldn't be receiving commands.."
@@ -430,6 +448,17 @@ export default class JellyParty {
   }
 
   async seek(tick: number) {
+    const msg: MediaCommandFrame = {
+      type: "media",
+      payload: {
+        type: "videoUpdate",
+        data: {
+          variant: "seek",
+          tick: tick,
+        },
+      },
+    };
+    this.iFrameMessenger.sendData(msg);
     // const videoState = this.videoHandler.getVideoState();
     // if (!videoState?.currentTime || !videoState?.paused) {
     //   log.warn(
@@ -450,9 +479,8 @@ export default class JellyParty {
     // }
   }
   async getVideoState() {
-    const dataframe: DataFrame = {
+    const dataframe: SimpleRequestFrame = {
       type: "videoStateRequest",
-      payload: {},
     };
     this.iFrameMessenger.sendData(dataframe);
     // We must await the asynchronous response. We do this by exposing the resolve method

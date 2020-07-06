@@ -2,35 +2,64 @@ import { browser, Runtime } from "webextension-polyfill-ts";
 import JellyParty from "@/browser/JellyParty";
 import VideoHandler from "@/browser/videoHandler";
 import { VideoState } from "@/browser/videoHandler";
+import { MainFrame } from "@/browser/mainFrame";
 
 // MESSAGING API
 // MainFrameMessenger
 // (1) MainFrameMessenger -> IFrameMessenger: play/pause/seek command -> No reply
 // (2) MainFrameMessenger -> IFrameMessenger: videoState update -> No reply
+// (3) MainFrameMessenger -> IFrameMessenger: joinParty command -> No reply
 // IFrameMessenger
-// (3) IFrameMessenger -> MainFrameMessenger: notyf command (displays notification) -> No reply
-// (4) IFrameMessenger -> MainFrameMessenger: videoState dataframe -> Triggers (2)
+// (4) IFrameMessenger -> MainFrameMessenger: notyf command (displays notification) -> No reply
+// (5) IFrameMessenger -> MainFrameMessenger: videoState dataframe -> Triggers (2)
 
-export type DataFrameType =
-  | "notyf"
-  | "media"
-  | "videoStateRequest"
-  | "videoStateResponse";
-export type DataFrameMediaVariantType = "play" | "pause" | "seek";
-export interface DataFrame {
-  type: DataFrameType;
-  payload:
-    | {
-        type: "videoUpdate";
-        data: {
-          variant: DataFrameMediaVariantType;
-          tick: number | undefined;
-        };
-      }
-    | { type: "notification"; message: string }
-    | VideoState
-    | {};
+export interface NotyfFrame {
+  type: "notyf";
+  payload: {
+    type: "notification";
+    message: string;
+  };
 }
+
+export type DataFrameMediaVariantType =
+  | "play"
+  | "pause"
+  | "seek"
+  | "togglePlayPause";
+
+export interface MediaCommandFrame {
+  type: "media";
+  payload: {
+    type: "videoUpdate";
+    data: {
+      variant: DataFrameMediaVariantType;
+      tick: number | undefined;
+    };
+  };
+}
+
+export interface SimpleRequestFrame {
+  type: "videoStateRequest" | "joinPartyRequest";
+}
+
+export interface VideoStateResponseFrame {
+  type: "videoStateResponse";
+  payload: VideoState;
+}
+
+export interface JoinPartyCommandFrame {
+  type: "joinPartyCommand";
+  payload: {
+    partyId: string;
+  };
+}
+
+export type MultiFrame =
+  | NotyfFrame
+  | MediaCommandFrame
+  | SimpleRequestFrame
+  | VideoStateResponseFrame
+  | JoinPartyCommandFrame;
 
 class Messenger {
   port!: Runtime.Port;
@@ -39,13 +68,14 @@ class Messenger {
   constructor(messengerType: string) {
     this.messengerType = messengerType;
   }
-  sendData(dataframe: DataFrame | VideoState) {
-    console.log(
-      `Jelly-Party: Posting dataframe from ${
-        this.messengerType
-      }: ${JSON.stringify(dataframe)}`
-    );
-    this.port.postMessage(dataframe);
+  sendData(dataframe: MultiFrame & { counter?: number | undefined }) {
+    if (!this.port && !(dataframe.counter ?? 0 > 3)) {
+      setTimeout(() => {
+        this.sendData({ ...dataframe, ...{ counter: dataframe.counter ?? 0 } });
+      }, 100 * (dataframe.counter ?? 1));
+    } else {
+      this.port.postMessage(dataframe);
+    }
   }
 }
 
@@ -53,13 +83,17 @@ export class MainFrameMessenger extends Messenger {
   // Playing, pausing and seeking means actually playing, pausing and seeking the video in this context
   // We have direct access to the video, but no access to the JellyParty object.
   videoHandler!: VideoHandler;
+  mainFrame: MainFrame;
   showNotification: (arg0: string) => void;
-  constructor(showNotification: (arg0: string) => void) {
+  constructor(showNotification: (arg0: string) => void, mainFrame: MainFrame) {
     super("MainFrameMessenger");
     this.showNotification = showNotification;
+    this.mainFrame = mainFrame;
     browser.runtime.onConnect.addListener((port) => {
       this.port = port;
-      port.onMessage.addListener((msg) => {
+      port.onMessage.addListener((msg: MultiFrame) => {
+        // Reset the event counter
+        this.videoHandler.eventsToProcess = 0;
         switch (msg.type) {
           case "media": {
             if (msg.payload.type === "videoUpdate") {
@@ -76,6 +110,9 @@ export class MainFrameMessenger extends Messenger {
                   this.videoHandler.seek(msg.payload.data.tick ?? 0);
                   break;
                 }
+                case "togglePlayPause": {
+                  this.videoHandler.togglePlayPause();
+                }
               }
             } else {
               console.log(
@@ -90,9 +127,13 @@ export class MainFrameMessenger extends Messenger {
             this.showNotification(msg.payload.message);
             break;
           }
+          case "joinPartyRequest": {
+            this.mainFrame.autojoin();
+            break;
+          }
           case "videoStateRequest": {
             // We must respond to this request with the current video state
-            const videoStateDataFrame: DataFrame = {
+            const videoStateDataFrame: VideoStateResponseFrame = {
               type: "videoStateResponse",
               payload: this.videoHandler.getVideoState(),
             };
@@ -128,7 +169,7 @@ export class IFrameMessenger extends Messenger {
         if (tabs.length > 0) {
           if (tabs[0]?.id) {
             this.port = browser.tabs.connect(tabs[0].id);
-            this.port.onMessage.addListener((msg) => {
+            this.port.onMessage.addListener((msg: MultiFrame) => {
               switch (msg.type) {
                 case "media": {
                   if (msg.payload.type === "videoUpdate") {
@@ -167,6 +208,10 @@ export class IFrameMessenger extends Messenger {
                   this.party.resolveVideoState(msg.payload);
                   break;
                 }
+                case "joinPartyCommand": {
+                  this.party.joinParty(msg.payload.partyId);
+                  break;
+                }
                 default: {
                   console.log(
                     `Jelly-Party: ${this.messengerType} received erroneous message:`
@@ -181,135 +226,3 @@ export class IFrameMessenger extends Messenger {
       });
   }
 }
-
-// export class IFrameMessenger extends Messenger {
-//   getVideoState: () => Promise<VideoState>;
-//   constructor(party: JellyParty) {
-//     super("IFrameMessenger");
-//     this.receiveMessage = (
-//       dataframe: DataFrame,
-//       response: Runtime.MessageSender
-//     ) => {
-//       switch (dataframe.type) {
-//         case "media": {
-//           if (dataframe.payload.type === "videoUpdate") {
-//             switch (dataframe.payload.data.variant) {
-//               case "play": {
-//                 party.dataframePeersToPlay(dataframe.payload.data.tick);
-//                 break;
-//               }
-//               case "pause": {
-//                 party.dataframePeersToPause(dataframe.payload.data.tick);
-//                 break;
-//               }
-//               case "seek": {
-//                 party.dataframePeersToSeek(dataframe.payload.data.tick);
-//                 break;
-//               }
-//             }
-//           } else {
-//             console.log(
-//               `Jelly-Party: ${this.type} received erroneous message:`
-//             );
-//             console.log(dataframe);
-//           }
-//           break;
-//         }
-//         default: {
-//           console.log(`Jelly-Party: ${this.type} received erroneous message:`);
-//           console.log(dataframe);
-//         }
-//       }
-//     };
-//     this.getVideoState = async () => {
-//       return await browser.runtime
-//         .sendMessage({
-//           type: "videoStateDataFrame",
-//         })
-//         .catch((err) => {
-//           console.error(`Jelly-Party: IFrameMessenger Error: ${err}`);
-//         });
-//     };
-//     this.addMessageListener(this.receiveMessage);
-//   }
-// }
-
-// class Messenger {
-//   receiveMessage!: (arg0: DataFrame, arg1: Runtime.MessageSender) => void;
-//   type: string;
-//   constructor(type: "IFrameMessenger" | "MainFrameMessenger") {
-//     this.type = type;
-//   }
-
-//   addMessageListener(
-//     receiveMessage: (arg0: DataFrame, arg1: Runtime.MessageSender) => void
-//   ) {
-//     browser.runtime.onMessage.addListener((dataframe, sender) => {
-//       console.log(
-//         `Jelly-Party: ${
-//           this.type
-//         } received dataframe. DataFrame is ${JSON.stringify(dataframe)}`
-//       );
-//       receiveMessage(dataframe, sender);
-//     });
-//   }
-
-//   sendData(dataframe: DataFrame) {
-//     console.log(
-//       `Jelly-Party: ${this.type} send dataframe: ${JSON.stringify(dataframe)}`
-//     );
-//     browser.runtime.sendMessage(dataframe).catch((err) => {
-//       console.error(`Jelly-Party: Messaging error: ${err}`);
-//     });
-//   }
-// }
-
-// export class MainFrameMessenger extends Messenger {
-//   constructor(videoHandler: VideoHandler) {
-//     super("MainFrameMessenger");
-//     this.receiveMessage = (dataframe: DataFrame, sender: Runtime.MessageSender) => {
-//       switch (dataframe.type) {
-//         case "media": {
-//           if (dataframe.payload.type === "videoUpdate") {
-//             switch (dataframe.payload.data.variant) {
-//               case "play": {
-//                 videoHandler.play();
-//                 break;
-//               }
-//               case "pause": {
-//                 videoHandler.pause();
-//                 break;
-//               }
-//               case "seek": {
-//                 videoHandler.seek(dataframe.payload.data.tick ?? 0);
-//                 break;
-//               }
-//             }
-//           } else {
-//             console.log(
-//               `Jelly-Party: ${this.type} received erroneous message:`
-//             );
-//             console.log(dataframe);
-//           }
-//           break;
-//         }
-//         case "notyf": {
-//           break;
-//         }
-//         case "videoStateDataFrame": {
-//           sender.send;
-//           break;
-//         }
-//         default: {
-//           console.log(`Jelly-Party: ${this.type} received erroneous message:`);
-//           console.log(dataframe);
-//         }
-//       }
-//     };
-//     this.addMessageListener(this.receiveMessage);
-//   }
-// }
-
-// Reset event counter, based on the command we receive. We will not forward
-// events until we have dealt with the command to prevent infinite loops.
-// this.videoHandler.eventsToProcess = 0;

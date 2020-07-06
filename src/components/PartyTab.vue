@@ -35,10 +35,7 @@
       <div style="height: var(--party-tab-header)">
         <ControlsBar />
         <InfoBox heading="Party Id" text="easy-thieves-walk-quickly" />
-        <InfoBox
-          heading="Magic link"
-          text="https://join.jelly-party-com/?partyId=this-is-a-test-id-and-it-should-be-long-enough-plus-there'll-be-more-information"
-        />
+        <InfoBox heading="Magic link" :text="magicLink" />
         <div class="text-center">
           <small class="text-white"
             >Share this magic link to let other people join your party.</small
@@ -61,6 +58,7 @@ import ChatMessenger from "@/components/ChatMessenger.vue";
 import InfoBox from "@/components/InfoBox.vue";
 import ControlsBar from "@/components/ControlsBar.vue";
 import store from "@/store/store";
+import { party as partyStore } from "@/store/party/index";
 
 export default {
   components: {
@@ -78,6 +76,11 @@ export default {
   methods: {
     startNewParty() {
       this.$root.$party.startParty();
+    },
+  },
+  computed: {
+    magicLink() {
+      return partyStore.state.magicLink;
     },
   },
 };
