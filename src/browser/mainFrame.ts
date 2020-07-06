@@ -362,6 +362,8 @@ export class MainFrame {
   }
 }
 
-if (!(window as any).jellyPartyLoaded) {
+if (window.location.host === "join.jelly-party.com") {
+  // Request background script to redirect & then inject content script
+} else if (!(window as any).jellyPartyLoaded) {
   new MainFrame(window.location.host);
 }

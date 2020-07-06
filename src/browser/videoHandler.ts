@@ -1,4 +1,4 @@
-import { MainFrameMessenger, DataFrame } from "@/browser/Messenger";
+import { MainFrameMessenger, MediaCommandFrame } from "@/browser/Messenger";
 
 // The VideoHandler handles playing, pausing & seeking videos
 // on different websites. For most websites the generic video.play(),
@@ -233,7 +233,7 @@ export default class VideoHandler {
     } else {
       // We triggered the PlayPause button, so forward it to everybody
       // Trigger play (will sync as well)
-      const dataframe: DataFrame = {
+      const dataframe: MediaCommandFrame = {
         type: "media",
         payload: {
           type: "videoUpdate",
@@ -259,7 +259,7 @@ export default class VideoHandler {
     } else {
       // We triggered the PlayPause button, so forward it to everybody
       // Trigger pause (will sync as well)
-      const dataframe: DataFrame = {
+      const dataframe: MediaCommandFrame = {
         type: "media",
         payload: {
           type: "videoUpdate",
@@ -284,7 +284,7 @@ export default class VideoHandler {
       );
     } else {
       // We triggered the seek, so forward it to everybody
-      const dataframe: DataFrame = {
+      const dataframe: MediaCommandFrame = {
         type: "media",
         payload: {
           type: "videoUpdate",
