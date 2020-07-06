@@ -57,6 +57,8 @@
 <script>
 import VEmojiPicker from "v-emoji-picker";
 import ClipboardJS from "clipboard";
+import { debounce as _debounce } from "lodash-es";
+import { party as partyStore } from "@/store/party/index";
 
 export default {
   components: {
@@ -65,6 +67,7 @@ export default {
   data: function() {
     return {
       text: "",
+      attached: true,
     };
   },
   methods: {
@@ -98,9 +101,33 @@ export default {
         this.text = "";
       }
     },
+    scrollToBottom() {
+      const div = document.getElementById("chatMessagesContainer");
+      div.scrollTop = div.scrollHeight;
+    },
   },
   mounted: function() {
     new ClipboardJS(".copy-button");
+    const el = document.querySelector("#chatMessagesContainer");
+    el.addEventListener(
+      "scroll",
+      _debounce(() => {
+        const isAtBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 1;
+        this.attached = isAtBottom;
+      }, 100)
+    );
+  },
+  computed: {
+    messages: function() {
+      return partyStore.state.chatMessages;
+    },
+  },
+  watch: {
+    messages: function() {
+      if (this.attached) {
+        this.scrollToBottom();
+      }
+    },
   },
   created: function() {
     // Create non-reactive references.

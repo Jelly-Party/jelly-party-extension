@@ -13,6 +13,20 @@ declare module "vue/types/vue" {
   }
 }
 
+Vue.directive("click-outside", {
+  bind: function(el: any, binding, vnode: any) {
+    el.clickOutsideEvent = function(event: any) {
+      if (!(el == event.target || el.contains(event.target))) {
+        vnode.context[binding.expression](event);
+      }
+    };
+    document.body.addEventListener("click", el.clickOutsideEvent);
+  },
+  unbind: function(el: any) {
+    document.body.removeEventListener("click", el.clickOutsideEvent);
+  },
+});
+
 Vue.config.devtools = ["development", "staging"].includes(process.env.NODE_ENV);
 console.log(`Vue.config.devtools = ${Vue.config.devtools}`);
 
