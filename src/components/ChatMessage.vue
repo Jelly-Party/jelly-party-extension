@@ -95,7 +95,7 @@ export default {
   justify-content: space-between;
 }
 .chatMessage {
-  border-radius: 2em;
+  border-radius: 1em;
   background-color: $jellyPartyPurple;
   color: white;
   text-align: left;

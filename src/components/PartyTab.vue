@@ -32,7 +32,8 @@
       </div>
     </div>
     <div v-if="store.state.connectedToServer" class="h-100 d-flex flex-column">
-      <div style="height: 185px">
+      <div style="height: var(--party-tab-header)">
+        <ControlsBar />
         <InfoBox heading="Party Id" text="easy-thieves-walk-quickly" />
         <InfoBox
           heading="Magic link"
@@ -45,7 +46,10 @@
         </div>
         <hr style="background-color: white;" />
       </div>
-      <ChatMessenger class="text-white" style="height: calc(100% - 185px)" />
+      <ChatMessenger
+        class="text-white"
+        style="height: calc(100% - var(--party-tab-header))"
+      />
     </div>
   </div>
 </template>
@@ -55,6 +59,7 @@ import JellyPartyPrimaryButton from "@/components/JellyPartyPrimaryButton.vue";
 import PreviousPartyList from "@/components/PreviousPartyList.vue";
 import ChatMessenger from "@/components/ChatMessenger.vue";
 import InfoBox from "@/components/InfoBox.vue";
+import ControlsBar from "@/components/ControlsBar.vue";
 import store from "@/store/store";
 
 export default {
@@ -62,6 +67,7 @@ export default {
     JellyPartyPrimaryButton,
     PreviousPartyList,
     InfoBox,
+    ControlsBar,
     ChatMessenger,
   },
   data: function() {
