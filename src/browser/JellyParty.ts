@@ -10,7 +10,7 @@ import store from "@/store/store";
 import { RootState as RootStateType } from "@/store/types";
 import { OptionsState as OptionsStateType } from "@/store/options/types";
 import { PartyState as PartyStateType } from "@/store/party/types";
-import { state as optionsState, options } from "@/store/options/index";
+import { state as optionsState } from "@/store/options/index";
 import { state as partyState } from "@/store/party/index";
 import { stableWebsites } from "@/helpers/stableWebsites";
 import { IFrameMessenger } from "@/browser/Messenger";
