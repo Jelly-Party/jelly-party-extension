@@ -3,17 +3,38 @@
     <div
       v-if="!store.state.connectingToServer && !store.state.connectedToServer"
     >
-      <h3 class="text-white text-center">Start something new</h3>
-      <div class="d-flex flex-column mr-5 ml-5 mt-4">
-        <JellyPartyPrimaryButton v-on:click.native="startNewParty">
-          Start a new party</JellyPartyPrimaryButton
+      <b-container>
+        <h3 class="text-white text-center">Getting started</h3>
+        <p class="text-justify">
+          To begin with, please make sure that all your friends have
+          <a href="https://www.jelly-party.com/">Jelly-Party</a> installed. Then
+          follow these simple steps:
+        </p>
+        <ol>
+          <li>Customize your avatar and name yourself.</li>
+          <li>Press <b>"Start a new party"</b> below.</li>
+          <li>Share your magic link.</li>
+        </ol>
+        <p>For more help, visit the help tab above.</p>
+      </b-container>
+      <hr style="background-color: white;" class="my-4" />
+      <StarNewPartyComponent />
+      <hr style="background-color: white;" class="my-4" />
+      <JoinPartyByIdComponent />
+      <hr style="background-color: white;" class="my-4" />
+
+      <!-- <h3 class="text-white text-center mt-4">
+        Rejoin a previous party
+        <span style="font-size: 0.7em">
+        <b-icon
+          icon="question-circle-fill"
+          v-b-tooltip.hover
+          title="Perfect if you just want to get started with a new party ASAP."
         >
-      </div>
-      <h3 class="text-white text-center mt-4">
-        Join a previous party
+        </b-icon>
+      </span>
       </h3>
-      <PreviousPartyList />
-      <div id="videoIframe" />
+      <PreviousPartyList /> -->
     </div>
     <div
       v-if="store.state.connectingToServer"
@@ -52,31 +73,28 @@
 </template>
 
 <script>
-import JellyPartyPrimaryButton from "@/components/JellyPartyPrimaryButton.vue";
-import PreviousPartyList from "@/components/PreviousPartyList.vue";
+// import PreviousPartyList from "@/components/PreviousPartyList.vue";
 import ChatMessenger from "@/components/ChatMessenger.vue";
 import InfoBox from "@/components/InfoBox.vue";
 import ControlsBar from "@/components/ControlsBar.vue";
 import store from "@/store/store";
 import { party as partyStore } from "@/store/party/index";
+import JoinPartyByIdComponent from "@/components/JoinPartyByIdComponent.vue";
+import StarNewPartyComponent from "@/components/StartNewPartyComponent.vue";
 
 export default {
   components: {
-    JellyPartyPrimaryButton,
-    PreviousPartyList,
+    StarNewPartyComponent,
+    // PreviousPartyList,
     InfoBox,
     ControlsBar,
     ChatMessenger,
+    JoinPartyByIdComponent,
   },
   data: function() {
     return {
       store,
     };
-  },
-  methods: {
-    startNewParty() {
-      this.$root.$party.startParty();
-    },
   },
   computed: {
     magicLink() {
@@ -89,4 +107,9 @@ export default {
 };
 </script>
 
-<style></style>
+<style lang="scss">
+.nav-tabs .nav-link:hover,
+.nav-tabs .nav-link:focus {
+  border: none;
+}
+</style>

@@ -19,10 +19,13 @@
         :topType="topType"
       />
     </div>
-    <b-input-group prepend="Name" class="p-3">
+    <b-input-group prepend="Name" class="px-3 pt-2">
       <b-form-input v-model="clientName"></b-form-input>
     </b-input-group>
-    <div class="p-3">
+    <p class="text-center m-0 p-0">
+      <small>Please scroll down to save your settings.</small>
+    </p>
+    <div class="px-3">
       <AvatarSliderOption optionsKey="accessoriesType" />
       <AvatarSliderOption optionsKey="clotheType" />
       <AvatarSliderOption optionsKey="clotheColor" />

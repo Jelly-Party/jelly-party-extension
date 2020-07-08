@@ -28,22 +28,25 @@ export default {
 
 :root {
   --jelly-party-sidebar-width: 350px;
-  --scrollbarBG: #cfd8dc;
-  --thumbBG: #90a4ae;
+  --scrollbarBG: #f5f5f5;
+  --thumbBG: #555;
 }
 @mixin scrollbars() {
   // For Google Chrome
   &::-webkit-scrollbar {
-    width: 0.5em;
-    height: 0.5em;
+    width: 9px;
+    background-color: var(--scrollbarBG);
   }
   &::-webkit-scrollbar-thumb {
     background-color: var(--thumbBG);
-    border-radius: 6px;
-    border: 3px solid var(--scrollbarBG);
+    border-radius: 10px;
+    -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
   }
   &::-webkit-scrollbar-track {
     background: var(--scrollbarBG);
+    -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+    border-radius: 10px;
+    background-color: var(--scrollbarBG);
   }
 }
 body {
@@ -56,16 +59,11 @@ body {
 #jellyPartyTabsContainer {
   @include scrollbars();
 }
-html {
-  --scrollbarBG: #cfd8dc;
-  --thumbBG: #90a4ae;
-}
-
 #wrapper {
   background: linear-gradient(
     to right bottom,
-    rgb(255, 148, 148) 0%,
-    rgb(238, 100, 246) 100%
+    darken(rgb(255, 148, 148), 20%) 0%,
+    darken(rgb(238, 100, 246), 20%) 100%
   );
   height: 100vh;
   transition: background-color 300ms ease;

@@ -1,6 +1,12 @@
 <template>
   <b-container class="pb-4">
-    <div class="chatMessage-container">
+    <div
+      v-if="chatMessage.peer.uuid === 'jellyPartyLogMessage'"
+      class="text-center"
+    >
+      <small> {{ chatMessage.data.text }} — {{ timestamp }}</small>
+    </div>
+    <div v-else class="chatMessage-container">
       <Avataaar
         v-if="!systemMessage"
         v-b-tooltip.hover

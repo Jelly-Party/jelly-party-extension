@@ -1,5 +1,5 @@
 <template>
-  <b-container class="qa-collapse">
+  <b-container class="qa-collapse text-center">
     <b-button v-b-toggle="id" class="m-1"
       ><slot name="question">Question</slot></b-button
     >

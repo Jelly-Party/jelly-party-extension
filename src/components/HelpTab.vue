@@ -5,14 +5,15 @@
       <QA id="start-party-question">
         <template v-slot:question>How do I start a party?</template>
         <template v-slot:answer
-          >Simply to the "Party" tab and press "Start a new party".
+          >Simply head to the "Party" tab and press "Start a new party".
         </template>
       </QA>
       <QA id="join-party-magic-link-question">
         <template v-slot:question>How do I join using a magic link?</template>
         <template v-slot:answer
           >Simply open the magic link in a browser with Jelly-Party installed
-          and you will automatically join the party.
+          and you will automatically join the party. Note that Jelly-Party may
+          ask you for additional permissions.
         </template>
       </QA>
       <QA id="join-party-manually-question">
@@ -42,7 +43,7 @@
     </b-container>
     <b-container class="mt-3">
       <h3 class="text-white text-center">Support Jelly-Party</h3>
-      <p>
+      <p class="text-justify">
         If you want to show your support, you can back me on Patreon. This will
         help cover the server costs and allow me to spend more time on improving
         Jelly-Party.
@@ -50,24 +51,28 @@
       <PatreonButton />
     </b-container>
     <b-container class="mt-3">
-      <h3 class="text-white text-center">About Jelly-Party</h3>
-      <p class="text-justify">
-        Jelly-Party syncs video playback between a group of people. If you want
-        to watch Netflix, Disney+, Youtube and many
-        <a href="https://www.jelly-party.com/">other sites</a> <b>together</b>,
-        Jelly-Party is for you.<br /><br />
-        You click pause, and the video pauses for everybody. Somebody clicks
-        play, and the video plays for everybody. Leave the cumbersome "3—2—1—GO"
-        behind!
-      </p>
-    </b-container>
-    <b-container class="mt-3 pb-3">
       <h3 class="text-white text-center">More help</h3>
-      <p>
+      <p class="text-justify">
         Join our <a href="https://discord.gg/H3dExqc">Discord channel</a> to get
         more help and browse our
         <a href="https://www.jelly-party.com/">website</a> to learn more about
         Jelly-Party.
+      </p>
+    </b-container>
+    <b-container class="mt-3">
+      <h3 class="text-white text-center">Open source software</h3>
+      <p class="text-justify">
+        Jelly-Party is powered by amazing open source software, notably
+        <a href="https://nodejs.org/en/">nodejs</a>,
+        <a href="https://vuejs.org/">vuejs</a>,
+        <a href="https://bootstrap-vue.org/">Bootstrap</a>,
+        <a href="https://fontawesome.com/">FontAwesome</a>,
+        <a href="https://github.com/joaoeudes7/V-Emoji-Picker">v-emoji-picker</a
+        >,
+        <a href="https://github.com/orgordin/vuejs-avataaars"
+          >vuejs-avataaars</a
+        >
+        and much more!
       </p>
     </b-container>
   </div>

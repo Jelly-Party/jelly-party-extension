@@ -10,7 +10,7 @@ import store from "@/store/store";
 import { RootState as RootStateType } from "@/store/types";
 import { OptionsState as OptionsStateType } from "@/store/options/types";
 import { PartyState as PartyStateType } from "@/store/party/types";
-import { state as optionsState } from "@/store/options/index";
+import { state as optionsState, options } from "@/store/options/index";
 import { state as partyState } from "@/store/party/index";
 import { stableWebsites } from "@/helpers/stableWebsites";
 import { IFrameMessenger } from "@/browser/Messenger";
@@ -63,7 +63,7 @@ export default class JellyParty {
     this.iFrameMessenger = new IFrameMessenger(this);
     log.debug("Jelly-Party: Global JellyParty Object");
     log.debug(this);
-    this.displayNotification("Jelly Party loaded!");
+    this.displayNotification("Jelly Party loaded!", true);
     // Let's request autojoin
     this.iFrameMessenger.sendData({
       type: "joinPartyRequest",
@@ -119,16 +119,18 @@ export default class JellyParty {
     this.connectToPartyHelper(partyId);
   }
 
-  displayNotification(notificationText: string) {
-    const notyfDataFrame = {
-      type: "notyf" as "notyf",
-      payload: {
-        type: "notification" as "notification",
-        message: notificationText,
-      },
-      context: "JellyParty" as "JellyParty",
-    };
-    this.iFrameMessenger.sendData(notyfDataFrame);
+  displayNotification(notificationText: string, forceDisplay = false) {
+    if (forceDisplay || optionsState.statusNotificationsNotyf) {
+      const notyfDataFrame = {
+        type: "notyf" as "notyf",
+        payload: {
+          type: "notification" as "notification",
+          message: notificationText,
+        },
+        context: "JellyParty" as "JellyParty",
+      };
+      this.iFrameMessenger.sendData(notyfDataFrame);
+    }
   }
 
   connectToPartyHelper = function(this: JellyParty, partyId = "") {
@@ -218,6 +220,7 @@ export default class JellyParty {
               ? `${peer} paused the video.`
               : `${peer} jumped to ${toHHMMSS(msg.data.tick)}.`;
           this.displayNotification(notificationText);
+          this.logToChat(notificationText);
           break;
         }
         case "partyStateUpdate": {
@@ -301,6 +304,20 @@ export default class JellyParty {
     this.ws.close();
     this.resetPartyState();
     this.displayNotification("You left the party!");
+  }
+
+  logToChat(text: string) {
+    if (optionsState.statusNotificationsInChat) {
+      const chatMessage: ChatMessage = {
+        type: "chatMessage",
+        peer: { uuid: "jellyPartyLogMessage" }, // will be added by server
+        data: {
+          text: text,
+          timestamp: Date.now(),
+        },
+      };
+      store.commit("party/addChatMessage", chatMessage);
+    }
   }
 
   sendChatMessage(text: string) {

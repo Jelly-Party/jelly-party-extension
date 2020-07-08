@@ -1,7 +1,7 @@
 <template>
   <div class="text-center">
     <small>{{ readableoptionsKey }}</small>
-    <div class="avatar-slider-option mb-2 w-100 d-flex align-items-center">
+    <div class="avatar-slider-option mb-1 w-100 d-flex align-items-center">
       <b-btn
         class="avatar-slider-button avatar-slider-button--left"
         @click="previousOption"
