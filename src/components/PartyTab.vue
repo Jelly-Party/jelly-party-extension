@@ -34,7 +34,7 @@
     <div v-if="store.state.connectedToServer" class="h-100 d-flex flex-column">
       <div style="height: var(--party-tab-header)">
         <ControlsBar />
-        <InfoBox heading="Party Id" text="easy-thieves-walk-quickly" />
+        <InfoBox heading="Party Id" :text="partyId" />
         <InfoBox heading="Magic link" :text="magicLink" />
         <div class="text-center">
           <small class="text-white"
@@ -81,6 +81,9 @@ export default {
   computed: {
     magicLink() {
       return partyStore.state.magicLink;
+    },
+    partyId() {
+      return partyStore.state.partyId;
     },
   },
 };

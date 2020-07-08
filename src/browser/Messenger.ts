@@ -1,4 +1,3 @@
-import { browser, Runtime } from "webextension-polyfill-ts";
 import JellyParty from "@/browser/JellyParty";
 import VideoHandler from "@/browser/videoHandler";
 import { VideoState } from "@/browser/videoHandler";
@@ -19,6 +18,7 @@ export interface NotyfFrame {
     type: "notification";
     message: string;
   };
+  context: "JellyParty";
 }
 
 export type DataFrameMediaVariantType =
@@ -36,15 +36,18 @@ export interface MediaCommandFrame {
       tick: number | undefined;
     };
   };
+  context: "JellyParty";
 }
 
 export interface SimpleRequestFrame {
-  type: "videoStateRequest" | "joinPartyRequest";
+  type: "videoStateRequest" | "joinPartyRequest" | "baseLinkRequest";
+  context: "JellyParty";
 }
 
 export interface VideoStateResponseFrame {
   type: "videoStateResponse";
   payload: VideoState;
+  context: "JellyParty";
 }
 
 export interface JoinPartyCommandFrame {
@@ -52,6 +55,15 @@ export interface JoinPartyCommandFrame {
   payload: {
     partyId: string;
   };
+  context: "JellyParty";
+}
+
+export interface BaseLinkResponseFrame {
+  type: "baseLinkResponse";
+  payload: {
+    baseLink: string;
+  };
+  context: "JellyParty";
 }
 
 export type MultiFrame =
@@ -59,170 +71,176 @@ export type MultiFrame =
   | MediaCommandFrame
   | SimpleRequestFrame
   | VideoStateResponseFrame
-  | JoinPartyCommandFrame;
+  | JoinPartyCommandFrame
+  | BaseLinkResponseFrame;
 
-class Messenger {
-  port!: Runtime.Port;
-  messengerType: string;
-
-  constructor(messengerType: string) {
-    this.messengerType = messengerType;
-  }
-  sendData(dataframe: MultiFrame & { counter?: number | undefined }) {
-    if (!this.port && !(dataframe.counter ?? 0 > 3)) {
-      setTimeout(() => {
-        this.sendData({ ...dataframe, ...{ counter: dataframe.counter ?? 0 } });
-      }, 100 * (dataframe.counter ?? 1));
-    } else {
-      this.port.postMessage(dataframe);
-    }
-  }
-}
-
-export class MainFrameMessenger extends Messenger {
+export class MainFrameMessenger {
   // Playing, pausing and seeking means actually playing, pausing and seeking the video in this context
   // We have direct access to the video, but no access to the JellyParty object.
   videoHandler!: VideoHandler;
   mainFrame: MainFrame;
+  messengerType: string;
   showNotification: (arg0: string) => void;
   constructor(showNotification: (arg0: string) => void, mainFrame: MainFrame) {
-    super("MainFrameMessenger");
+    this.messengerType = "MainFrameMessenger";
     this.showNotification = showNotification;
     this.mainFrame = mainFrame;
-    browser.runtime.onConnect.addListener((port) => {
-      this.port = port;
-      port.onMessage.addListener((msg: MultiFrame) => {
-        // Reset the event counter
-        this.videoHandler.eventsToProcess = 0;
-        switch (msg.type) {
-          case "media": {
-            if (msg.payload.type === "videoUpdate") {
-              switch (msg.payload.data.variant) {
-                case "play": {
-                  this.videoHandler.play();
-                  break;
-                }
-                case "pause": {
-                  this.videoHandler.pause();
-                  break;
-                }
-                case "seek": {
-                  this.videoHandler.seek(msg.payload.data.tick ?? 0);
-                  break;
-                }
-                case "togglePlayPause": {
-                  this.videoHandler.togglePlayPause();
-                }
-              }
-            } else {
-              console.log(
-                `Jelly-Party: ${this.messengerType} received erroneous message:`
-              );
-              console.log(msg);
+    window.addEventListener("message", (event: Event & { data?: any }) => {
+      // Reset the event counter
+      this.videoHandler.eventsToProcess = 0;
+      // Load the message
+      const msg: MultiFrame = event.data;
+      if (!(msg.context === "JellyParty")) {
+        console.log("Received message that's probably not from JellyParty.");
+        return;
+      }
+      switch (msg.type) {
+        case "media": {
+          switch (msg.payload.data.variant) {
+            case "play": {
+              this.videoHandler.play();
+              break;
             }
-            break;
+            case "pause": {
+              this.videoHandler.pause();
+              break;
+            }
+            case "seek": {
+              this.videoHandler.seek(msg.payload.data.tick ?? 0);
+              break;
+            }
+            case "togglePlayPause": {
+              this.videoHandler.togglePlayPause();
+            }
           }
-          case "notyf": {
-            // Call showNotification to trigger a notyf
-            this.showNotification(msg.payload.message);
-            break;
-          }
-          case "joinPartyRequest": {
-            this.mainFrame.autojoin();
-            break;
-          }
-          case "videoStateRequest": {
-            // We must respond to this request with the current video state
-            const videoStateDataFrame: VideoStateResponseFrame = {
-              type: "videoStateResponse",
-              payload: this.videoHandler.getVideoState(),
-            };
-            this.sendData(videoStateDataFrame);
-            break;
-          }
-          default: {
-            console.log(
-              `Jelly-Party: ${this.messengerType} received erroneous message:`
-            );
-            console.log(msg);
-          }
+          break;
         }
-      });
+        case "notyf": {
+          // Call showNotification to trigger a notyf
+          this.showNotification(msg.payload.message);
+          break;
+        }
+        case "joinPartyRequest": {
+          this.mainFrame.autojoin();
+          break;
+        }
+        case "videoStateRequest": {
+          // We must respond to this request with the current video state
+          const videoStateDataFrame: VideoStateResponseFrame = {
+            type: "videoStateResponse",
+            payload: this.videoHandler.getVideoState(),
+            context: "JellyParty",
+          };
+          this.sendData(videoStateDataFrame);
+          break;
+        }
+        case "baseLinkRequest": {
+          const baseLink = this.mainFrame.getBaseLink();
+          const baseLinkResponse: BaseLinkResponseFrame = {
+            type: "baseLinkResponse",
+            payload: {
+              baseLink: baseLink,
+            },
+            context: "JellyParty",
+          };
+          this.sendData(baseLinkResponse);
+          break;
+        }
+        default: {
+          console.log(
+            `Jelly-Party: ${this.messengerType} received erroneous message:`
+          );
+          console.log(msg);
+        }
+      }
     });
+  }
+  sendData(dataFrame: MultiFrame) {
+    (document.querySelector(
+      "#jellyPartyRoot"
+    ) as any).contentWindow.postMessage(dataFrame, "*");
   }
 }
 
-export class IFrameMessenger extends Messenger {
+export class IFrameMessenger {
   // Playing, pausing and seeking in this context means notifying peers
   // We do not have access to the video inside the IFrame.
   party: JellyParty;
+  messengerType: string;
   constructor(party: JellyParty) {
-    super("IFrameMessenger");
+    this.messengerType = "IFrameMessenger";
     this.party = party;
     console.log("Jelly-Party: Attempting to connect IFrame with MainFrame.");
-    browser.tabs
-      .query({
-        currentWindow: true,
-        active: true,
-      })
-      .then((tabs) => {
-        if (tabs.length > 0) {
-          if (tabs[0]?.id) {
-            this.port = browser.tabs.connect(tabs[0].id);
-            this.port.onMessage.addListener((msg: MultiFrame) => {
-              switch (msg.type) {
-                case "media": {
-                  if (msg.payload.type === "videoUpdate") {
-                    switch (msg.payload.data.variant) {
-                      case "play": {
-                        this.party.requestPeersToPlay(msg.payload.data.tick);
-                        break;
-                      }
-                      case "pause": {
-                        this.party.requestPeersToPause(msg.payload.data.tick);
-                        break;
-                      }
-                      case "seek": {
-                        this.party.requestPeersToSeek(msg.payload.data.tick);
-                        break;
-                      }
-                      default: {
-                        console.log(
-                          `Jelly-Party: ${this.messengerType} received erroneous message:`
-                        );
-                        console.error(msg);
-                      }
-                    }
-                  } else {
-                    console.log(
-                      `Jelly-Party: ${this.messengerType} received erroneous message:`
-                    );
-                    console.log(msg);
-                  }
-                  break;
-                }
-                case "videoStateResponse": {
-                  // We resolve a video state promise that gets created upon calling the async
-                  // JellyParty.getVideoState(). This is essentially the same as using a Deferred
-                  // see https://stackoverflow.com/questions/26150232/resolve-javascript-promise-outside-function-scope
-                  this.party.resolveVideoState(msg.payload);
-                  break;
-                }
-                case "joinPartyCommand": {
-                  this.party.joinParty(msg.payload.partyId);
-                  break;
-                }
-                default: {
-                  console.log(
-                    `Jelly-Party: ${this.messengerType} received erroneous message:`
-                  );
-                  console.log(msg);
-                }
+    window.addEventListener("message", (event: Event & { data?: any }) => {
+      // Load the message
+      const msg: MultiFrame = event.data;
+      if (!(msg.context === "JellyParty")) {
+        console.log("Received message that's probably not from JellyParty.");
+        return;
+      }
+      switch (msg.type) {
+        case "media": {
+          if (msg.payload.type === "videoUpdate") {
+            switch (msg.payload.data.variant) {
+              case "play": {
+                this.party.requestPeersToPlay(msg.payload.data.tick);
+                break;
               }
-            });
-            this.party.displayNotification("Jelly Party loaded!");
+              case "pause": {
+                this.party.requestPeersToPause(msg.payload.data.tick);
+                break;
+              }
+              case "seek": {
+                this.party.requestPeersToSeek(msg.payload.data.tick);
+                break;
+              }
+              default: {
+                console.log(
+                  `Jelly-Party: ${this.messengerType} received erroneous message:`
+                );
+                console.error(msg);
+              }
+            }
+          } else {
+            console.log(
+              `Jelly-Party: ${this.messengerType} received erroneous message:`
+            );
+            console.log(event);
           }
+          break;
         }
-      });
+        case "videoStateResponse": {
+          // We resolve a video state promise that gets created upon calling the async
+          // JellyParty.getVideoState(). This is essentially the same as using a Deferred
+          // see https://stackoverflow.com/questions/26150232/resolve-javascript-promise-outside-function-scope
+          this.party.resolveVideoState(msg.payload);
+          break;
+        }
+        case "joinPartyCommand": {
+          this.party.joinParty(msg.payload.partyId);
+          break;
+        }
+        case "baseLinkResponse": {
+          const magicLink = new URL("https://join.jelly-party.com/");
+          const redirectURL = encodeURIComponent(msg.payload.baseLink);
+          magicLink.searchParams.append("redirectURL", redirectURL);
+          magicLink.searchParams.append(
+            "jellyPartyId",
+            this.party.partyState.partyId
+          );
+          this.party.resolveMagicLink(magicLink.toString());
+          break;
+        }
+        default: {
+          console.log(
+            `Jelly-Party: ${this.messengerType} received erroneous message:`
+          );
+          console.log(msg);
+        }
+      }
+    });
+  }
+  sendData(dataFrame: MultiFrame) {
+    window.parent.postMessage(dataFrame, "*");
   }
 }

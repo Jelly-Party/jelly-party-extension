@@ -98,22 +98,24 @@
           :key="peer.uuid"
           class="d-flex align-items-center justify-content-center"
         >
-          <Avataaar
-            style="height:3.5em; width: 3.5em;"
-            :title="getPeer(peer.uuid).clientName"
-            :accessoriesType="getPeer(peer.uuid).avatarState.accessoriesType"
-            :clotheType="getPeer(peer.uuid).avatarState.clotheType"
-            :clotheColor="getPeer(peer.uuid).avatarState.clotheColor"
-            :eyebrowType="getPeer(peer.uuid).avatarState.eyebrowType"
-            :eyeType="getPeer(peer.uuid).avatarState.eyeType"
-            :facialHairColor="getPeer(peer.uuid).avatarState.facialHairColor"
-            :facialHairType="getPeer(peer.uuid).avatarState.facialHairType"
-            :graphicType="'Hola'"
-            :hairColor="getPeer(peer.uuid).avatarState.hairColor"
-            :mouthType="getPeer(peer.uuid).avatarState.mouthType"
-            :skinColor="getPeer(peer.uuid).avatarState.skinColor"
-            :topType="getPeer(peer.uuid).avatarState.topType"
-          />
+          <div>
+            <Avataaar
+              style="height:3.5em; width: 3.5em;"
+              :title="getPeer(peer.uuid).clientName"
+              :accessoriesType="getPeer(peer.uuid).avatarState.accessoriesType"
+              :clotheType="getPeer(peer.uuid).avatarState.clotheType"
+              :clotheColor="getPeer(peer.uuid).avatarState.clotheColor"
+              :eyebrowType="getPeer(peer.uuid).avatarState.eyebrowType"
+              :eyeType="getPeer(peer.uuid).avatarState.eyeType"
+              :facialHairColor="getPeer(peer.uuid).avatarState.facialHairColor"
+              :facialHairType="getPeer(peer.uuid).avatarState.facialHairType"
+              :graphicType="'Hola'"
+              :hairColor="getPeer(peer.uuid).avatarState.hairColor"
+              :mouthType="getPeer(peer.uuid).avatarState.mouthType"
+              :skinColor="getPeer(peer.uuid).avatarState.skinColor"
+              :topType="getPeer(peer.uuid).avatarState.topType"
+            />
+          </div>
           <div class="jelly-party-name-wrapper">
             <span class="text-white"> {{ peer.clientName }} </span>
           </div>

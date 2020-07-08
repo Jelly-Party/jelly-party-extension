@@ -36,6 +36,7 @@ export default class JellyParty {
   iFrameMessenger: IFrameMessenger;
   videoState!: VideoState;
   resolveVideoState!: (arg0: VideoState) => VideoState;
+  resolveMagicLink!: (arg0: string) => string;
 
   constructor() {
     this.rootState = store.state;
@@ -62,22 +63,28 @@ export default class JellyParty {
     this.iFrameMessenger = new IFrameMessenger(this);
     log.debug("Jelly-Party: Global JellyParty Object");
     log.debug(this);
+    this.displayNotification("Jelly Party loaded!");
     // Let's request autojoin
-    this.iFrameMessenger.sendData({ type: "joinPartyRequest" });
+    this.iFrameMessenger.sendData({
+      type: "joinPartyRequest",
+      context: "JellyParty",
+    });
   }
   resetPartyState() {
     store.dispatch("party/resetPartyState");
   }
 
-  updateMagicLink() {
-    // Get "clean" website URL without jellyPartyId=..
-    const searchParams = new URLSearchParams(window.location.search);
-    searchParams.delete("jellyPartyId");
-    const redirectURL = encodeURIComponent(
-      window.location.origin + window.location.pathname + "?" + searchParams
-    );
-    // Set the magic link
-    const magicLink = `https://join.jelly-party.com/?jellyPartyId=${this.partyState.partyId}&redirectURL=${redirectURL}`;
+  async updateMagicLink() {
+    // Deferred used in similar way to VideoState request
+    let magicLink: any = new Promise((resolve, reject) => {
+      this.resolveMagicLink = resolve as (arg0: string) => string;
+    });
+    const request: SimpleRequestFrame = {
+      type: "baseLinkRequest",
+      context: "JellyParty",
+    };
+    this.iFrameMessenger.sendData(request);
+    magicLink = await magicLink;
     store.dispatch("party/setMagicLink", magicLink);
   }
 
@@ -119,6 +126,7 @@ export default class JellyParty {
         type: "notification" as "notification",
         message: notificationText,
       },
+      context: "JellyParty" as "JellyParty",
     };
     this.iFrameMessenger.sendData(notyfDataFrame);
   }
@@ -183,7 +191,7 @@ export default class JellyParty {
       this.updateClientStateInterval = setInterval(this.updateClientState, 200);
     }.bind(this);
 
-    this.ws.onmessage = function(this: JellyParty, event: any) {
+    this.ws.onmessage = (event: any) => {
       const msg = JSON.parse(event.data);
       switch (msg.type) {
         case "videoUpdate": {
@@ -200,6 +208,7 @@ export default class JellyParty {
                 tick: msg.data.tick,
               },
             },
+            context: "JellyParty",
           };
           this.iFrameMessenger.sendData(mediaDataFrame);
           const notificationText =
@@ -263,7 +272,9 @@ export default class JellyParty {
           break;
         }
         case "chatMessage": {
-          // this.chatHandler.chatComponent.receiveChatMessage(msg);
+          this.sendChatMessage(msg);
+          const chatMessage: ChatMessage = msg;
+          store.commit("party/addChatMessage", chatMessage);
           break;
         }
         case "setUUID": {
@@ -276,14 +287,14 @@ export default class JellyParty {
           );
         }
       }
-    }.bind(this);
+    };
 
-    this.ws.onclose = function(this: JellyParty) {
+    this.ws.onclose = () => {
       log.debug("Jelly-Party: Disconnected from WebSocket-Server.");
       clearInterval(this.updateClientStateInterval);
       store.dispatch("setConnectedToServer", false);
-    }.bind(this);
-  }.bind(this);
+    };
+  };
 
   leaveParty() {
     log.info("Jelly-Party: Leaving current party.");
@@ -319,68 +330,56 @@ export default class JellyParty {
   }
 
   requestPeersToPlay(tick: number | undefined) {
-    if (tick) {
-      if (this.partyState.isActive) {
-        const clientCommand = {
-          type: "videoUpdate",
-          data: {
-            variant: "play",
-            tick: tick,
-            peer: { uuid: partyState.selfUUID },
-          },
-        };
-        const serverCommand = {
-          type: "forward",
-          data: { commandToForward: clientCommand },
-        };
-        this.ws.send(JSON.stringify(serverCommand));
-      }
-    } else {
-      log.log(`Jelly-Party: Invalid tick of ${tick}`);
+    if (this.partyState.isActive) {
+      const clientCommand = {
+        type: "videoUpdate",
+        data: {
+          variant: "play",
+          tick: tick ?? 0,
+          peer: { uuid: partyState.selfUUID },
+        },
+      };
+      const serverCommand = {
+        type: "forward",
+        data: { commandToForward: clientCommand },
+      };
+      this.ws.send(JSON.stringify(serverCommand));
     }
   }
 
   requestPeersToPause(tick: number | undefined) {
-    if (tick) {
-      if (this.partyState.isActive) {
-        const clientCommand = {
-          type: "videoUpdate",
-          data: {
-            variant: "pause",
-            tick: tick,
-            peer: { uuid: partyState.selfUUID },
-          },
-        };
-        const serverCommand = {
-          type: "forward",
-          data: { commandToForward: clientCommand },
-        };
-        this.ws.send(JSON.stringify(serverCommand));
-      }
-    } else {
-      log.log(`Jelly-Party: Invalid tick of ${tick}`);
+    if (this.partyState.isActive) {
+      const clientCommand = {
+        type: "videoUpdate",
+        data: {
+          variant: "pause",
+          tick: tick ?? 0,
+          peer: { uuid: partyState.selfUUID },
+        },
+      };
+      const serverCommand = {
+        type: "forward",
+        data: { commandToForward: clientCommand },
+      };
+      this.ws.send(JSON.stringify(serverCommand));
     }
   }
 
   requestPeersToSeek(tick: number | undefined) {
-    if (tick) {
-      if (this.partyState.isActive) {
-        const clientCommand = {
-          type: "videoUpdate",
-          data: {
-            variant: "seek",
-            tick: tick,
-            peer: { uuid: partyState.selfUUID },
-          },
-        };
-        const serverCommand = {
-          type: "forward",
-          data: { commandToForward: clientCommand },
-        };
-        this.ws.send(JSON.stringify(serverCommand));
-      }
-    } else {
-      log.log(`Jelly-Party: Invalid tick of ${tick}`);
+    if (this.partyState.isActive) {
+      const clientCommand = {
+        type: "videoUpdate",
+        data: {
+          variant: "seek",
+          tick: tick ?? 0,
+          peer: { uuid: partyState.selfUUID },
+        },
+      };
+      const serverCommand = {
+        type: "forward",
+        data: { commandToForward: clientCommand },
+      };
+      this.ws.send(JSON.stringify(serverCommand));
     }
   }
 
@@ -395,6 +394,7 @@ export default class JellyParty {
             tick: tick,
           },
         },
+        context: "JellyParty",
       };
       this.iFrameMessenger.sendData(msg);
     });
@@ -427,6 +427,7 @@ export default class JellyParty {
             tick: tick,
           },
         },
+        context: "JellyParty",
       };
       this.iFrameMessenger.sendData(msg);
     });
@@ -457,6 +458,7 @@ export default class JellyParty {
           tick: tick,
         },
       },
+      context: "JellyParty",
     };
     this.iFrameMessenger.sendData(msg);
     // const videoState = this.videoHandler.getVideoState();
@@ -481,6 +483,7 @@ export default class JellyParty {
   async getVideoState() {
     const dataframe: SimpleRequestFrame = {
       type: "videoStateRequest",
+      context: "JellyParty",
     };
     this.iFrameMessenger.sendData(dataframe);
     // We must await the asynchronous response. We do this by exposing the resolve method

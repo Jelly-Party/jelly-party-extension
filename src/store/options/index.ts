@@ -1,7 +1,6 @@
 import { Module } from "vuex";
 import { AvatarState, OptionsState } from "./types";
 import { RootState } from "../types";
-import uuidv4 from "@/helpers/uuidv4.js";
 // @ts-ignore
 import { getField, updateField } from "vuex-map-fields";
 import { browser } from "webextension-polyfill-ts";
@@ -15,7 +14,7 @@ export const state: OptionsState = {
   statusNotificationsInChat: true,
   statusNotificationsNotyf: true,
   previousParties: [{ partyId: "abc", members: ["me"], dateInfo: {} }],
-  guid: uuidv4(),
+  guid: "",
   avatarState: {
     accessoriesType: "Round",
     clotheType: "ShirtScoopNeck",
@@ -23,7 +22,7 @@ export const state: OptionsState = {
     eyebrowType: "Default",
     eyeType: "Default",
     facialHairColor: "Auburn",
-    facialHairType: "BeardMedium",
+    facialHairType: "Blank",
     graphicType: "Hola",
     hairColor: "Auburn",
     mouthType: "Twinkle",
@@ -42,7 +41,7 @@ export const options: Module<OptionsState, RootState> = {
   },
   actions: {
     populateOptionsStateFromChromeLocalStorage(context) {
-      browser.storage.sync.get(["options"]).then(function(res: any) {
+      browser.storage.local.get(["options"]).then(function(res: any) {
         console.log("Jelly-Party: Got options.");
         console.log(res.options);
         if (res.options) {
@@ -52,10 +51,9 @@ export const options: Module<OptionsState, RootState> = {
             res.options
           );
         } else {
-          console.log("Jelly-Party: No options found. Resetting options.");
-          browser.storage.sync.set({ options: state }).then(function() {
-            context.commit("populateOptionsStateFromChromeLocalStorage", state);
-          });
+          console.log(
+            "Jelly-Party: No options found. Must save options first to load options."
+          );
         }
       });
     },
@@ -69,7 +67,6 @@ export const options: Module<OptionsState, RootState> = {
       const newAvatarState: AvatarState = { ...state.avatarState };
       newAvatarState[stateKey] = newState;
       context.commit("updateAvatarState", newAvatarState);
-      console.log(state.avatarState);
     },
   },
   mutations: {
@@ -77,7 +74,7 @@ export const options: Module<OptionsState, RootState> = {
       Object.assign(state, options);
     },
     saveOptionsStateToChromeLocalStorage(state) {
-      browser.storage.sync.set({ options: state });
+      browser.storage.local.set({ options: state });
     },
     updateAvatarState(state, newAvatarState) {
       Object.assign(state.avatarState, newAvatarState);

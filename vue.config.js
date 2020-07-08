@@ -25,7 +25,7 @@ module.exports = {
   filenameHashing: false,
   configureWebpack: {
     entry: {
-      background: "./src/browser/background.js",
+      background: "./src/browser/background.ts",
       mainFrame: "./src/browser/mainFrame.ts",
       RootStyles: "./src/styles/RootStyles.scss",
     },
@@ -55,12 +55,12 @@ module.exports = {
       .tap((options) => Object.assign(options, { limit: 100240 }));
   },
   // TODO: Look into webpack's side effects: https://github.com/vuejs/vue-cli/issues/1287
-  // css: { extract: false },
   css: {
     loaderOptions: {
       sass: {
         prependData: `@import "~@/styles/_variables.scss";`,
       },
     },
+    extract: false,
   },
 };

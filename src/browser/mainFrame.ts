@@ -10,6 +10,7 @@ import VideoHandler from "@/browser/videoHandler";
 import Notyf from "./libs/js/notyf.min.js";
 import "./libs/css/notyf.min.css";
 import { JoinPartyCommandFrame } from "@/browser/Messenger";
+import { PermissionsFrame } from "@/browser/background";
 
 console.log(`Jelly-Party: Mode is ${process.env.NODE_ENV}`);
 
@@ -160,8 +161,13 @@ export class MainFrame {
         }, 3000);
         break;
       }
-      case "www.disneyplus.com":
+      case "www.disneyplus.com": {
         break;
+      }
+      case "vimeo.com": {
+        this.IFrameTarget = document.querySelector("#main");
+        break;
+      }
       default:
         console.log(`Jelly-Party: No customization intended for ${host}`);
         this.IFrameTarget = document.body;
@@ -197,7 +203,7 @@ export class MainFrame {
     const jellyPartyWrapper = document.createElement("div");
     jellyPartyWrapper.setAttribute(
       "style",
-      "position: fixed; right: 0; top: 0; bottom: 0; width: var(--jelly-party-sidebar-width); transition: all 1s ease; margin: 0px;height: 100vh;"
+      "position: fixed; right: 0; top: 0; bottom: 0; width: var(--jelly-party-sidebar-width); transition: all 1s ease; margin: 0px;height: 100vh; z-index: 999999;"
     );
     jellyPartyWrapper.id = "jellyPartyWrapper";
     const jellyPartyRoot = document.createElement("iframe");
@@ -356,14 +362,55 @@ export class MainFrame {
         payload: {
           partyId: this.partyIdFromURL,
         },
+        context: "JellyParty",
       };
       this.mainFrameMessenger.sendData(msg);
     }
+  }
+
+  getBaseLink() {
+    const baseLink: URL = new URL(window.location.href);
+    baseLink.searchParams.delete("jellyPartyId");
+    return baseLink.toString();
   }
 }
 
 if (window.location.host === "join.jelly-party.com") {
   // Request background script to redirect & then inject content script
+  (() => {
+    const jellyPartyId = decodeURIComponent(
+      new URLSearchParams(window.location.search).get("jellyPartyId") ?? ""
+    );
+    const redirectURL = new URL(
+      decodeURIComponent(
+        new URLSearchParams(window.location.search).get("redirectURL") ?? ""
+      )
+    );
+    if (!redirectURL || !jellyPartyId) {
+      console.log("Jelly-Party: Invalid link.");
+      return;
+    }
+    redirectURL.searchParams.append("jellyPartyId", jellyPartyId);
+    const permissionScheme = `${redirectURL.origin}/`;
+    const permissionButton = document.createElement("button");
+    permissionButton.id = "permissionButton";
+    permissionButton.className = "btn mt-2 btn-secondary btn-lg btn-block";
+    permissionButton.innerText = "Grant permissions now";
+    const firstButton = document.querySelector("button");
+    firstButton?.remove();
+    document.querySelector(".wrapper")?.appendChild(permissionButton);
+    permissionButton.onclick = async () => {
+      const request: PermissionsFrame = {
+        type: "checkPermissions",
+        payload: {
+          permissionScheme: permissionScheme,
+          redirectURL: redirectURL.toString(),
+        },
+      };
+      console.log(JSON.stringify(request));
+      browser.runtime.sendMessage(JSON.stringify(request));
+    };
+  })();
 } else if (!(window as any).jellyPartyLoaded) {
   new MainFrame(window.location.host);
 }

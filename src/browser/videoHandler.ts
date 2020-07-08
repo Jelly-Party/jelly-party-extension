@@ -242,6 +242,7 @@ export default class VideoHandler {
             tick: this.video?.currentTime,
           },
         },
+        context: "JellyParty",
       };
       this.mainFrameMessenger.sendData(dataframe);
     }
@@ -268,6 +269,7 @@ export default class VideoHandler {
             tick: this.video?.currentTime,
           },
         },
+        context: "JellyParty",
       };
       this.mainFrameMessenger.sendData(dataframe);
     }
@@ -293,6 +295,7 @@ export default class VideoHandler {
             tick: this.video?.currentTime,
           },
         },
+        context: "JellyParty",
       };
       this.mainFrameMessenger.sendData(dataframe);
     }
