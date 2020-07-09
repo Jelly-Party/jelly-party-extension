@@ -102,7 +102,7 @@ export class MainFrameMessenger {
           // This is required for a new queue of commands, e.g. a
           // "play" command initially triggers a "seek"
           if (msg.payload.resetEventCounter) {
-            this.videoHandler.eventsToProcess = 0;
+            this.videoHandler.noEventsToSkipBeforeForwardingAgain = 0;
           }
           switch (msg.payload.data.variant) {
             case "play": {

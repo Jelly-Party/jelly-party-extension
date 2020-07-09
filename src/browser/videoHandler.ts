@@ -14,7 +14,7 @@ export default class VideoHandler {
   host: string;
   notyf: any;
   mainFrameMessenger: MainFrameMessenger;
-  eventsToProcess: number;
+  noEventsToSkipBeforeForwardingAgain: number;
   findVideoInterval: number | undefined;
   video: HTMLVideoElement | null;
   findVideoAndAttach: () => void;
@@ -28,7 +28,7 @@ export default class VideoHandler {
   ) {
     this.host = host;
     // this.notyf = notyf;
-    this.eventsToProcess = 0;
+    this.noEventsToSkipBeforeForwardingAgain = 0;
     this.findVideoInterval;
     this.video = null;
     this.mainFrameMessenger = mainFrameMessenger;
@@ -122,7 +122,7 @@ export default class VideoHandler {
   }
 
   togglePlayPause() {
-    this.eventsToProcess += 1;
+    this.noEventsToSkipBeforeForwardingAgain += 1;
     if (this.video?.paused) {
       this.play();
     } else {
@@ -134,21 +134,21 @@ export default class VideoHandler {
     switch (host) {
       case "www.netflix.com": {
         return async () => {
-          this.eventsToProcess += 1;
+          this.noEventsToSkipBeforeForwardingAgain += 1;
           window.dispatchEvent(new CustomEvent("playRequest"));
           await this.sleep(50);
         };
       }
       case "www.disneyplus.com": {
         return async () => {
-          this.eventsToProcess += 1;
+          this.noEventsToSkipBeforeForwardingAgain += 1;
           window.dispatchEvent(new CustomEvent("playPauseRequest"));
           await this.sleep(50);
         };
       }
       default:
         return async () => {
-          this.eventsToProcess += 1;
+          this.noEventsToSkipBeforeForwardingAgain += 1;
           await this.video?.play();
         };
     }
@@ -158,20 +158,20 @@ export default class VideoHandler {
     switch (host) {
       case "www.netflix.com":
         return async () => {
-          this.eventsToProcess += 1;
+          this.noEventsToSkipBeforeForwardingAgain += 1;
           window.dispatchEvent(new CustomEvent("pauseRequest"));
           await this.sleep(50);
         };
       case "www.disneyplus.com": {
         return async () => {
-          this.eventsToProcess += 1;
+          this.noEventsToSkipBeforeForwardingAgain += 1;
           window.dispatchEvent(new CustomEvent("playPauseRequest"));
           await this.sleep(50);
         };
       }
       default:
         return async () => {
-          this.eventsToProcess += 1;
+          this.noEventsToSkipBeforeForwardingAgain += 1;
           await this.video?.pause();
         };
     }
@@ -187,7 +187,7 @@ export default class VideoHandler {
           if (timeDelta > 0.5) {
             // Seeking is actually worth it. We're off by more than half a second.
             // Disable forwarding for the upcoming seek event.
-            this.eventsToProcess += 1;
+            this.noEventsToSkipBeforeForwardingAgain += 1;
             window.dispatchEvent(
               new CustomEvent<number>("seekRequest", { detail: tick })
             );
@@ -203,7 +203,7 @@ export default class VideoHandler {
             if (timeDelta > 0.5) {
               // Seeking is actually worth it. We're off by more than half a second.
               // Disable forwarding for the upcoming seek event.
-              this.eventsToProcess += 1;
+              this.noEventsToSkipBeforeForwardingAgain += 1;
               this.video.currentTime = tick;
               await this.sleep(50);
             }
@@ -224,7 +224,7 @@ export default class VideoHandler {
 
   playListener = () => {
     console.log({ type: "play", tick: this.video?.currentTime });
-    if (this.eventsToProcess > 0) {
+    if (this.noEventsToSkipBeforeForwardingAgain > 0) {
       // Somebody else is asking us to play
       // We must not forward the event, otherwise we'll end up in an infinite "play now" loop
       console.log(
@@ -246,12 +246,12 @@ export default class VideoHandler {
       };
       this.mainFrameMessenger.sendData(dataframe);
     }
-    this.eventsToProcess -= 1;
+    this.noEventsToSkipBeforeForwardingAgain -= 1;
   };
 
   pauseListener = () => {
     console.log({ type: "pause", tick: this.video?.currentTime });
-    if (this.eventsToProcess > 0) {
+    if (this.noEventsToSkipBeforeForwardingAgain > 0) {
       // Somebody else is asking us to pause
       // We must not forward the event, otherwise we'll end up in an infinite "pause now" loop
       console.log(
@@ -273,12 +273,12 @@ export default class VideoHandler {
       };
       this.mainFrameMessenger.sendData(dataframe);
     }
-    this.eventsToProcess -= 1;
+    this.noEventsToSkipBeforeForwardingAgain -= 1;
   };
 
   seekingListener = () => {
     console.log({ type: "seek", tick: this.video?.currentTime });
-    if (this.eventsToProcess > 0) {
+    if (this.noEventsToSkipBeforeForwardingAgain > 0) {
       // Somebody else is asking us to seek
       // We must not forward the event, otherwise we'll end up in an infinite seek loop
       console.log(
@@ -299,7 +299,7 @@ export default class VideoHandler {
       };
       this.mainFrameMessenger.sendData(dataframe);
     }
-    this.eventsToProcess -= 1;
+    this.noEventsToSkipBeforeForwardingAgain -= 1;
   };
 
   emptiedListener() {
