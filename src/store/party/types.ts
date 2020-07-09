@@ -25,7 +25,6 @@ export interface PartyState {
   partyId: string;
   peers: Array<Peer>;
   wsIsConnected: boolean;
-  lastPartyId: string;
   websiteIsTested: boolean;
   magicLink: string;
   selfUUID: string;

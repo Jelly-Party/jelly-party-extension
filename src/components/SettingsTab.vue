@@ -98,7 +98,7 @@ export default {
   methods: {
     showConfirmation: function() {
       console.log("Jelly-Party: Saving options to chrome local storage.");
-      this.$store.dispatch("options/saveOptionsStateToChromeLocalStorage");
+      this.$store.dispatch("options/saveOptionsStateToBrowserLocalStorage");
       this.$root.$emit("bv::toggle::collapse", "collapse-success");
       window.setTimeout(() => {
         this.$root.$emit("bv::toggle::collapse", "collapse-success");

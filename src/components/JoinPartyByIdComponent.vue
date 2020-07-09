@@ -21,11 +21,18 @@
     <JellyPartyPrimaryButton v-on:click.native="joinParty">
       Join Party by Id</JellyPartyPrimaryButton
     >
+    <div v-if="lastPartyId" class="text-center">
+      <small
+        ><span style="user-select: none;">Your last party Id was </span>
+        <b>{{ lastPartyId }}</b></small
+      >
+    </div>
   </b-container>
 </template>
 
 <script>
 import JellyPartyPrimaryButton from "@/components/JellyPartyPrimaryButton.vue";
+import { options as optionsStore } from "@/store/options/index";
 export default {
   components: {
     JellyPartyPrimaryButton,
@@ -38,6 +45,11 @@ export default {
   methods: {
     joinParty() {
       this.$root.$party.joinParty(this.partyId);
+    },
+  },
+  computed: {
+    lastPartyId() {
+      return optionsStore.state.lastPartyId;
     },
   },
 };

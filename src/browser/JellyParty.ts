@@ -149,10 +149,9 @@ export default class JellyParty {
     }
     // this.admin = Boolean(start);
     store.dispatch("party/setActive", true);
-    store.dispatch(
-      "party/setPartyId",
-      start ? generateRoomWithoutSeparator() : partyId
-    );
+    const finalPartyId = start ? generateRoomWithoutSeparator() : partyId;
+    store.dispatch("party/setPartyId", finalPartyId);
+    store.dispatch("options/setLastPartyId", finalPartyId);
     // Set the magic link
     this.updateMagicLink();
     let wsAddress = "";
@@ -172,9 +171,6 @@ export default class JellyParty {
       store.dispatch("setConnectedToServer", true);
       log.debug("Jelly-Party: Connected to Jelly-Party Websocket.");
       this.displayNotification("Connected to server!");
-      // this.lastPartyId = this.partyId;
-      // log.debug(`Jelly-Party: Last Party Id set to ${this.optionsState.lastPartyId}`);
-
       this.ws.send(
         JSON.stringify({
           type: "join",

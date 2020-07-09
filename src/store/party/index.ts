@@ -11,7 +11,6 @@ const initalPartyState: PartyState = {
   partyId: "",
   peers: [],
   wsIsConnected: false,
-  lastPartyId: "",
   websiteIsTested: false,
   magicLink: "",
   selfUUID: "",

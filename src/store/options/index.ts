@@ -5,7 +5,7 @@ import { RootState } from "../types";
 import { getField, updateField } from "vuex-map-fields";
 import { browser } from "webextension-polyfill-ts";
 
-// OptionsState is permanent (stored in Chrome Storage)
+// OptionsState is permanent (stored in local browser storage)
 
 export const state: OptionsState = {
   clientName: "guest",
@@ -15,6 +15,7 @@ export const state: OptionsState = {
   statusNotificationsNotyf: true,
   previousParties: [{ partyId: "abc", members: ["me"], dateInfo: {} }],
   guid: "",
+  lastPartyId: "",
   avatarState: {
     accessoriesType: "Round",
     clotheType: "ShirtScoopNeck",
@@ -40,14 +41,14 @@ export const options: Module<OptionsState, RootState> = {
     getField,
   },
   actions: {
-    populateOptionsStateFromChromeLocalStorage(context) {
+    populateOptionsStateFromBrowserLocalStorage(context) {
       browser.storage.local.get(["options"]).then(function(res: any) {
         console.log("Jelly-Party: Got options.");
         console.log(res.options);
         if (res.options) {
           console.log("Jelly-Party: Loading options from chrome storage.");
           context.commit(
-            "populateOptionsStateFromChromeLocalStorage",
+            "populateOptionsStateFromBrowserLocalStorage",
             res.options
           );
         } else {
@@ -57,8 +58,8 @@ export const options: Module<OptionsState, RootState> = {
         }
       });
     },
-    saveOptionsStateToChromeLocalStorage(context) {
-      context.commit("saveOptionsStateToChromeLocalStorage");
+    saveOptionsStateToBrowserLocalStorage(context) {
+      context.commit("saveOptionsStateToBrowserLocalStorage");
     },
     updateAvatarState(
       context,
@@ -68,16 +69,26 @@ export const options: Module<OptionsState, RootState> = {
       newAvatarState[stateKey] = newState;
       context.commit("updateAvatarState", newAvatarState);
     },
+    setLastPartyId(context, partyId: string) {
+      context.commit("setLastPartyId", partyId);
+      // Next we must save the options to the local browser storage
+      context.dispatch("options/saveOptionsStateToBrowserLocalStorage", null, {
+        root: true,
+      });
+    },
   },
   mutations: {
-    populateOptionsStateFromChromeLocalStorage(state, options) {
+    populateOptionsStateFromBrowserLocalStorage(state, options) {
       Object.assign(state, options);
     },
-    saveOptionsStateToChromeLocalStorage(state) {
+    saveOptionsStateToBrowserLocalStorage(state) {
       browser.storage.local.set({ options: state });
     },
     updateAvatarState(state, newAvatarState) {
       Object.assign(state.avatarState, newAvatarState);
+    },
+    setLastPartyId(state, partyId: string) {
+      state.lastPartyId = partyId;
     },
     updateField,
   },

@@ -15,7 +15,10 @@
           <li>Press <b>"Start a new party"</b> below.</li>
           <li>Share your magic link.</li>
         </ol>
-        <p>For more help, visit the help tab above.</p>
+        <p>
+          For more help and to learn about joining manually, please visit the
+          help tab above.
+        </p>
       </b-container>
       <hr style="background-color: white;" class="my-4" />
       <StarNewPartyComponent />

@@ -28,4 +28,5 @@ export interface OptionsState {
   guid: string;
   avatarState: AvatarState;
   previousParties: Array<PreviousParty>;
+  lastPartyId: string;
 }

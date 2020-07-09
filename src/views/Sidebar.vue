@@ -18,7 +18,7 @@ export default {
   },
   computed: mapState("options", ["darkMode"]),
   mounted: function() {
-    this.$store.dispatch("options/populateOptionsStateFromChromeLocalStorage");
+    this.$store.dispatch("options/populateOptionsStateFromBrowserLocalStorage");
   },
 };
 </script>
@@ -62,8 +62,8 @@ body {
 #wrapper {
   background: linear-gradient(
     to right bottom,
-    darken(rgb(255, 148, 148), 20%) 0%,
-    darken(rgb(238, 100, 246), 20%) 100%
+    darken(rgb(255, 148, 148), 10%) 0%,
+    darken(rgb(238, 100, 246), 10%) 100%
   );
   height: 100vh;
   transition: background-color 300ms ease;
