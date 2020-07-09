@@ -211,18 +211,6 @@ export default class JellyParty {
               break;
             }
           }
-          // const mediaDataFrame: MediaCommandFrame = {
-          //   type: "media",
-          //   payload: {
-          //     type: "videoUpdate",
-          //     data: {
-          //       variant: msg.data.variant as DataFrameMediaVariantType,
-          //       tick: msg.data.tick,
-          //     },
-          //   },
-          //   context: "JellyParty",
-          // };
-          // this.iFrameMessenger.sendData(mediaDataFrame);
           const notificationText =
             msg.data.variant === "play"
               ? `${peer} played the video.`
@@ -444,21 +432,6 @@ export default class JellyParty {
       };
       this.iFrameMessenger.sendData(msg);
     });
-    // if (!this.videoHandler.getVideoState()) {
-    //   log.warn(
-    //     "Jelly-Party: No video defined. I shouldn't be receiving commands.."
-    //   );
-    // } else {
-    //   // If we're already paused, ignore pauseVideo request
-    //   if (this.videoHandler.getVideoState()?.paused) {
-    //     return;
-    //   }
-    //   // At the least, disable forwarding for the pause event.
-    //   // The seek event will handle itself.
-    //   await this.seek(tick);
-    //   this.videoHandler.eventsToProcess += 1;
-    //   await this.videoHandler.pause();
-    // }
   }
 
   async seek(tick: number) {
@@ -475,24 +448,6 @@ export default class JellyParty {
       context: "JellyParty",
     };
     this.iFrameMessenger.sendData(msg);
-    // const videoState = this.videoHandler.getVideoState();
-    // if (!videoState?.currentTime || !videoState?.paused) {
-    //   log.warn(
-    //     "Jelly-Party: No video defined. I shouldn't be receiving commands.."
-    //   );
-    // } else {
-    //   const timeDelta = Math.abs(tick - videoState?.currentTime);
-    //   if (timeDelta > 0.5) {
-    //     // Seeking is actually worth it. We're off by more than half a second.
-    //     // Disable forwarding for the upcoming seek event.
-    //     this.videoHandler.eventsToProcess += 1;
-    //     await this.videoHandler.seek(tick);
-    //   } else {
-    //     log.debug(
-    //       "Jelly-Party: Not actually seeking. Almost at same time already."
-    //     );
-    //   }
-    // }
   }
   async getVideoState() {
     const dataframe: SimpleRequestFrame = {
