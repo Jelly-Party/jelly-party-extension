@@ -133,21 +133,21 @@ export default class VideoHandler {
   getPlayHook(host: string) {
     switch (host) {
       case "www.netflix.com": {
-        return async function(this: VideoHandler) {
+        return async () => {
           this.eventsToProcess += 1;
           window.dispatchEvent(new CustomEvent("playRequest"));
           await this.sleep(50);
         };
       }
       case "www.disneyplus.com": {
-        return async function(this: VideoHandler) {
+        return async () => {
           this.eventsToProcess += 1;
           window.dispatchEvent(new CustomEvent("playPauseRequest"));
           await this.sleep(50);
         };
       }
       default:
-        return async function(this: VideoHandler) {
+        return async () => {
           this.eventsToProcess += 1;
           await this.video?.play();
         };
@@ -157,20 +157,20 @@ export default class VideoHandler {
   getPauseHook(host: string) {
     switch (host) {
       case "www.netflix.com":
-        return async function(this: VideoHandler) {
+        return async () => {
           this.eventsToProcess += 1;
           window.dispatchEvent(new CustomEvent("pauseRequest"));
           await this.sleep(50);
         };
       case "www.disneyplus.com": {
-        return async function(this: VideoHandler) {
+        return async () => {
           this.eventsToProcess += 1;
           window.dispatchEvent(new CustomEvent("playPauseRequest"));
           await this.sleep(50);
         };
       }
       default:
-        return async function(this: VideoHandler) {
+        return async () => {
           this.eventsToProcess += 1;
           await this.video?.pause();
         };
@@ -180,7 +180,7 @@ export default class VideoHandler {
   getSeekHook(host: string) {
     switch (host) {
       case "www.netflix.com":
-        return async function(this: VideoHandler, tick: number) {
+        return async (tick: number) => {
           const timeDelta = Math.abs(
             tick - (this.getVideoState().currentTime ?? tick)
           );
@@ -195,7 +195,7 @@ export default class VideoHandler {
           }
         };
       default:
-        return async function(this: VideoHandler, tick: number) {
+        return async (tick: number) => {
           if (this.video?.currentTime) {
             const timeDelta = Math.abs(
               tick - (this.getVideoState().currentTime ?? tick)

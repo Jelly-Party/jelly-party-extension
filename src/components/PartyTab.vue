@@ -58,13 +58,16 @@
     <div v-if="store.state.connectedToServer" class="h-100 d-flex flex-column">
       <div style="height: var(--party-tab-header)">
         <ControlsBar />
-        <InfoBox heading="Party Id" :text="partyId" />
-        <InfoBox heading="Magic link" :text="magicLink" />
-        <div class="text-center">
-          <small class="text-white"
-            >Share this magic link to let other people join your party.</small
-          >
-        </div>
+        <InfoBox
+          heading="Party Id"
+          :text="partyId"
+          tooltip="This is a unique identifier for your party."
+        />
+        <InfoBox
+          heading="Magic link"
+          :text="magicLink"
+          tooltip="Share this magic link to let other people join your party."
+        />
         <hr style="background-color: white;" />
       </div>
       <ChatMessenger

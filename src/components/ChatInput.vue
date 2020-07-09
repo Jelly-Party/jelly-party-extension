@@ -5,8 +5,8 @@
       id="textarea"
       v-model="text"
       placeholder="Enter something..."
-      rows="6"
-      max-rows="6"
+      rows="4"
+      max-rows="4"
       style="resize: none; padding: 0.375rem 3rem 0.375rem 0.75rem;"
     ></b-form-textarea>
     <div id="sendMessageButton" @click="sendChatMessage">
@@ -49,7 +49,7 @@
     </div>
     <VEmojiPicker
       @select="selectEmoji"
-      style="position: absolute; top: -28em; right: 0.7em; display: none;"
+      style="position: absolute; top: -27em; right: 0.7em; display: none;"
     />
   </b-container>
 </template>
@@ -168,10 +168,10 @@ export default {
   }
 }
 #sendMessageButton {
-  @include positionButton(2em);
+  @include positionButton(1.5em);
 }
 
 #toggleEmojiPicker {
-  @include positionButton(6em);
+  @include positionButton(4.5em);
 }
 </style>

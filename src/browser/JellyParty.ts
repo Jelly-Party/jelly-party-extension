@@ -197,18 +197,32 @@ export default class JellyParty {
           const peer = this.partyState.peers.filter(
             (peer) => peer.uuid === msg.data.peer.uuid
           )[0].clientName;
-          const mediaDataFrame: MediaCommandFrame = {
-            type: "media",
-            payload: {
-              type: "videoUpdate",
-              data: {
-                variant: msg.data.variant as DataFrameMediaVariantType,
-                tick: msg.data.tick,
-              },
-            },
-            context: "JellyParty",
-          };
-          this.iFrameMessenger.sendData(mediaDataFrame);
+          switch (msg.data.variant) {
+            case "play": {
+              this.playVideo(msg.data.tick);
+              break;
+            }
+            case "pause": {
+              this.pauseVideo(msg.data.tick);
+              break;
+            }
+            case "seek": {
+              this.seek(msg.data.tick);
+              break;
+            }
+          }
+          // const mediaDataFrame: MediaCommandFrame = {
+          //   type: "media",
+          //   payload: {
+          //     type: "videoUpdate",
+          //     data: {
+          //       variant: msg.data.variant as DataFrameMediaVariantType,
+          //       tick: msg.data.tick,
+          //     },
+          //   },
+          //   context: "JellyParty",
+          // };
+          // this.iFrameMessenger.sendData(mediaDataFrame);
           const notificationText =
             msg.data.variant === "play"
               ? `${peer} played the video.`
@@ -402,6 +416,7 @@ export default class JellyParty {
         type: "media",
         payload: {
           type: "videoUpdate",
+          resetEventCounter: variant === "seek",
           data: {
             variant: variant as DataFrameMediaVariantType,
             tick: tick,
@@ -411,22 +426,6 @@ export default class JellyParty {
       };
       this.iFrameMessenger.sendData(msg);
     });
-
-    // if (!this.videoHandler.getVideoState()) {
-    //   log.warn(
-    //     "Jelly-Party: No video defined. I shouldn't be receiving commands.."
-    //   );
-    // } else {
-    //   // If we're already playing, ignore playVideo request
-    //   if (!this.videoHandler.getVideoState()?.paused) {
-    //     return;
-    //   }
-    //   // At the least, disable forwarding for the play event.
-    //   // The seek event will handle itself.
-    //   await this.seek(tick);
-    //   this.videoHandler.eventsToProcess += 1;
-    //   await this.videoHandler.play();
-    // }
   }
 
   async pauseVideo(tick: number) {
@@ -435,6 +434,7 @@ export default class JellyParty {
         type: "media",
         payload: {
           type: "videoUpdate",
+          resetEventCounter: variant === "seek",
           data: {
             variant: variant as DataFrameMediaVariantType,
             tick: tick,
@@ -466,6 +466,7 @@ export default class JellyParty {
       type: "media",
       payload: {
         type: "videoUpdate",
+        resetEventCounter: true,
         data: {
           variant: "seek",
           tick: tick,

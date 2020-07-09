@@ -31,6 +31,7 @@ export interface MediaCommandFrame {
   type: "media";
   payload: {
     type: "videoUpdate";
+    resetEventCounter?: boolean;
     data: {
       variant: DataFrameMediaVariantType;
       tick: number | undefined;
@@ -86,16 +87,23 @@ export class MainFrameMessenger {
     this.showNotification = showNotification;
     this.mainFrame = mainFrame;
     window.addEventListener("message", (event: Event & { data?: any }) => {
-      // Reset the event counter
-      this.videoHandler.eventsToProcess = 0;
       // Load the message
       const msg: MultiFrame = event.data;
       if (!(msg.context === "JellyParty")) {
-        console.log("Received message that's probably not from JellyParty.");
+        console.log(
+          "Jelly-Party: Received message that's probably not from JellyParty. Event is:"
+        );
+        console.log(event);
         return;
       }
       switch (msg.type) {
         case "media": {
+          // Reset the event counter if we're instructed to do so.
+          // This is required for a new queue of commands, e.g. a
+          // "play" command initially triggers a "seek"
+          if (msg.payload.resetEventCounter) {
+            this.videoHandler.eventsToProcess = 0;
+          }
           switch (msg.payload.data.variant) {
             case "play": {
               this.videoHandler.play();
@@ -175,7 +183,10 @@ export class IFrameMessenger {
       // Load the message
       const msg: MultiFrame = event.data;
       if (!(msg.context === "JellyParty")) {
-        console.log("Received message that's probably not from JellyParty.");
+        console.log(
+          "Jelly-Party: Received message that's probably not from JellyParty. Event is:"
+        );
+        console.log(event);
         return;
       }
       switch (msg.type) {

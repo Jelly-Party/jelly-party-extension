@@ -29,7 +29,8 @@
         </svg>
       </div>
       <div class="p-1">
-        <b-icon icon="question-circle-fill"></b-icon>
+        <b-icon icon="question-circle-fill" v-b-tooltip.hover :title="tooltip">
+        </b-icon>
       </div>
     </div>
     <div class="text-center">
@@ -46,6 +47,10 @@ export default {
       required: true,
     },
     text: {
+      type: String,
+      required: true,
+    },
+    tooltip: {
       type: String,
       required: true,
     },

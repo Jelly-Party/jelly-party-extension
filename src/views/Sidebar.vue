@@ -39,13 +39,11 @@ export default {
   }
   &::-webkit-scrollbar-thumb {
     background-color: var(--thumbBG);
-    border-radius: 10px;
     -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
   }
   &::-webkit-scrollbar-track {
     background: var(--scrollbarBG);
     -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
-    border-radius: 10px;
     background-color: var(--scrollbarBG);
   }
 }

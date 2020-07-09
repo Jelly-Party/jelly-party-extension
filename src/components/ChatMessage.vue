@@ -4,7 +4,7 @@
       v-if="chatMessage.peer.uuid === 'jellyPartyLogMessage'"
       class="text-center"
     >
-      <small> {{ chatMessage.data.text }} — {{ timestamp }}</small>
+      <small> {{ chatMessage.data.text }} </small>
     </div>
     <div v-else class="chatMessage-container">
       <Avataaar
@@ -29,7 +29,7 @@
         v-else
         style="height:3.5em; width: 3.5em;"
         v-b-tooltip.hover
-        title="JP"
+        title="Jelly"
       >
         <img
           src="@/assets/circular-logo.png"
@@ -40,7 +40,7 @@
         <!-- :style="{ order: messageFromSelf ? '2' : '1' }" -->
         <p class="m-0">{{ chatMessage.data.text }}</p>
         <hr
-          style="background-color: white; width: 30%; text-align: left; margin: 0.3em 0em;"
+          style="background-color: white; width: 30%; text-align: left; margin: 0em;"
         />
         <small>{{ getPeer.clientName }} — {{ timestamp }}</small>
       </div>
@@ -73,7 +73,7 @@ export default {
   computed: {
     getPeer: function() {
       if (this.systemMessage) {
-        return { clientName: "JP" };
+        return { clientName: "Jelly" };
       } else {
         const peer = partyStore.state.peers.find(
           (peer) => this.chatMessage.peer.uuid === peer.uuid

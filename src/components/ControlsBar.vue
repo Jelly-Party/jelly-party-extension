@@ -1,5 +1,5 @@
 <template>
-  <b-container class="mt-3 mb-3">
+  <b-container class="mb-3">
     <div id="jelly-party-controls-bar">
       <div
         v-b-modal.modal-center

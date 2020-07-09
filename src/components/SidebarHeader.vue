@@ -10,8 +10,8 @@
       />
     </div>
     <div class="d-flex align-items-center justify-content-center">
-      <p class="text-center text-white m-0">{{ connectionString }}</p>
-      <span style="font-size: 0.7em" class="ml-1">
+      <small class="text-center text-white m-0">{{ connectionString }}</small>
+      <span style="font-size: 0.5em" class="ml-1">
         <b-icon-circle-fill
           v-if="this.connectingToServer"
           style="fill: yellow"
