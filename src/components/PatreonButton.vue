@@ -1,5 +1,5 @@
 <template>
-  <a href="https://patreon.com/jellyparty" target="_blank">
+  <a target="_blank" href="https://patreon.com/jellyparty">
     <div
       id="patreon-button"
       class="d-flex align-items-center justify-content-center"

@@ -53,23 +53,25 @@
     <b-container class="mt-3">
       <h3 class="text-white text-center">More help</h3>
       <p class="text-justify">
-        Join our <a href="https://discord.gg/H3dExqc">Discord channel</a> to get
-        more help and browse our
-        <a href="https://www.jelly-party.com/">website</a> to learn more about
-        Jelly-Party.
+        Join our
+        <a target="_blank" href="https://discord.gg/H3dExqc">Discord channel</a>
+        to get more help and browse our
+        <a target="_blank" href="https://www.jelly-party.com/">website</a> to
+        learn more about Jelly-Party.
       </p>
     </b-container>
     <b-container class="mt-3">
       <h3 class="text-white text-center">Open source software</h3>
       <p class="text-justify">
         Jelly-Party is powered by amazing open source software, notably
-        <a href="https://nodejs.org/en/">nodejs</a>,
-        <a href="https://vuejs.org/">vuejs</a>,
-        <a href="https://bootstrap-vue.org/">Bootstrap</a>,
-        <a href="https://fontawesome.com/">FontAwesome</a>,
-        <a href="https://github.com/joaoeudes7/V-Emoji-Picker">v-emoji-picker</a
+        <a target="_blank" href="https://nodejs.org/en/">nodejs</a>,
+        <a target="_blank" href="https://vuejs.org/">vuejs</a>,
+        <a target="_blank" href="https://bootstrap-vue.org/">Bootstrap</a>,
+        <a target="_blank" href="https://fontawesome.com/">FontAwesome</a>,
+        <a target="_blank" href="https://github.com/joaoeudes7/V-Emoji-Picker"
+          >v-emoji-picker</a
         >,
-        <a href="https://github.com/orgordin/vuejs-avataaars"
+        <a target="_blank" href="https://github.com/orgordin/vuejs-avataaars"
           >vuejs-avataaars</a
         >
         and much more!

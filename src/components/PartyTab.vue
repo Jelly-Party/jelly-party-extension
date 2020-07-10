@@ -7,8 +7,8 @@
         <h3 class="text-white text-center">Getting started</h3>
         <p class="text-justify">
           To begin with, please make sure that all your friends have
-          <a href="https://www.jelly-party.com/">Jelly-Party</a> installed. Then
-          follow these simple steps:
+          <a target="_blank" href="https://www.jelly-party.com/">Jelly-Party</a>
+          installed. Then follow these simple steps:
         </p>
         <ol>
           <li>Customize your avatar and name yourself.</li>

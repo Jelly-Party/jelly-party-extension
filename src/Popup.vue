@@ -1,6 +1,19 @@
 <template>
-  <div id="app" class="m-0 p-0">
-    <h1 style="margin: 0; padding: 1em">Jelly-Party</h1>
+  <div id="app">
+    <h1>
+      Jelly-Party
+      <img
+        src="@/assets/logo-blue.png"
+        width="32px"
+        height="32px"
+        class="d-inline-block"
+      />
+    </h1>
+    <p>
+      Jelly-Party will load in a Sidebar. For more information about
+      Jelly-Party, please visit our
+      <a target="_blank" href="https://www.jelly-party.com/"> website</a>.
+    </p>
   </div>
 </template>
 
@@ -8,26 +21,33 @@
 export default {};
 </script>
 
-<style>
-html {
-  --scrollbarBG: #cfd8dc;
-  --thumbBG: #90a4ae;
-}
-body::-webkit-scrollbar {
-  width: 11px;
-}
+<style lang="scss">
+$primaryButtonColor: #9164ff;
+$jellyPartyOrange: #ff9494;
 body {
-  color: white;
   margin: 0;
-  scrollbar-width: thin;
-  scrollbar-color: var(--thumbBG) var(--scrollbarBG);
+  font-size: 16px;
 }
-body::-webkit-scrollbar-track {
-  background: var(--scrollbarBG);
+
+h1 {
+  padding: 0;
+  margin: 0 0 0.5em 0;
 }
-body::-webkit-scrollbar-thumb {
-  background-color: var(--thumbBG);
-  border: 3px solid var(--scrollbarBG);
+
+p {
+  margin: 0;
+  text-align: justify;
+}
+
+a {
+  text-decoration: none;
+  color: $primaryButtonColor;
+  &:visited {
+    color: $primaryButtonColor;
+  }
+  &:hover {
+    color: $primaryButtonColor;
+  }
 }
 
 #app {
@@ -35,33 +55,10 @@ body::-webkit-scrollbar-thumb {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
-  color: #2c3e50;
-  width: 350px;
-  min-height: 427px;
+  color: white;
+  width: 250px;
   margin: 0 auto;
-  background: linear-gradient(
-    to bottom right,
-    rgba(145, 100, 255, 0.2) 0%,
-    rgba(139, 255, 244, 0.2) 100%
-  );
-}
-
-.fullheight {
-  height: 100vh;
-  display: flex;
-  align-items: center;
-}
-
-#nav {
-  padding: 30px;
-}
-
-#nav a {
-  font-weight: bold;
-  color: #2c3e50;
-}
-
-#nav a.router-link-exact-active {
-  color: #42b983;
+  padding: 2em;
+  background: black;
 }
 </style>
