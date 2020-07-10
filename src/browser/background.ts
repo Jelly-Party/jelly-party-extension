@@ -54,7 +54,7 @@ function redirectToParty(redirectURL: string) {
 }
 
 export interface PermissionsFrame {
-  type: "checkPermissions" | "setPermissions";
+  type: "checkPermissionsThenMaybeRedirect" | "askForPermissionsThenRedirect";
   payload: {
     permissionScheme: string;
     redirectURL: string;
@@ -87,7 +87,7 @@ async function askForPermissionsThenRedirect(
 browser.runtime.onMessage.addListener((req: string) => {
   const request: PermissionsFrame = JSON.parse(req);
   switch (request.type) {
-    case "checkPermissions": {
+    case "checkPermissionsThenMaybeRedirect": {
       return new Promise((resolve, reject) => {
         browser.permissions
           .contains({
@@ -98,10 +98,6 @@ browser.runtime.onMessage.addListener((req: string) => {
               redirectToParty(request.payload.redirectURL);
               resolve("Already have permissions");
             } else {
-              askForPermissionsThenRedirect(
-                request.payload.permissionScheme,
-                request.payload.redirectURL
-              );
               reject("Must ask for permissions first");
             }
           });
@@ -109,7 +105,7 @@ browser.runtime.onMessage.addListener((req: string) => {
         console.log(err);
       });
     }
-    case "setPermissions": {
+    case "askForPermissionsThenRedirect": {
       return askForPermissionsThenRedirect(
         request.payload.permissionScheme,
         request.payload.redirectURL

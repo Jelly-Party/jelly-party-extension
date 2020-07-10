@@ -401,15 +401,23 @@ if (window.location.host === "join.jelly-party.com") {
     document.querySelector(".wrapper")?.appendChild(permissionButton);
     permissionButton.onclick = async () => {
       const request: PermissionsFrame = {
-        type: "checkPermissions",
+        type: "askForPermissionsThenRedirect",
         payload: {
           permissionScheme: permissionScheme,
           redirectURL: redirectURL.toString(),
         },
       };
-      console.log(JSON.stringify(request));
       browser.runtime.sendMessage(JSON.stringify(request));
     };
+    // Check if we already have permissions, in which case we redirect immediately
+    const request: PermissionsFrame = {
+      type: "checkPermissionsThenMaybeRedirect",
+      payload: {
+        permissionScheme: permissionScheme,
+        redirectURL: redirectURL.toString(),
+      },
+    };
+    browser.runtime.sendMessage(JSON.stringify(request));
   })();
 } else if (!(window as any).jellyPartyLoaded) {
   new MainFrame(window.location.host);
