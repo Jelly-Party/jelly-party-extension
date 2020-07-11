@@ -1,9 +1,9 @@
 import { Module } from "vuex";
+import Vue from "vue";
 import { PartyState, ChatMessage } from "./types";
 import { RootState } from "../types";
 // @ts-ignore
 import { getField, updateField } from "vuex-map-fields";
-import { difference as _difference } from "lodash-es";
 
 // PartyState is ephemeral
 
@@ -16,7 +16,7 @@ const initalPartyState: PartyState = {
   websiteIsTested: false,
   magicLink: "",
   selfUUID: "",
-  paused: false,
+  videoState: { paused: true, currentTime: 0 },
   chatMessages: [
     {
       type: "chatMessage",
@@ -45,10 +45,8 @@ export const party: Module<PartyState, RootState> = {
     updatePartyState(state, newPartyState: PartyState) {
       Object.assign(state, newPartyState);
     },
-    updatePeersChache(state, newPeers) {
-      for (const newPeer of newPeers) {
-        state.cachedPeers.push(newPeer);
-      }
+    updatePeersChache(state, newCachedPeers) {
+      state.cachedPeers = newCachedPeers;
     },
     setMagicLink(state, magicLink: string) {
       state.magicLink = magicLink;
@@ -71,38 +69,50 @@ export const party: Module<PartyState, RootState> = {
   },
   actions: {
     updatePartyState(context, newPartyState: PartyState) {
+      // First, we handle the cache updating, which is more complicated, since
+      // we must not remove peers, but possibly mutate peers.
+      const allUUIDs = new Set(
+        context.state.peers
+          .map((peer) => peer.uuid)
+          .concat(newPartyState.peers.map((peer) => peer.uuid))
+      );
+      console.log(`allUUIDs is`);
+      console.log(allUUIDs);
+      // Create a copy of the current cache, use current state if it doesn't yet exist
+      let cachedPeers = context.state.cachedPeers
+        ? context.state.cachedPeers.slice()
+        : context.state.peers.slice();
+      console.log(`cachedPeers is ${JSON.stringify(cachedPeers)}`);
+      // Iterate over all UUIDs from current state + new state
+      for (const uuid of allUUIDs) {
+        const oldPeer = context.state.peers.find((peer) => peer.uuid === uuid);
+        const newPeer = newPartyState.peers.find((peer) => peer.uuid === uuid);
+        console.log(`uuid is ${uuid}`);
+        console.log(`oldPeer is ${JSON.stringify(oldPeer)}`);
+        console.log(`newPeer is ${JSON.stringify(newPeer)}`);
+
+        if (!oldPeer && newPeer) {
+          // We have added a peer, which we must add to the cache
+          cachedPeers.push(newPeer);
+        } else if (!oldPeer && !newPeer) {
+          throw Error(`Jelly-Party: Unknown uuid of ${uuid}.`);
+        } else if (oldPeer && newPeer) {
+          // Peer's state might have been updated
+          // Let's first remove the old peer from the cache
+          cachedPeers = cachedPeers.filter((peer) => !(peer.uuid === uuid));
+          // Then add the new peer back to cachedPeers
+          cachedPeers.push(newPeer);
+        } else {
+          // Peer has been removed, do nothing
+          continue;
+        }
+      }
+      // Then we commit the new cache
+      context.commit("updatePeersChache", cachedPeers);
+      // Lastly, we update the client state
       context.commit("updatePartyState", newPartyState);
-      const potentiallyNewPeers = newPartyState.peers
-        ? newPartyState.peers.slice()
-        : [];
-      console.log(
-        `potentiallyNewPeers = ${JSON.stringify(potentiallyNewPeers)}`
-      );
-      const potentiallyNewPeersUUIDs = potentiallyNewPeers
-        ? potentiallyNewPeers.map((peer) => peer.uuid)
-        : [];
-      console.log(
-        `potentiallyNewPeersUUIDs = ${JSON.stringify(potentiallyNewPeersUUIDs)}`
-      );
-
-      const previousPeersUUIDs = state.cachedPeers
-        ? state.cachedPeers.slice().map((peer) => peer.uuid)
-        : [];
-      console.log(`previousPeersUUIDs = ${JSON.stringify(previousPeersUUIDs)}`);
-
-      const newPeersUUIDs = _difference(
-        potentiallyNewPeersUUIDs,
-        previousPeersUUIDs
-      );
-      console.log(`newPeersUUIDs = ${JSON.stringify(newPeersUUIDs)}`);
-
-      const newPeers = potentiallyNewPeers
-        ? potentiallyNewPeers.filter((peer) =>
-            newPeersUUIDs.includes(peer.uuid)
-          )
-        : [];
-      console.log(`newPeers = ${JSON.stringify(newPeers)}`);
-      context.commit("updatePeersChache", newPeers);
+      console.log("State is");
+      console.log(context.state);
     },
     resetPartyState(context) {
       context.commit("updatePartyState", initalPartyState);

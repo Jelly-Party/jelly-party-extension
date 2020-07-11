@@ -29,7 +29,7 @@ export default class JellyParty {
   // Party State
   readonly partyState: PartyStateType;
   // Local state
-  updateClientStateInterval: number | undefined;
+  locallySyncPartyStateInterval: number | undefined;
   ws!: WebSocket & { uuid?: string };
   notyf: any;
   stableWebsite!: boolean;
@@ -47,7 +47,7 @@ export default class JellyParty {
         this.stableWebsite = true;
       }
     }
-    this.updateClientStateInterval = undefined;
+    this.locallySyncPartyStateInterval = undefined;
     if (["staging", "development"].includes(this.rootState.appMode)) {
       log.enableAll();
     } else {
@@ -88,28 +88,36 @@ export default class JellyParty {
     store.dispatch("party/setMagicLink", magicLink);
   }
 
-  updateClientState = async function(this: JellyParty) {
-    // Request a client state update
-    // without "bind", "this" is bound to window, see 'The "this" problem' @ https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/setInterval
+  locallySyncPartyState = async () => {
     try {
       // We craft a command to let the server know about our new client state
       const videoState: VideoState = (await this.getVideoState()) as VideoState;
-      // const serverCommand = {
-      //   type: "clientUpdate",
-      //   data: {
-      //     newClientState: {
-      //       currentlyWatching: this.partyState.magicLink,
-      //       videoState: videoState,
-      //     },
-      //   },
-      // };
-      // this.ws.send(JSON.stringify(serverCommand));
-      partyState.paused = videoState.paused ?? true;
+      partyState.videoState = {
+        paused: videoState.paused ?? true,
+        currentTime: videoState.currentTime ?? 0,
+      };
     } catch (error) {
       log.debug("Jelly-Party: Error updating client state..");
       log.error(error);
     }
-  }.bind(this);
+  };
+
+  uploadPartyState = async () => {
+    // We craft a command to let the server know about our new client state
+    await this.locallySyncPartyState();
+    const serverCommand = {
+      type: "clientUpdate",
+      data: {
+        newClientState: {
+          currentlyWatching: this.partyState.magicLink,
+          videoState: this.partyState.videoState,
+          clientName: this.optionsState.clientName,
+          avatarState: this.optionsState.avatarState,
+        },
+      },
+    };
+    this.ws.send(JSON.stringify(serverCommand));
+  };
 
   startParty() {
     this.connectToPartyHelper();
@@ -186,7 +194,10 @@ export default class JellyParty {
           },
         })
       );
-      this.updateClientStateInterval = setInterval(this.updateClientState, 200);
+      this.locallySyncPartyStateInterval = setInterval(
+        this.locallySyncPartyState,
+        200
+      );
     }.bind(this);
 
     this.ws.onmessage = (event: any) => {
@@ -292,7 +303,7 @@ export default class JellyParty {
 
     this.ws.onclose = () => {
       log.debug("Jelly-Party: Disconnected from WebSocket-Server.");
-      clearInterval(this.updateClientStateInterval);
+      clearInterval(this.locallySyncPartyStateInterval);
       store.dispatch("setConnectedToServer", false);
     };
   };

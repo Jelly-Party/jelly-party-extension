@@ -1,4 +1,5 @@
 import { AvatarState } from "@/store/options/types";
+import { VideoState } from "@/browser/videoHandler";
 
 export interface ChatMessage {
   type: "chatMessage";
@@ -14,10 +15,7 @@ export interface Peer {
   clientName: string;
   currentlyWatching: string;
   avatarState: AvatarState;
-  videoState: {
-    paused: boolean;
-    currentTime: number;
-  };
+  videoState: VideoState;
 }
 
 export interface PartyState {
@@ -31,7 +29,7 @@ export interface PartyState {
   selfUUID: string;
   chatMessages: Array<ChatMessage>;
   maxChatMessagesDisplay: number;
-  paused: boolean;
+  videoState: { paused: boolean; currentTime: number };
 }
 
 // The video state is not stored in the PartyState, since it updates all the time,

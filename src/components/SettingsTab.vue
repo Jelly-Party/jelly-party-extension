@@ -60,8 +60,8 @@
     <b-collapse id="collapse-success" class="mt-2">
       <b-card>
         <p style="color: black" class="card-text text-justify">
-          Your changes have been saved. If you're currently inside a party,
-          please reload Jelly-Party for the changes to take effect.
+          Your changes have been saved. Please not that some changes, such as
+          your name, require you to rejoin the party to be shown.
         </p>
       </b-card>
     </b-collapse>
@@ -99,10 +99,14 @@ export default {
     showConfirmation: function() {
       console.log("Jelly-Party: Saving options to chrome local storage.");
       this.$store.dispatch("options/saveOptionsStateToBrowserLocalStorage");
+      // Share the new options with the party (videoState, name & avatar options are shared,
+      // though only avatar options and name are relevant)
       this.$root.$emit("bv::toggle::collapse", "collapse-success");
       window.setTimeout(() => {
         this.$root.$emit("bv::toggle::collapse", "collapse-success");
+
       }, 5000);
+      this.$root.$party.uploadPartyState();
     },
   },
 };

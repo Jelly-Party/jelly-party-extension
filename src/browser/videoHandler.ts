@@ -1,5 +1,4 @@
 import { MainFrameMessenger, MediaCommandFrame } from "@/browser/Messenger";
-
 // The VideoHandler handles playing, pausing & seeking videos
 // on different websites. For most websites the generic video.play(),
 // video.pause() & video.currentTime= will work, however some websites,
@@ -40,7 +39,7 @@ export default class VideoHandler {
           clearInterval(this.findVideoInterval);
           // if (this.party.ws?.readyState === 1) {
           //   this.party.updateMagicLink();
-          //   this.party.updateClientState();
+          //   this.party.locallySyncPartyState();
           // }
           console.log("Jelly-Party: Found video. Attaching to video..");
           // this.notyf.success("Video detected!");
