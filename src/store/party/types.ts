@@ -24,6 +24,7 @@ export interface PartyState {
   isActive: boolean;
   partyId: string;
   peers: Array<Peer>;
+  cachedPeers: Array<Peer>;
   wsIsConnected: boolean;
   websiteIsTested: boolean;
   magicLink: string;

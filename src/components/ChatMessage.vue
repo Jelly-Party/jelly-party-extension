@@ -75,7 +75,7 @@ export default {
       if (this.systemMessage) {
         return { clientName: "Jelly" };
       } else {
-        const peer = partyStore.state.peers.find(
+        const peer = partyStore.state.cachedPeers.find(
           (peer) => this.chatMessage.peer.uuid === peer.uuid
         );
         return peer;
