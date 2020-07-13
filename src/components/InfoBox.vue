@@ -5,7 +5,7 @@
         <p class="m-0" style="white-space: nowrap">{{ heading }}</p>
       </div>
       <span style="white-space: nowrap; overflow: hidden; margin: 0em 0.5em">{{
-        text
+        showSuccessText ? `${heading} copied.` : text
       }}</span>
       <div class="p-1">
         <svg
@@ -32,9 +32,6 @@
         <b-icon icon="question-circle-fill" v-b-tooltip.hover :title="tooltip">
         </b-icon>
       </div>
-    </div>
-    <div class="text-center">
-      <p class="m-0" v-if="showSuccessText">{{ heading }} copied.</p>
     </div>
   </b-container>
 </template>
