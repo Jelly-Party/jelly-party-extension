@@ -2,7 +2,7 @@ import JellyParty from "@/browser/JellyParty";
 import VideoHandler from "@/browser/videoHandler";
 import { VideoState } from "@/browser/videoHandler";
 import { MainFrame } from "@/browser/mainFrame";
-import { state as optionsState, options } from "@/store/options";
+import { state as optionsState } from "@/store/options";
 
 // MESSAGING API
 // MainFrameMessenger

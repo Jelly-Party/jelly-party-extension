@@ -1,21 +1,20 @@
 <template>
   <div class="text-center">
-    <small>{{ readableoptionsKey }}</small>
     <div class="avatar-slider-option mb-1 w-100 d-flex align-items-center">
       <b-btn
-        class="avatar-slider-button avatar-slider-button--left"
+        class="avatar-slider-button avatar-slider-button--left avatar-selection"
         @click="previousOption"
         ><b-icon-arrow-left-short
           class="font-weight-bold"
         ></b-icon-arrow-left-short
       ></b-btn>
       <div
-        class="w-100 option-inline-text d-flex align-items-center justify-content-center"
+        class="w-100 option-inline-text d-flex align-items-center justify-content-center overflow-hidden"
       >
         <span class="font-weight-bold">{{ avatarState[this.optionsKey] }}</span>
       </div>
       <b-btn
-        class="avatar-slider-button avatar-slider-button--right"
+        class="avatar-slider-button avatar-slider-button--right avatar-selection"
         @click="nextOption"
       >
         <b-icon-arrow-right-short
@@ -28,21 +27,6 @@
 
 <script>
 import allOptions from "@/helpers/avatarOptions.js";
-
-const readableOptions = {
-  accessoriesType: "Accessories",
-  clotheColor: "Clothes color",
-  clotheType: "Clothes",
-  eyebrowType: "Eye Brows",
-  eyeType: "Eyes",
-  facialHairColor: "Facial hair color",
-  facialHairType: "Facial hair",
-  graphicType: "Graphic",
-  hairColor: "Hair color",
-  mouthType: "Mouth",
-  skinColor: "Skin color",
-  topType: "Top",
-};
 
 export default {
   props: {
@@ -84,9 +68,6 @@ export default {
     },
   },
   computed: {
-    readableoptionsKey: function() {
-      return readableOptions[this.optionsKey];
-    },
     optionsValues: function() {
       let key = this.optionsKey;
       switch (this.optionsKey) {
@@ -112,7 +93,9 @@ export default {
   justify-content: space-between;
 }
 .avatar-slider-button {
-  padding: calc(0.375rem + 2px) 0.75rem;
+  background-color: transparent !important;
+  border: 2px solid white !important;
+  padding: calc(0.375rem - 1px) 0.75rem !important;
   &--right {
     border-top-left-radius: 0px !important;
     border-bottom-left-radius: 0px !important;
@@ -123,8 +106,8 @@ export default {
   }
 }
 .option-inline-text {
-  border-top: 2px solid gray;
-  border-bottom: 2px solid gray;
+  border-top: 2px solid white;
+  border-bottom: 2px solid white;
   height: 38px;
 }
 </style>

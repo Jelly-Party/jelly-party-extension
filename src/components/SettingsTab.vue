@@ -2,9 +2,14 @@
   <b-container>
     <h3 class="text-white text-center">Your Avatar</h3>
     <AvatarCustomizer />
-    <h3 class="text-white text-center mt-3">Settings</h3>
-    <b-form-checkbox v-model="darkMode" name="darkMode-button" switch size="lg">
-      Toggle Dark Mode
+    <b-form-checkbox
+      v-model="darkMode"
+      name="darkMode-button"
+      switch
+      size="lg"
+      class="mt-3"
+    >
+      Enable Dark Mode
       <b-icon
         icon="question-circle-fill"
         v-b-tooltip.hover
@@ -41,6 +46,20 @@
       </b-icon>
     </b-form-checkbox>
     <b-form-checkbox
+      v-model="showNotificationsForSelf"
+      name="showNotificationsForSelf-button"
+      switch
+      size="lg"
+    >
+      Show notifications when you play/pause/seek
+      <b-icon
+        icon="question-circle-fill"
+        v-b-tooltip.hover
+        title="Toggle this option to enable notifications when you play, pause or seek the video."
+      >
+      </b-icon>
+    </b-form-checkbox>
+    <b-form-checkbox
       v-model="onlyIHaveControls"
       disabled
       name="onlyIHaveControls-button"
@@ -56,25 +75,11 @@
         <!-- title="Toggle this option to make you the party admin when creating a party. Changes, like pausing the video, are then only synced if you make them." -->
       </b-icon>
     </b-form-checkbox>
-    <b-form-checkbox
-      v-model="showNotificationsForSelf"
-      name="showNotificationsForSelf-button"
-      switch
-      size="lg"
-    >
-      Show notifications when you play/pause/seek
-      <b-icon
-        icon="question-circle-fill"
-        v-b-tooltip.hover
-        title="Toggle this option to enable notifications when you play, pause or seek the video."
-      >
-      </b-icon>
-    </b-form-checkbox>
     <b-collapse id="collapse-success" class="mt-2">
       <b-card>
         <p style="color: black" class="card-text text-justify">
           Your changes have been saved. Please not that some changes, such as
-          your name, require you to rejoin the party to be shown.
+          your name, require you to rejoin the party until they are shown.
         </p>
       </b-card>
     </b-collapse>

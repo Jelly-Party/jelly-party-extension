@@ -19,37 +19,22 @@
         :topType="topType"
       />
     </div>
-    <b-input-group prepend="Name" class="px-3 pt-2">
+    <b-input-group prepend="Name" class="pt-2">
       <b-form-input v-model="clientName"></b-form-input>
     </b-input-group>
-    <p class="text-center m-0 p-0">
-      <small>Please scroll down to save your settings.</small>
-    </p>
-    <div class="px-3">
-      <AvatarSliderOption optionsKey="accessoriesType" />
-      <AvatarSliderOption optionsKey="clotheType" />
-      <AvatarSliderOption optionsKey="clotheColor" />
-      <AvatarSliderOption optionsKey="eyebrowType" />
-      <AvatarSliderOption optionsKey="eyeType" />
-      <AvatarSliderOption optionsKey="facialHairColor" />
-      <AvatarSliderOption optionsKey="facialHairType" />
-      <AvatarSliderOption optionsKey="hairColor" />
-      <AvatarSliderOption optionsKey="mouthType" />
-      <AvatarSliderOption optionsKey="skinColor" />
-      <AvatarSliderOption optionsKey="topType" />
-    </div>
+    <NestedSelection />
   </div>
 </template>
 
 <script>
 import Avataaar from "@/browser/vuejs-avataaars/entry.js";
-import AvatarSliderOption from "@/components/AvatarSliderOption.vue";
+import NestedSelection from "@/components/NestedSelection.vue";
 import { mapFields } from "vuex-map-fields";
 
 export default {
   components: {
     Avataaar,
-    AvatarSliderOption,
+    NestedSelection,
   },
   computed: {
     // When using nested data structures, the string
@@ -74,4 +59,20 @@ export default {
 };
 </script>
 
-<style></style>
+<style lang="scss" scoped>
+@mixin color($color) {
+  border-color: $color !important;
+  background-color: $color !important;
+  color: white;
+}
+.input-group-text {
+  @include color($jellyPartyPurple);
+}
+
+.form-control {
+  @include color($jellyPartyOrange);
+  &:focus-within {
+    color: white !important;
+  }
+}
+</style>

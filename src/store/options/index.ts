@@ -10,7 +10,7 @@ import { browser } from "webextension-polyfill-ts";
 export const state: OptionsState = {
   clientName: "guest",
   darkMode: true,
-  onlyIHaveControls: true,
+  onlyIHaveControls: false,
   statusNotificationsInChat: true,
   statusNotificationsNotyf: true,
   previousParties: [{ partyId: "abc", members: ["me"], dateInfo: {} }],
