@@ -34,7 +34,7 @@ export interface MediaCommandFrame {
     resetEventCounter?: boolean;
     data: {
       variant: DataFrameMediaVariantType;
-      tick: number | undefined;
+      tick?: number;
     };
   };
   context: "JellyParty";

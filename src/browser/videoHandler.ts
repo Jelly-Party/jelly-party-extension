@@ -121,7 +121,10 @@ export default class VideoHandler {
   }
 
   togglePlayPause() {
-    this.noEventsToSkipBeforeForwardingAgain += 1;
+    console.log("Toggling play pause");
+    // We want to forward the play event, so we must decrement
+    // noEventsToSkipBeforeForwardingAgain
+    this.noEventsToSkipBeforeForwardingAgain -= 1;
     if (this.video?.paused) {
       this.play();
     } else {

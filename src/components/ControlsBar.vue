@@ -4,10 +4,10 @@
       <div
         v-b-modal.modal-center
         class="jelly-party-navbar-button"
-        @click="togglePlayingStatus()"
+        @click="togglePlayPause()"
       >
         <svg
-          v-if="!paused"
+          v-if="paused"
           width="1em"
           height="1em"
           xmlns="http://www.w3.org/2000/svg"
@@ -154,7 +154,7 @@ export default {
       return partyStore.state.peers;
     },
     paused() {
-      return partyStore.state.paused;
+      return partyStore.state.videoState.paused;
     },
   },
   methods: {
@@ -167,8 +167,9 @@ export default {
       this.$root.$party.leaveParty();
       cancel();
     },
-    togglePlayingStatus() {
-      console.log("Jelly-Party: Toggling playing status.");
+    togglePlayPause() {
+      console.log("Jelly-Party: Toggling PlayPause.");
+      this.$root.$party.togglePlayPause();
     },
   },
 };

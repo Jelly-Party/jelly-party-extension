@@ -460,6 +460,22 @@ export default class JellyParty {
     };
     this.iFrameMessenger.sendData(msg);
   }
+
+  async togglePlayPause() {
+    const msg: MediaCommandFrame = {
+      type: "media",
+      payload: {
+        type: "videoUpdate",
+        resetEventCounter: true,
+        data: {
+          variant: "togglePlayPause",
+        },
+      },
+      context: "JellyParty",
+    };
+    this.iFrameMessenger.sendData(msg);
+  }
+
   async getVideoState() {
     const dataframe: SimpleRequestFrame = {
       type: "videoStateRequest",
