@@ -29,4 +29,5 @@ export interface OptionsState {
   avatarState: AvatarState;
   previousParties: Array<PreviousParty>;
   lastPartyId: string;
+  showNotificationsForSelf: boolean;
 }

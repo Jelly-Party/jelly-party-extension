@@ -16,6 +16,7 @@ export const state: OptionsState = {
   previousParties: [{ partyId: "abc", members: ["me"], dateInfo: {} }],
   guid: "",
   lastPartyId: "",
+  showNotificationsForSelf: false,
   avatarState: {
     accessoriesType: "Round",
     clotheType: "ShirtScoopNeck",

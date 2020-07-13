@@ -22,7 +22,7 @@
       <b-icon
         icon="question-circle-fill"
         v-b-tooltip.hover
-        title="Toggle this option to enable status notifications in the chat, e.g. when somebody play or pauses the video."
+        title="Toggle this option to enable status notifications in the chat, e.g. when somebody plays or pauses the video."
       >
       </b-icon>
     </b-form-checkbox>
@@ -36,8 +36,7 @@
       <b-icon
         icon="question-circle-fill"
         v-b-tooltip.hover
-        id="testooltip"
-        title="Toggle this option to enable popup status notifications, e.g. when somebody play or pauses the video."
+        title="Toggle this option to enable popup status notifications, e.g. when somebody plays or pauses the video."
       >
       </b-icon>
     </b-form-checkbox>
@@ -55,6 +54,20 @@
         title="This feature is coming soon. Let us know on Discord if this is something you'd like to see."
       >
         <!-- title="Toggle this option to make you the party admin when creating a party. Changes, like pausing the video, are then only synced if you make them." -->
+      </b-icon>
+    </b-form-checkbox>
+    <b-form-checkbox
+      v-model="showNotificationsForSelf"
+      name="showNotificationsForSelf-button"
+      switch
+      size="lg"
+    >
+      Show notifications when you play/pause/seek
+      <b-icon
+        icon="question-circle-fill"
+        v-b-tooltip.hover
+        title="Toggle this option to enable notifications when you play, pause or seek the video."
+      >
       </b-icon>
     </b-form-checkbox>
     <b-collapse id="collapse-success" class="mt-2">
@@ -93,6 +106,7 @@ export default {
       "options.onlyIHaveControls",
       "options.statusNotificationsInChat",
       "options.statusNotificationsNotyf",
+      "options.showNotificationsForSelf"
     ]),
   },
   methods: {

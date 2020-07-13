@@ -2,6 +2,7 @@ import JellyParty from "@/browser/JellyParty";
 import VideoHandler from "@/browser/videoHandler";
 import { VideoState } from "@/browser/videoHandler";
 import { MainFrame } from "@/browser/mainFrame";
+import { state as optionsState, options } from "@/store/options";
 
 // MESSAGING API
 // MainFrameMessenger
@@ -194,14 +195,42 @@ export class IFrameMessenger {
           if (msg.payload.type === "videoUpdate") {
             switch (msg.payload.data.variant) {
               case "play": {
+                const notificationText = "You played the video.";
+                if (optionsState?.showNotificationsForSelf) {
+                  if (optionsState?.statusNotificationsNotyf) {
+                    this.party.displayNotification(notificationText);
+                  }
+                  if (optionsState?.statusNotificationsInChat) {
+                    this.party.logToChat(notificationText);
+                  }
+                }
                 this.party.requestPeersToPlay(msg.payload.data.tick);
                 break;
               }
               case "pause": {
+                if (optionsState?.showNotificationsForSelf) {
+                  const notificationText = "You paused the video.";
+                  if (optionsState.statusNotificationsNotyf) {
+                    this.party.displayNotification(notificationText);
+                  }
+                  if (optionsState?.statusNotificationsInChat) {
+                    this.party.logToChat(notificationText);
+                  }
+                }
                 this.party.requestPeersToPause(msg.payload.data.tick);
                 break;
               }
               case "seek": {
+                if (optionsState?.showNotificationsForSelf) {
+                  const notificationText = `You jumped to ${msg.payload.data.tick}.`;
+                  if (optionsState.statusNotificationsNotyf) {
+                    this.party.displayNotification(notificationText);
+                  }
+                  if (optionsState?.statusNotificationsInChat) {
+                    this.party.logToChat(notificationText);
+                  }
+                }
+
                 this.party.requestPeersToSeek(msg.payload.data.tick);
                 break;
               }

@@ -1,5 +1,4 @@
 import { Module } from "vuex";
-import Vue from "vue";
 import { PartyState, ChatMessage } from "./types";
 import { RootState } from "../types";
 // @ts-ignore
