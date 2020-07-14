@@ -3,6 +3,7 @@ import VideoHandler from "@/browser/videoHandler";
 import { VideoState } from "@/browser/videoHandler";
 import { MainFrame } from "@/browser/mainFrame";
 import { state as optionsState } from "@/store/options";
+import toHHMMSS from "./toHHMMSS.js";
 
 // MESSAGING API
 // MainFrameMessenger
@@ -222,7 +223,9 @@ export class IFrameMessenger {
               }
               case "seek": {
                 if (optionsState?.showNotificationsForSelf) {
-                  const notificationText = `You jumped to ${msg.payload.data.tick}.`;
+                  const notificationText = `You jumped to ${toHHMMSS(
+                    msg.payload.data.tick
+                  )}.`;
                   if (optionsState.statusNotificationsNotyf) {
                     this.party.displayNotification(notificationText);
                   }

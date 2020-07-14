@@ -75,21 +75,14 @@ export const party: Module<PartyState, RootState> = {
           .map((peer) => peer.uuid)
           .concat(newPartyState.peers.map((peer) => peer.uuid))
       );
-      console.log(`allUUIDs is`);
-      console.log(allUUIDs);
       // Create a copy of the current cache, use current state if it doesn't yet exist
       let cachedPeers = context.state.cachedPeers
         ? context.state.cachedPeers.slice()
         : context.state.peers.slice();
-      console.log(`cachedPeers is ${JSON.stringify(cachedPeers)}`);
       // Iterate over all UUIDs from current state + new state
       for (const uuid of allUUIDs) {
         const oldPeer = context.state.peers.find((peer) => peer.uuid === uuid);
         const newPeer = newPartyState.peers.find((peer) => peer.uuid === uuid);
-        console.log(`uuid is ${uuid}`);
-        console.log(`oldPeer is ${JSON.stringify(oldPeer)}`);
-        console.log(`newPeer is ${JSON.stringify(newPeer)}`);
-
         if (!oldPeer && newPeer) {
           // We have added a peer, which we must add to the cache
           cachedPeers.push(newPeer);
@@ -110,8 +103,6 @@ export const party: Module<PartyState, RootState> = {
       context.commit("updatePeersChache", cachedPeers);
       // Lastly, we update the client state
       context.commit("updatePartyState", newPartyState);
-      console.log("State is");
-      console.log(context.state);
     },
     resetPartyState(context) {
       context.commit("updatePartyState", initalPartyState);
