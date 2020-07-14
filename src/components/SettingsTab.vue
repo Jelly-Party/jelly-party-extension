@@ -111,12 +111,16 @@ export default {
       "options.onlyIHaveControls",
       "options.statusNotificationsInChat",
       "options.statusNotificationsNotyf",
-      "options.showNotificationsForSelf"
+      "options.showNotificationsForSelf",
+      "options.clientName"
     ]),
   },
   methods: {
     showConfirmation: function() {
       console.log("Jelly-Party: Saving options to chrome local storage.");
+      if (this.clientName.length < 2) {
+        alert("Please choose a name that's longer than 2 characters")
+      } else {
       this.$store.dispatch("options/saveOptionsStateToBrowserLocalStorage");
       // Share the new options with the party (videoState, name & avatar options are shared,
       // though only avatar options and name are relevant)
@@ -126,6 +130,7 @@ export default {
 
       }, 5000);
       this.$root.$party.uploadPartyState();
+      }
     },
   },
 };

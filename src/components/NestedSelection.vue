@@ -119,7 +119,7 @@ export default {
   transition: all 300ms ease !important;
   cursor: pointer !important;
   &:hover {
-    color: $jellyPartyPurple !important;
+    color: lightgray !important;
   }
 }
 

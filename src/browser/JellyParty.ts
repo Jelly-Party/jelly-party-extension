@@ -246,9 +246,9 @@ export default class JellyParty {
                 peer.uuid === _difference(previousUUIDs, newUUIDs)[0]
             )[0];
             if (peerWhoLeft) {
-              this.displayNotification(
-                `${peerWhoLeft.clientName} left the party.`
-              );
+              const msg = `${peerWhoLeft.clientName} left the party.`;
+              this.displayNotification(msg);
+              this.logToChat(msg);
             }
           } else if (
             this.partyState.peers.length < msg.data.partyState.peers.length
@@ -263,9 +263,9 @@ export default class JellyParty {
             if (previousUUIDs.length === 0) {
               // Let's show all peers in the party
               for (const peer of msg.data.partyState.peers) {
-                this.displayNotification(
-                  `${peer.clientName} joined the party.`
-                );
+                const msg = `${peer.clientName} joined the party.`;
+                this.displayNotification(msg);
+                this.logToChat(msg);
               }
             } else {
               // Show only the peer that joined
@@ -274,9 +274,9 @@ export default class JellyParty {
                   peer.uuid === _difference(newUUIDs, previousUUIDs)[0]
               )[0];
               if (peerWhoJoined) {
-                this.displayNotification(
-                  `${peerWhoJoined.clientName} joined the party.`
-                );
+                const msg = `${peerWhoJoined.clientName} joined the party.`;
+                this.displayNotification(msg);
+                this.logToChat(msg);
               }
             }
           }
