@@ -43,7 +43,11 @@ export interface MediaCommandFrame {
 }
 
 export interface SimpleRequestFrame {
-  type: "videoStateRequest" | "joinPartyRequest" | "baseLinkRequest";
+  type:
+    | "videoStateRequest"
+    | "joinPartyRequest"
+    | "baseLinkRequest"
+    | "chatNotification";
   context: "JellyParty";
 }
 
@@ -154,6 +158,10 @@ export class MainFrameMessenger {
             context: "JellyParty",
           };
           this.sendData(baseLinkResponse);
+          break;
+        }
+        case "chatNotification": {
+          this.mainFrame.showChatNotificationIfMinimized();
           break;
         }
         default: {

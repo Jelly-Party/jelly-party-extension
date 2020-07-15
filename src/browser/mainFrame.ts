@@ -1,6 +1,8 @@
 import { debounce as _debounce, throttle as _throttle } from "lodash-es";
 import {
   baseSVG,
+  jellyFishWithNotification,
+  jellyFishWithoutNotification,
   jellyFishToArrow,
   arrowToJellyFish,
 } from "./jellyPartyFab.js";
@@ -262,6 +264,7 @@ export class MainFrame {
   }
 
   showJellyPartyFab() {
+    this.jellyPartyFabTimer = Date.now();
     const jellyPartyFab: HTMLElement | null = document.querySelector(
       "#jellyPartyFab"
     );
@@ -318,7 +321,6 @@ export class MainFrame {
       _throttle(() => {
         if (this.sideBarHidden) {
           this.showJellyPartyFab();
-          this.jellyPartyFabTimer = Date.now();
         }
       }, 300).bind(this)
     );
@@ -340,6 +342,11 @@ export class MainFrame {
         // Switch to showing sidebar
         this.sideBarHidden = false;
         this.fixWebsiteDisplay();
+        // Remove notification
+        const fab = document.querySelector("#jellyPartyFab");
+        if (fab) {
+          fab.innerHTML = jellyFishWithoutNotification;
+        }
         jellyPartyWrapper.classList.remove("sideBarMinimized");
         jellyFishToArrow();
       } else {
@@ -372,6 +379,14 @@ export class MainFrame {
     baseLink.searchParams.delete("jellyPartyId");
     return baseLink.toString();
   }
+
+  showChatNotificationIfMinimized = () => {
+    const fab = document.querySelector("#jellyPartyFab");
+    if (fab && this.sideBarHidden) {
+      fab.innerHTML = jellyFishWithNotification;
+      this.showJellyPartyFab();
+    }
+  };
 }
 
 if (window.location.host === "join.jelly-party.com") {
@@ -381,5 +396,6 @@ if (window.location.host === "join.jelly-party.com") {
   console.log(joinURL);
   window.location.href = joinURL.toString();
 } else if (!(window as any).jellyPartyLoaded) {
-  new MainFrame(window.location.host);
+  const mf = new MainFrame(window.location.host);
+  console.log(mf.showChatNotificationIfMinimized);
 }

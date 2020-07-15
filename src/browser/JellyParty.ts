@@ -284,9 +284,13 @@ export default class JellyParty {
           break;
         }
         case "chatMessage": {
-          this.sendChatMessage(msg);
           const chatMessage: ChatMessage = msg;
           store.commit("party/addChatMessage", chatMessage);
+          const request: SimpleRequestFrame = {
+            type: "chatNotification",
+            context: "JellyParty",
+          };
+          this.iFrameMessenger.sendData(request);
           break;
         }
         case "setUUID": {
@@ -319,7 +323,7 @@ export default class JellyParty {
     if (optionsState.statusNotificationsInChat) {
       const chatMessage: ChatMessage = {
         type: "chatMessage",
-        peer: { uuid: "jellyPartyLogMessage" }, // will be added by server
+        peer: { uuid: "jellyPartyLogMessage" },
         data: {
           text: text,
           timestamp: Date.now(),
