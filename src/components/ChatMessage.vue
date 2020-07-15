@@ -7,25 +7,26 @@
       <small> {{ chatMessage.data.text }} </small>
     </div>
     <div v-else class="chatMessage-container">
-      <avataaars
-        v-if="!systemMessage"
-        v-b-tooltip.hover
-        style="height:4em; width: 4em;"
-        :isCircle="true"
-        :title="getPeer.clientName"
-        :accessoriesType="getPeer.avatarState.accessoriesType"
-        :clotheType="getPeer.avatarState.clotheType"
-        :clotheColor="getPeer.avatarState.clotheColor"
-        :eyebrowType="getPeer.avatarState.eyebrowType"
-        :eyeType="getPeer.avatarState.eyeType"
-        :facialHairColor="getPeer.avatarState.facialHairColor"
-        :facialHairType="getPeer.avatarState.facialHairType"
-        :graphicType="'Hola'"
-        :hairColor="getPeer.avatarState.hairColor"
-        :mouthType="getPeer.avatarState.mouthType"
-        :skinColor="getPeer.avatarState.skinColor"
-        :topType="getPeer.avatarState.topType"
-      ></avataaars>
+      <div v-if="!systemMessage" style="height: 4em; width: 4em;">
+        <avataaars
+          v-b-tooltip.hover
+          style="height:4em; width: 4em;"
+          :isCircle="true"
+          :title="getPeer.clientName"
+          :accessoriesType="getPeer.avatarState.accessoriesType"
+          :clotheType="getPeer.avatarState.clotheType"
+          :clotheColor="getPeer.avatarState.clotheColor"
+          :eyebrowType="getPeer.avatarState.eyebrowType"
+          :eyeType="getPeer.avatarState.eyeType"
+          :facialHairColor="getPeer.avatarState.facialHairColor"
+          :facialHairType="getPeer.avatarState.facialHairType"
+          :graphicType="'Hola'"
+          :hairColor="getPeer.avatarState.hairColor"
+          :mouthType="getPeer.avatarState.mouthType"
+          :skinColor="getPeer.avatarState.skinColor"
+          :topType="getPeer.avatarState.topType"
+        ></avataaars>
+      </div>
       <div
         v-else
         style="height:3.5em; width: 3.5em;"
@@ -109,5 +110,6 @@ export default {
   padding: 0.5em 1em;
   flex-grow: 1;
   margin: 0em 0em 0em 1em;
+  overflow-wrap: anywhere;
 }
 </style>
