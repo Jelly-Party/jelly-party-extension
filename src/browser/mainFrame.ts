@@ -10,7 +10,6 @@ import VideoHandler from "@/browser/videoHandler";
 import Notyf from "./libs/js/notyf.min.js";
 import "./libs/css/notyf.min.css";
 import { JoinPartyCommandFrame } from "@/browser/Messenger";
-import { PermissionsFrame } from "@/browser/background";
 
 console.log(`Jelly-Party: Mode is ${process.env.NODE_ENV}`);
 
@@ -376,49 +375,11 @@ export class MainFrame {
 }
 
 if (window.location.host === "join.jelly-party.com") {
-  // Request background script to redirect & then inject content script
-  (() => {
-    const jellyPartyId = decodeURIComponent(
-      new URLSearchParams(window.location.search).get("jellyPartyId") ?? ""
-    );
-    const redirectURL = new URL(
-      decodeURIComponent(
-        new URLSearchParams(window.location.search).get("redirectURL") ?? ""
-      )
-    );
-    if (!redirectURL || !jellyPartyId) {
-      console.log("Jelly-Party: Invalid link.");
-      return;
-    }
-    redirectURL.searchParams.append("jellyPartyId", jellyPartyId);
-    const permissionScheme = `${redirectURL.origin}/`;
-    const permissionButton = document.createElement("button");
-    permissionButton.id = "permissionButton";
-    permissionButton.className = "btn mt-2 btn-secondary btn-lg btn-block";
-    permissionButton.innerText = "Grant permissions now";
-    const firstButton = document.querySelector("button");
-    firstButton?.remove();
-    document.querySelector(".wrapper")?.appendChild(permissionButton);
-    permissionButton.onclick = async () => {
-      const request: PermissionsFrame = {
-        type: "askForPermissionsThenRedirect",
-        payload: {
-          permissionScheme: permissionScheme,
-          redirectURL: redirectURL.toString(),
-        },
-      };
-      browser.runtime.sendMessage(JSON.stringify(request));
-    };
-    // Check if we already have permissions, in which case we redirect immediately
-    const request: PermissionsFrame = {
-      type: "checkPermissionsThenMaybeRedirect",
-      payload: {
-        permissionScheme: permissionScheme,
-        redirectURL: redirectURL.toString(),
-      },
-    };
-    browser.runtime.sendMessage(JSON.stringify(request));
-  })();
+  // Redirect to options page that has full access to browser APIs
+  const joinURL = new URL(browser.runtime.getURL("join.html"));
+  joinURL.search = window.location.search;
+  console.log(joinURL);
+  window.location.href = joinURL.toString();
 } else if (!(window as any).jellyPartyLoaded) {
   new MainFrame(window.location.host);
 }

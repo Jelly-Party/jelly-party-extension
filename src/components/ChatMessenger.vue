@@ -4,8 +4,8 @@
     <div id="chatMessagesContainer" style="overflow: auto;">
       <ChatMessage
         style="flex-grow: 1;"
-        v-for="chatMessage in chatMessages"
-        :key="chatMessage.data.timestamp"
+        v-for="(chatMessage, index) in chatMessages"
+        :key="index"
         :chatMessage="chatMessage"
       />
     </div>

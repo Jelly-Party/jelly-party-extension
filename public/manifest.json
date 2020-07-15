@@ -5,8 +5,7 @@
   "permissions": ["activeTab", "storage"],
   "optional_permissions": ["http://*/*", "https://*/*"],
   "background": {
-    "scripts": ["js/background.js"],
-    "persistent": false
+    "scripts": ["js/background.js"]
   },
   "browser_action": {
     "default_popup": "index.html",
@@ -31,5 +30,5 @@
   },
   "manifest_version": 2,
   "content_security_policy": "script-src 'self' 'unsafe-eval'; connect-src 'self' http://localhost:8098 ws://localhost:8098 wss://staging.jelly-party.com:8080 wss://ws.jelly-party.com:8080; object-src 'self'",
-  "web_accessible_resources": ["js/RootStyles.js", "iframe.html"]
+  "web_accessible_resources": ["js/RootStyles.js", "iframe.html", "join.html"]
 }

@@ -17,7 +17,11 @@ browser.storage.local.get("options").then((options: any) => {
   }
 });
 
-function redirectToParty(redirectURL: string) {
+function redirectToParty(
+  redirectURL: string,
+  resolve: (arg0?: any) => void,
+  reject: (arg0?: any) => void
+) {
   // We attempt to inject the content script several times. If we've been
   // successful, further injections will yield no effect.
   // The root of the problem lies in the fact that browser.tabs.update's
@@ -37,15 +41,18 @@ function redirectToParty(redirectURL: string) {
             .executeScript(activeTabId, {
               file: "js/mainFrame.js",
             })
+            .then(() => {
+              resolve("Jelly-Party: Redirection to party successful.");
+            })
             .catch((err) => {
-              console.log(
-                `Could not inject content script. ${
-                  delay === delays.splice(-1)[0]
-                    ? "No further injection intended."
-                    : `Will attempt redirection again in ${delay}.`
-                }.`
-              );
-              console.log(err);
+              if (delay === delays.splice(-1)[0]) {
+                reject("Jelly-Party: Redirection to party failed.");
+              } else {
+                console.log(
+                  `Could not redirect to party. Will attempt redirection again in ${delay}.`
+                );
+                console.log(err);
+              }
             });
         }, delay);
       });
@@ -53,63 +60,20 @@ function redirectToParty(redirectURL: string) {
   });
 }
 
-export interface PermissionsFrame {
-  type: "checkPermissionsThenMaybeRedirect" | "askForPermissionsThenRedirect";
+export interface RedirectFrame {
+  type: "redirectToParty";
   payload: {
-    permissionScheme: string;
     redirectURL: string;
   };
 }
 
-async function askForPermissionsThenRedirect(
-  matchPattern: string,
-  redirectURL: string
-) {
-  return new Promise((resolve, reject) => {
-    browser.permissions
-      .request({
-        origins: [matchPattern],
-      })
-      .then((granted) => {
-        if (granted) {
-          redirectToParty(redirectURL);
-          resolve("Permissions granted successfully");
-        } else {
-          reject("Permissions not granted.");
-        }
-      })
-      .catch((err) => {
-        console.log(err);
-      });
-  });
-}
-
 browser.runtime.onMessage.addListener((req: string) => {
-  const request: PermissionsFrame = JSON.parse(req);
+  const request: RedirectFrame = JSON.parse(req);
   switch (request.type) {
-    case "checkPermissionsThenMaybeRedirect": {
+    case "redirectToParty": {
       return new Promise((resolve, reject) => {
-        browser.permissions
-          .contains({
-            origins: [request.payload.permissionScheme],
-          })
-          .then((hasPermission) => {
-            if (hasPermission) {
-              redirectToParty(request.payload.redirectURL);
-              resolve("Already have permissions");
-            } else {
-              reject("Must ask for permissions first");
-            }
-          });
-      }).catch((err) => {
-        console.log(err);
+        redirectToParty(request.payload.redirectURL, resolve, reject);
       });
-    }
-    case "askForPermissionsThenRedirect": {
-      return askForPermissionsThenRedirect(
-        request.payload.permissionScheme,
-        request.payload.redirectURL
-      );
     }
     default: {
       console.log(`Jelly-Party: Received unknown message: ${request}`);

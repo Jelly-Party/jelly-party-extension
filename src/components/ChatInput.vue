@@ -140,7 +140,8 @@ export default {
         this.skipNext = false;
         return;
       }
-      const clickContainsEmojiPicker = e.path.some((elem, index) => {
+      const path = e.path || e.composedPath();
+      const clickContainsEmojiPicker = path.some((elem, index) => {
         if (elem?.id === "EmojiPicker") {
           return true;
         }

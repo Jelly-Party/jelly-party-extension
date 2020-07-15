@@ -1,11 +1,11 @@
-import { mouthTypes } from "../browser/vuejs-avataaars/assetsTypes/mouth.js";
-import { eyeTypes } from "../browser/vuejs-avataaars/assetsTypes/eyes.js";
-import { eyebrowTypes } from "../browser/vuejs-avataaars/assetsTypes/eyebrows.js";
-import { clothesType } from "../browser/vuejs-avataaars/assetsTypes/clothes.js";
-import { topTypes } from "../browser/vuejs-avataaars/assetsTypes/top.js";
-import { accessoriesTypes } from "../browser/vuejs-avataaars/assetsTypes/accessories.js";
-import { facialHairTypes } from "../browser/vuejs-avataaars/assetsTypes/facial-hair.js";
-import { GraphicShirtTypes } from "../browser/vuejs-avataaars/assetsTypes/graphic-shirt.js";
+import { mouthTypes } from "./assetsTypes/mouth.js";
+import { eyeTypes } from "./assetsTypes/eyes.js";
+import { eyebrowTypes } from "./assetsTypes/eyebrows.js";
+import { clothesType } from "./assetsTypes/clothes.js";
+import { topTypes } from "./assetsTypes/top.js";
+import { accessoriesTypes } from "./assetsTypes/accessories.js";
+import { facialHairTypes } from "./assetsTypes/facial-hair.js";
+import { GraphicShirtTypes } from "./assetsTypes/graphic-shirt.js";
 
 export default {
   mouthType: Object.keys(mouthTypes),

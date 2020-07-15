@@ -98,8 +98,9 @@
           :key="peer.uuid"
           class="d-flex align-items-center justify-content-center"
         >
-          <Avataaar
+          <avataaars
             style="height:3.5em; width: 3.5em;"
+            :isCircle="true"
             :title="getPeer(peer.uuid).clientName"
             :accessoriesType="getPeer(peer.uuid).avatarState.accessoriesType"
             :clotheType="getPeer(peer.uuid).avatarState.clotheType"
@@ -113,7 +114,7 @@
             :mouthType="getPeer(peer.uuid).avatarState.mouthType"
             :skinColor="getPeer(peer.uuid).avatarState.skinColor"
             :topType="getPeer(peer.uuid).avatarState.topType"
-          />
+          ></avataaars>
           <div class="jelly-party-name-wrapper">
             <span class="text-white"> {{ peer.clientName }} </span>
           </div>
@@ -141,11 +142,11 @@
 
 <script>
 import { party as partyStore } from "@/store/party";
-import Avataaar from "@/browser/vuejs-avataaars/entry.js";
+import Avataaars from "vuejs-avataaars";
 
 export default {
   components: {
-    Avataaar,
+    Avataaars,
   },
   computed: {
     peers() {

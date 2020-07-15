@@ -16,6 +16,12 @@ module.exports = {
       filename: "iframe.html",
       title: "Jelly-Party IFrame",
     },
+    Join: {
+      entry: "src/browser/join/index.ts",
+      template: "public/index.html",
+      filename: "join.html",
+      title: "Jelly-Party Join",
+    },
   },
   pluginOptions: {
     webpackBundleAnalyzer: {

@@ -3,8 +3,9 @@
     <div
       class="background-white d-flex align-items-center justify-content-center"
     >
-      <Avataaar
+      <avataaars
         style="height:250px;"
+        :isCircle="true"
         :accessoriesType="accessoriesType"
         :clotheType="clotheType"
         :clotheColor="clotheColor"
@@ -17,7 +18,7 @@
         :mouthType="mouthType"
         :skinColor="skinColor"
         :topType="topType"
-      />
+      ></avataaars>
     </div>
     <b-input-group prepend="Name" class="pt-2">
       <b-form-input v-model="clientName"></b-form-input>
@@ -27,13 +28,13 @@
 </template>
 
 <script>
-import Avataaar from "@/browser/vuejs-avataaars/entry.js";
+import Avataaars from "vuejs-avataaars";
 import NestedSelection from "@/components/NestedSelection.vue";
 import { mapFields } from "vuex-map-fields";
 
 export default {
   components: {
-    Avataaar,
+    Avataaars,
     NestedSelection,
   },
   computed: {

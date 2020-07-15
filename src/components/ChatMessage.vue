@@ -7,10 +7,11 @@
       <small> {{ chatMessage.data.text }} </small>
     </div>
     <div v-else class="chatMessage-container">
-      <Avataaar
+      <avataaars
         v-if="!systemMessage"
         v-b-tooltip.hover
-        style="height:3.5em; width: 3.5em;"
+        style="height:4em; width: 4em;"
+        :isCircle="true"
         :title="getPeer.clientName"
         :accessoriesType="getPeer.avatarState.accessoriesType"
         :clotheType="getPeer.avatarState.clotheType"
@@ -24,7 +25,7 @@
         :mouthType="getPeer.avatarState.mouthType"
         :skinColor="getPeer.avatarState.skinColor"
         :topType="getPeer.avatarState.topType"
-      />
+      ></avataaars>
       <div
         v-else
         style="height:3.5em; width: 3.5em;"
@@ -49,13 +50,13 @@
 </template>
 
 <script>
-import Avataaar from "@/browser/vuejs-avataaars/entry.js";
+import Avataaars from "vuejs-avataaars";
 import { party as partyStore } from "@/store/party/index";
 import { baseSVG as JellyPartySVG } from "@/browser/jellyPartyFab";
 
 export default {
   components: {
-    Avataaar,
+    Avataaars,
   },
   props: {
     chatMessage: {
