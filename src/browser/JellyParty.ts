@@ -422,7 +422,6 @@ export default class JellyParty {
         type: "media",
         payload: {
           type: "videoUpdate",
-          resetEventCounter: variant === "seek",
           data: {
             variant: variant as DataFrameMediaVariantType,
             tick: tick,
@@ -440,7 +439,6 @@ export default class JellyParty {
         type: "media",
         payload: {
           type: "videoUpdate",
-          resetEventCounter: variant === "seek",
           data: {
             variant: variant as DataFrameMediaVariantType,
             tick: tick,
@@ -457,7 +455,6 @@ export default class JellyParty {
       type: "media",
       payload: {
         type: "videoUpdate",
-        resetEventCounter: true,
         data: {
           variant: "seek",
           tick: tick,
@@ -473,7 +470,6 @@ export default class JellyParty {
       type: "media",
       payload: {
         type: "videoUpdate",
-        resetEventCounter: true,
         data: {
           variant: "togglePlayPause",
         },

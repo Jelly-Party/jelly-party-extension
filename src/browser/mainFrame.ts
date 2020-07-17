@@ -67,7 +67,7 @@ export class MainFrame {
   customizeStyling(this: MainFrame, host: string) {
     switch (host) {
       case "www.netflix.com":
-        this.IFrameIdentifier = ".AkiraPlayer";
+        this.IFrameIdentifier = ".sizing-wrapper";
         this.IFrameTarget = document.querySelector(this.IFrameIdentifier);
         break;
       case "www.youtube.com": {
@@ -417,10 +417,9 @@ if (window.location.host === "join.jelly-party.com") {
   console.log(joinURL);
   window.location.href = joinURL.toString();
 } else if (!document.querySelector("#jellyPartyRoot")) {
-  delete (window as any).JellyParty;
   console.log(`Jelly-Party: Initializing MainFrame!`);
   console.log(`Jelly-Party: Mode is ${process.env.NODE_ENV}`);
-  (window as any).JellyParty = new MainFrame(window.location.host);
+  (window as any).MainFrame = new MainFrame(window.location.host);
 } else {
   console.log(`Jelly-Party: Already loaded. Skipping loading.`);
 }

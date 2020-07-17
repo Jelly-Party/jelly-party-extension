@@ -33,7 +33,6 @@ export interface MediaCommandFrame {
   type: "media";
   payload: {
     type: "videoUpdate";
-    resetEventCounter?: boolean;
     data: {
       variant: DataFrameMediaVariantType;
       tick?: number;
@@ -104,12 +103,6 @@ export class MainFrameMessenger {
       }
       switch (msg.type) {
         case "media": {
-          // Reset the event counter if we're instructed to do so & if the event counter is negative
-          if (msg.payload.resetEventCounter) {
-            if (this.videoHandler.noEventsToSkipBeforeForwardingAgain < 0) {
-              this.videoHandler.noEventsToSkipBeforeForwardingAgain = 0;
-            }
-          }
           switch (msg.payload.data.variant) {
             case "play": {
               this.videoHandler.play();

@@ -13,7 +13,6 @@ export default class VideoHandler {
   host: string;
   notyf: any;
   mainFrameMessenger: MainFrameMessenger;
-  noEventsToSkipBeforeForwardingAgain: number;
   findVideoInterval: number | undefined;
   video: HTMLVideoElement | null;
   findVideoAndAttach: () => void;
@@ -27,7 +26,6 @@ export default class VideoHandler {
   ) {
     this.host = host;
     // this.notyf = notyf;
-    this.noEventsToSkipBeforeForwardingAgain = 0;
     this.findVideoInterval;
     this.video = null;
     this.mainFrameMessenger = mainFrameMessenger;
@@ -43,20 +41,16 @@ export default class VideoHandler {
           // }
           console.log("Jelly-Party: Found video. Attaching to video..");
           // this.notyf.success("Video detected!");
-
-          this.video.addEventListener("play", this.playListener);
-          this.video.addEventListener("pause", this.pauseListener);
-          this.video.addEventListener("seeking", this.seekingListener);
-          this.video.addEventListener("emptied", this.emptiedListener);
+          this.addListeners();
         }
       } else {
         console.log("Jelly-Party: Checking if video source has changed..");
       }
     };
     this.initialize(host);
-    this.play = this.getPlayHook(host);
-    this.pause = this.getPauseHook(host);
-    this.seek = this.getSeekHook(host);
+    this.play = this.wrapPlayPauseHandler(this.getPlayHook(host));
+    this.pause = this.wrapPlayPauseHandler(this.getPauseHook(host));
+    this.seek = this.wrapSeekHandler(this.getSeekHook(host));
   }
 
   initialize(host: string) {
@@ -124,7 +118,6 @@ export default class VideoHandler {
     console.log("Toggling play pause");
     // We want to forward the play event, so we must decrement
     // noEventsToSkipBeforeForwardingAgain
-    this.noEventsToSkipBeforeForwardingAgain -= 1;
     if (this.video?.paused) {
       this.play();
     } else {
@@ -136,44 +129,54 @@ export default class VideoHandler {
     switch (host) {
       case "www.netflix.com": {
         return async () => {
-          this.noEventsToSkipBeforeForwardingAgain += 1;
           window.dispatchEvent(new CustomEvent("playRequest"));
           await this.sleep(50);
         };
       }
       case "www.disneyplus.com": {
         return async () => {
-          this.noEventsToSkipBeforeForwardingAgain += 1;
           window.dispatchEvent(new CustomEvent("playPauseRequest"));
           await this.sleep(50);
         };
       }
       default:
         return async () => {
-          this.noEventsToSkipBeforeForwardingAgain += 1;
           await this.video?.play();
         };
     }
   }
 
+  wrapPlayPauseHandler = (fun: () => Promise<void>) => {
+    return async () => {
+      this.removeListeners();
+      await fun();
+      this.addListeners();
+    };
+  };
+
+  wrapSeekHandler = (fun: (tick: number) => Promise<void>) => {
+    return async (tick: number) => {
+      this.removeListeners();
+      await fun(tick);
+      this.addListeners();
+    };
+  };
+
   getPauseHook(host: string) {
     switch (host) {
       case "www.netflix.com":
         return async () => {
-          this.noEventsToSkipBeforeForwardingAgain += 1;
           window.dispatchEvent(new CustomEvent("pauseRequest"));
           await this.sleep(50);
         };
       case "www.disneyplus.com": {
         return async () => {
-          this.noEventsToSkipBeforeForwardingAgain += 1;
           window.dispatchEvent(new CustomEvent("playPauseRequest"));
           await this.sleep(50);
         };
       }
       default:
         return async () => {
-          this.noEventsToSkipBeforeForwardingAgain += 1;
           await this.video?.pause();
         };
     }
@@ -189,7 +192,6 @@ export default class VideoHandler {
           if (timeDelta > 0.5) {
             // Seeking is actually worth it. We're off by more than half a second.
             // Disable forwarding for the upcoming seek event.
-            this.noEventsToSkipBeforeForwardingAgain += 1;
             window.dispatchEvent(
               new CustomEvent<number>("seekRequest", { detail: tick })
             );
@@ -205,7 +207,6 @@ export default class VideoHandler {
             if (timeDelta > 0.5) {
               // Seeking is actually worth it. We're off by more than half a second.
               // Disable forwarding for the upcoming seek event.
-              this.noEventsToSkipBeforeForwardingAgain += 1;
               this.video.currentTime = tick;
               await this.sleep(50);
             }
@@ -226,91 +227,73 @@ export default class VideoHandler {
 
   playListener = () => {
     console.log({ type: "play", tick: this.video?.currentTime });
-    if (this.noEventsToSkipBeforeForwardingAgain > 0) {
-      // Somebody else is asking us to play
-      // We must not forward the event, otherwise we'll end up in an infinite "play now" loop
-      console.log(
-        "Jelly-Party: Not asking party to act - we did not generate the event. Event was caused by a peer."
-      );
-    } else {
-      // We triggered the PlayPause button, so forward it to everybody
-      // Trigger play (will sync as well)
-      const dataframe: MediaCommandFrame = {
-        type: "media",
-        payload: {
-          type: "videoUpdate",
-          data: {
-            variant: "play",
-            tick: this.video?.currentTime,
-          },
+    const dataframe: MediaCommandFrame = {
+      type: "media",
+      payload: {
+        type: "videoUpdate",
+        data: {
+          variant: "play",
+          tick: this.video?.currentTime,
         },
-        context: "JellyParty",
-      };
-      this.mainFrameMessenger.sendData(dataframe);
-    }
-    this.noEventsToSkipBeforeForwardingAgain -= 1;
+      },
+      context: "JellyParty",
+    };
+    this.mainFrameMessenger.sendData(dataframe);
   };
 
   pauseListener = () => {
     console.log({ type: "pause", tick: this.video?.currentTime });
-    if (this.noEventsToSkipBeforeForwardingAgain > 0) {
-      // Somebody else is asking us to pause
-      // We must not forward the event, otherwise we'll end up in an infinite "pause now" loop
-      console.log(
-        "Jelly-Party: Not asking party to act - we did not generate the event. Event was caused by a peer."
-      );
-    } else {
-      // We triggered the PlayPause button, so forward it to everybody
-      // Trigger pause (will sync as well)
-      const dataframe: MediaCommandFrame = {
-        type: "media",
-        payload: {
-          type: "videoUpdate",
-          data: {
-            variant: "pause",
-            tick: this.video?.currentTime,
-          },
+    // We triggered the PlayPause button, so forward it to everybody
+    // Trigger pause (will sync as well)
+    const dataframe: MediaCommandFrame = {
+      type: "media",
+      payload: {
+        type: "videoUpdate",
+        data: {
+          variant: "pause",
+          tick: this.video?.currentTime,
         },
-        context: "JellyParty",
-      };
-      this.mainFrameMessenger.sendData(dataframe);
-    }
-    this.noEventsToSkipBeforeForwardingAgain -= 1;
+      },
+      context: "JellyParty",
+    };
+    this.mainFrameMessenger.sendData(dataframe);
   };
 
   seekingListener = () => {
     console.log({ type: "seek", tick: this.video?.currentTime });
-    if (this.noEventsToSkipBeforeForwardingAgain > 0) {
-      // Somebody else is asking us to seek
-      // We must not forward the event, otherwise we'll end up in an infinite seek loop
-      console.log(
-        "Jelly-Party: Not asking party to act - we did not generate the event. Event was caused by a peer."
-      );
-    } else {
-      // We triggered the seek, so forward it to everybody
-      const dataframe: MediaCommandFrame = {
-        type: "media",
-        payload: {
-          type: "videoUpdate",
-          data: {
-            variant: "seek",
-            tick: this.video?.currentTime,
-          },
+    // We triggered the seek, so forward it to everybody
+    const dataframe: MediaCommandFrame = {
+      type: "media",
+      payload: {
+        type: "videoUpdate",
+        data: {
+          variant: "seek",
+          tick: this.video?.currentTime,
         },
-        context: "JellyParty",
-      };
-      this.mainFrameMessenger.sendData(dataframe);
-    }
-    this.noEventsToSkipBeforeForwardingAgain -= 1;
+      },
+      context: "JellyParty",
+    };
+    this.mainFrameMessenger.sendData(dataframe);
   };
 
-  emptiedListener() {
-    // this.notyf.success("Video lost! Rescanning for video..");
-    // Remove open event listeners
+  addListeners() {
+    this.video?.addEventListener("play", this.playListener);
+    this.video?.addEventListener("pause", this.pauseListener);
+    this.video?.addEventListener("seeking", this.seekingListener);
+    this.video?.addEventListener("emptied", this.emptiedListener);
+  }
+
+  removeListeners() {
     this.video?.removeEventListener("play", this.playListener);
     this.video?.removeEventListener("pause", this.pauseListener);
     this.video?.removeEventListener("seeked", this.seekingListener);
     this.video?.removeEventListener("emptied", this.emptiedListener);
+  }
+
+  emptiedListener() {
+    // this.notyf.success("Video lost! Rescanning for video..");
+    // Remove open event listeners
+    this.removeListeners();
     this.video = null;
     this.findVideoInterval = setInterval(this.findVideoAndAttach, 1000);
   }
