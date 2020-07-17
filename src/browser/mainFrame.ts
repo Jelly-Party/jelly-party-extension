@@ -13,12 +13,11 @@ import Notyf from "./libs/js/notyf.min.js";
 import "./libs/css/notyf.min.css";
 import { JoinPartyCommandFrame } from "@/browser/Messenger";
 
-console.log(`Jelly-Party: Mode is ${process.env.NODE_ENV}`);
-
 export class MainFrame {
   host: string;
   sideBarHidden: boolean;
   IFrameTarget!: HTMLElement | null;
+  IFrameIdentifier!: string;
   jellyPartyFabTimer!: number;
   videoHandler: VideoHandler;
   mainFrameMessenger: MainFrameMessenger;
@@ -31,6 +30,7 @@ export class MainFrame {
   showNotification: (arg0: string) => void;
 
   constructor(host: string) {
+    (window as any).jellyPartyLoaded = true;
     this.host = host;
     this.sideBarHidden = false;
     this.notyf = new (Notyf())({
@@ -62,16 +62,17 @@ export class MainFrame {
     );
     this.mainFrameMessenger.videoHandler = this.videoHandler;
     this.customizeStyling(host);
-    this.insertSideBar();
   }
 
   customizeStyling(this: MainFrame, host: string) {
     switch (host) {
       case "www.netflix.com":
-        this.IFrameTarget = document.querySelector(".AkiraPlayer");
+        this.IFrameIdentifier = ".AkiraPlayer";
+        this.IFrameTarget = document.querySelector(this.IFrameIdentifier);
         break;
       case "www.youtube.com": {
-        this.IFrameTarget = document.querySelector("ytd-app");
+        this.IFrameIdentifier = "ytd-app";
+        this.IFrameTarget = document.querySelector(this.IFrameIdentifier);
         if (!this.IFrameTarget) {
           console.log(`Jelly-Party: Missing IFrame target.`);
           break;
@@ -162,9 +163,9 @@ export class MainFrame {
         }, 3000);
         break;
       }
-      case "www.disneyplus.com": {
-        break;
-      }
+      // case "www.disneyplus.com": {
+      //   break;
+      // }
       case "vimeo.com": {
         this.IFrameTarget = document.querySelector("#main");
         break;
@@ -173,31 +174,40 @@ export class MainFrame {
         console.log(`Jelly-Party: No customization intended for ${host}`);
         this.IFrameTarget = document.body;
     }
-    if (!this.IFrameTarget) {
-      console.log(`Jelly-Party: Uh-oh. No IFrameTarget found..`);
-    }
-    if (!this.fixWebsiteDisplay) {
-      if (this.IFrameTarget) {
-        this.IFrameTarget.style.transition = "all 1s";
-        this.fixWebsiteDisplay = function() {
-          // Define generic fixWebsiteDisplay handler
-          if (!this.IFrameTarget) {
-            console.log(
-              `Jelly-Party: Cannot define fixWebsiteDisplay. Missing IFrameTarget.`
-            );
-          } else {
-            if (this.sideBarHidden) {
-              this.IFrameTarget.style.width = "100%";
-            } else {
-              this.IFrameTarget.style.width =
-                "calc(100vw - var(--jelly-party-sidebar-width))";
-            }
-          }
-        };
-      } else {
-        console.log(`Jelly-Party: Missing IFrameTarget.`);
+    (async () => {
+      while (!this.IFrameTarget) {
+        console.log(`Jelly-Party: Uh-oh. No IFrameTarget found.. Retrying..`);
+        this.IFrameTarget = document.querySelector(this.IFrameIdentifier);
+        await new Promise((resolve, reject) =>
+          setTimeout(() => {
+            resolve();
+          }, 250)
+        );
       }
-    }
+      if (!this.fixWebsiteDisplay) {
+        if (this.IFrameTarget) {
+          this.IFrameTarget.style.transition = "all 1s";
+          this.fixWebsiteDisplay = function() {
+            // Define generic fixWebsiteDisplay handler
+            if (!this.IFrameTarget) {
+              console.log(
+                `Jelly-Party: Cannot define fixWebsiteDisplay. Missing IFrameTarget.`
+              );
+            } else {
+              if (this.sideBarHidden) {
+                this.IFrameTarget.style.width = "100%";
+              } else {
+                this.IFrameTarget.style.width =
+                  "calc(100vw - var(--jelly-party-sidebar-width))";
+              }
+            }
+          };
+        } else {
+          console.log(`Jelly-Party: Missing IFrameTarget.`);
+        }
+      }
+      this.insertSideBar();
+    })();
   }
 
   insertSideBar() {
@@ -220,11 +230,22 @@ export class MainFrame {
       this.initFullscreenHandler();
       this.insertStyles();
       this.setupSideBarToggle();
-      (window as any).jellyPartyLoaded = true;
     } else {
       console.error(
         `Jelly-Party: Error attaching IFrame. this.IFrameTarget not found.`
       );
+    }
+  }
+
+  observeElement(elementToObserve: HTMLElement | null) {
+    if (!elementToObserve) {
+      console.error(`Jelly-Party: Cannot observe ${elementToObserve}`);
+    } else {
+      const observer = new MutationObserver(function(mutationsList, observer) {
+        console.log("Jelly-Party: Noticed a mutation.");
+        console.log(mutationsList);
+      });
+      observer.observe(elementToObserve, { childList: true });
     }
   }
 
@@ -395,7 +416,11 @@ if (window.location.host === "join.jelly-party.com") {
   joinURL.search = window.location.search;
   console.log(joinURL);
   window.location.href = joinURL.toString();
-} else if (!(window as any).jellyPartyLoaded) {
-  const mf = new MainFrame(window.location.host);
-  console.log(mf.showChatNotificationIfMinimized);
+} else if (!document.querySelector("#jellyPartyRoot")) {
+  delete (window as any).JellyParty;
+  console.log(`Jelly-Party: Initializing MainFrame!`);
+  console.log(`Jelly-Party: Mode is ${process.env.NODE_ENV}`);
+  (window as any).JellyParty = new MainFrame(window.location.host);
+} else {
+  console.log(`Jelly-Party: Already loaded. Skipping loading.`);
 }

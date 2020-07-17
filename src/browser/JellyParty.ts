@@ -61,8 +61,6 @@ export default class JellyParty {
       }.`
     );
     this.iFrameMessenger = new IFrameMessenger(this);
-    log.debug("Jelly-Party: Global JellyParty Object");
-    log.debug(this);
     this.displayNotification("Jelly Party loaded!", true);
     // Let's request autojoin
     this.iFrameMessenger.sendData({
@@ -163,7 +161,6 @@ export default class JellyParty {
     // Set the magic link
     this.updateMagicLink();
     let wsAddress = "";
-    log.log(`APPMODE IS: ${this.rootState.appMode}`);
     switch (this.rootState.appMode) {
       case "staging":
         wsAddress = "wss://staging.jelly-party.com:8080";
@@ -308,15 +305,21 @@ export default class JellyParty {
     this.ws.onclose = () => {
       log.debug("Jelly-Party: Disconnected from WebSocket-Server.");
       clearInterval(this.locallySyncPartyStateInterval);
-      store.dispatch("setConnectedToServer", false);
+      this.leaveParty();
     };
   };
 
   leaveParty() {
     log.info("Jelly-Party: Leaving current party.");
-    this.ws.close();
-    this.resetPartyState();
-    this.displayNotification("You left the party!");
+    try {
+      this.ws.close();
+      store.dispatch("setConnectedToServer", false);
+      this.resetPartyState();
+      this.displayNotification("You left the party!");
+    } catch (e) {
+      console.log(`Jelly-Party: Error while leaving party.`);
+      console.log(e);
+    }
   }
 
   logToChat(text: string) {

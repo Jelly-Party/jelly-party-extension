@@ -28,15 +28,14 @@ function redirectToParty(
   // callback function sometimes seems to execute before the tab's DOM content
   // has been loaded. This leads to the content script sometimes disappearing
   // into a void inbetween join.jelly-party.com and redirectURL.
-  browser.tabs.update(undefined, { url: redirectURL }).then(async () => {
-    // We query the active tab id after the tab has been updated, to make
-    // sure that we only attempt to inject the content script into whatever
-    // tab was opened by our "browser.tabs.update" query.
-    browser.tabs.query({ active: true, currentWindow: true }).then((tabs) => {
-      const activeTabId = tabs[0].id;
-      const delays = [1000, 2000, 3000, 5000, 7000, 10000, 15000, 25000];
+  browser.tabs
+    .update(undefined, { url: redirectURL })
+    .then(async (tab) => {
+      const activeTabId = tab.id;
+      const delays = [3000, 5000, 7000, 10000, 15000, 25000];
       delays.forEach((delay) => {
         setTimeout(() => {
+          console.log("Jelly-Party: Attempting script injection.");
           browser.tabs
             .executeScript(activeTabId, {
               file: "js/mainFrame.js",
@@ -56,8 +55,8 @@ function redirectToParty(
             });
         }, delay);
       });
-    });
-  });
+    })
+    .catch((e) => console.log(e));
 }
 
 export interface RedirectFrame {

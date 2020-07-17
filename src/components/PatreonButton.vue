@@ -46,7 +46,7 @@ export default {};
   border-radius: 20px;
   background-color: #f86753;
   color: white;
-  font-family: sans-serif;
+  font-family: Avenir, Helvetica, Arial, sans-serif;
   font-size: 14px;
   overflow: hidden;
   padding: 0 20px 0 10px;

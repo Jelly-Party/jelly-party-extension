@@ -104,11 +104,11 @@ export class MainFrameMessenger {
       }
       switch (msg.type) {
         case "media": {
-          // Reset the event counter if we're instructed to do so.
-          // This is required for a new queue of commands, e.g. a
-          // "play" command initially triggers a "seek"
+          // Reset the event counter if we're instructed to do so & if the event counter is negative
           if (msg.payload.resetEventCounter) {
-            this.videoHandler.noEventsToSkipBeforeForwardingAgain = 0;
+            if (this.videoHandler.noEventsToSkipBeforeForwardingAgain < 0) {
+              this.videoHandler.noEventsToSkipBeforeForwardingAgain = 0;
+            }
           }
           switch (msg.payload.data.variant) {
             case "play": {
