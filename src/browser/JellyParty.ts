@@ -67,6 +67,7 @@ export default class JellyParty {
       type: "joinPartyRequest",
       context: "JellyParty",
     });
+    this.logToChat("Press play/pause once to start the sync.");
   }
   resetPartyState() {
     store.dispatch("party/resetPartyState");
