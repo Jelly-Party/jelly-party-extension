@@ -19,6 +19,9 @@ export default class VideoHandler {
   play: () => Promise<void>;
   pause: () => Promise<void>;
   seek: (tick: number) => Promise<void>;
+  playAndForward: () => Promise<void>;
+  pauseAndForward: () => Promise<void>;
+
   constructor(
     host: string,
     // notyf: any,
@@ -51,6 +54,8 @@ export default class VideoHandler {
     this.play = this.wrapPlayPauseHandler(this.getPlayHook(host));
     this.pause = this.wrapPlayPauseHandler(this.getPauseHook(host));
     this.seek = this.wrapSeekHandler(this.getSeekHook(host));
+    this.playAndForward = this.getPlayHook(host);
+    this.pauseAndForward = this.getPauseHook(host);
   }
 
   initialize(host: string) {
@@ -87,9 +92,24 @@ export default class VideoHandler {
         break;
       case "www.disneyplus.com":
         this.injectScript(() => {
-          window.addEventListener("playPauseRequest", function() {
+          window.addEventListener("playRequest", function() {
+            console.log("Jelly-Party: Disney+ Context: Received play request.");
+            const vid: any = document.querySelector("video");
+            if (vid) {
+              const key: string | undefined = Object.keys(vid).find((elem) =>
+                elem.includes("reactInternalInstance")
+              );
+              if (key) {
+                // Play only if currently paused
+                if (vid.paused) {
+                  vid[key]?.memoizedProps?.onPointerUp?.();
+                }
+              }
+            }
+          });
+          window.addEventListener("pauseRequest", function() {
             console.log(
-              "Jelly-Party: Disney+ Context: Received playPause request."
+              "Jelly-Party: Disney+ Context: Received pause request."
             );
             const vid: any = document.querySelector("video");
             if (vid) {
@@ -97,7 +117,10 @@ export default class VideoHandler {
                 elem.includes("reactInternalInstance")
               );
               if (key) {
-                vid[key]?.memoizedProps?.onPointerUp?.();
+                // Play only if currently playing
+                if (!vid.paused) {
+                  vid[key]?.memoizedProps?.onPointerUp?.();
+                }
               }
             }
           });
@@ -119,23 +142,18 @@ export default class VideoHandler {
     // We want to forward the play event, so we must decrement
     // noEventsToSkipBeforeForwardingAgain
     if (this.video?.paused) {
-      this.play();
+      this.playAndForward();
     } else {
-      this.pause();
+      this.pauseAndForward();
     }
   }
 
   getPlayHook(host: string) {
     switch (host) {
-      case "www.netflix.com": {
-        return async () => {
-          window.dispatchEvent(new CustomEvent("playRequest"));
-          await this.sleep(50);
-        };
-      }
+      case "www.netflix.com":
       case "www.disneyplus.com": {
         return async () => {
-          window.dispatchEvent(new CustomEvent("playPauseRequest"));
+          window.dispatchEvent(new CustomEvent("playRequest"));
           await this.sleep(50);
         };
       }
@@ -165,13 +183,9 @@ export default class VideoHandler {
   getPauseHook(host: string) {
     switch (host) {
       case "www.netflix.com":
-        return async () => {
-          window.dispatchEvent(new CustomEvent("pauseRequest"));
-          await this.sleep(50);
-        };
       case "www.disneyplus.com": {
         return async () => {
-          window.dispatchEvent(new CustomEvent("playPauseRequest"));
+          window.dispatchEvent(new CustomEvent("pauseRequest"));
           await this.sleep(50);
         };
       }
