@@ -50,7 +50,7 @@
     "prettier": "^1.19.1",
     "sass": "^1.26.10",
     "sass-loader": "^8.0.2",
-    "typescript": "^3.9.6",
+    "typescript": "^3.9.7",
     "vue-cli-plugin-webpack-bundle-analyzer": "~2.0.0",
     "vue-svg-loader": "^0.16.0",
     "vue-template-compiler": "^2.6.11",
