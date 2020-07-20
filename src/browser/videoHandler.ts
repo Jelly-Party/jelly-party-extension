@@ -138,9 +138,7 @@ export default class VideoHandler {
   }
 
   togglePlayPause() {
-    console.log("Toggling play pause");
-    // We want to forward the play event, so we must decrement
-    // noEventsToSkipBeforeForwardingAgain
+    console.log("Jelly-Party: Toggling play pause.");
     if (this.video?.paused) {
       this.playAndForward();
     } else {
@@ -174,9 +172,15 @@ export default class VideoHandler {
 
   wrapSeekHandler = (fun: (tick: number) => Promise<void>) => {
     return async (tick: number) => {
-      this.removeListeners();
-      await fun(tick);
-      this.addListeners();
+      const timeDelta = Math.abs(
+        tick - (this.getVideoState().currentTime ?? tick)
+      );
+      if (timeDelta > 0.5) {
+        // Seeking is actually worth it. We're off by more than half a second.
+        this.removeListeners();
+        await fun(tick);
+        this.addListeners();
+      }
     };
   };
 
@@ -191,7 +195,8 @@ export default class VideoHandler {
       }
       default:
         return async () => {
-          await this.video?.pause();
+          this.video?.pause();
+          await this.sleep(50);
         };
     }
   }
@@ -200,30 +205,16 @@ export default class VideoHandler {
     switch (host) {
       case "www.netflix.com":
         return async (tick: number) => {
-          const timeDelta = Math.abs(
-            tick - (this.getVideoState().currentTime ?? tick)
+          window.dispatchEvent(
+            new CustomEvent<number>("seekRequest", { detail: tick })
           );
-          if (timeDelta > 0.5) {
-            // Seeking is actually worth it. We're off by more than half a second.
-            // Disable forwarding for the upcoming seek event.
-            window.dispatchEvent(
-              new CustomEvent<number>("seekRequest", { detail: tick })
-            );
-            await this.sleep(50);
-          }
+          await this.sleep(50);
         };
       default:
         return async (tick: number) => {
           if (this.video?.currentTime) {
-            const timeDelta = Math.abs(
-              tick - (this.getVideoState().currentTime ?? tick)
-            );
-            if (timeDelta > 0.5) {
-              // Seeking is actually worth it. We're off by more than half a second.
-              // Disable forwarding for the upcoming seek event.
-              this.video.currentTime = tick;
-              await this.sleep(50);
-            }
+            this.video.currentTime = tick;
+            await this.sleep(50);
           }
         };
     }
@@ -273,7 +264,7 @@ export default class VideoHandler {
     this.mainFrameMessenger.sendData(dataframe);
   };
 
-  seekingListener = () => {
+  seekedListener = () => {
     console.log({ type: "seek", tick: this.video?.currentTime });
     // We triggered the seek, so forward it to everybody
     const dataframe: MediaCommandFrame = {
@@ -293,14 +284,14 @@ export default class VideoHandler {
   addListeners() {
     this.video?.addEventListener("play", this.playListener);
     this.video?.addEventListener("pause", this.pauseListener);
-    this.video?.addEventListener("seeking", this.seekingListener);
+    this.video?.addEventListener("seeked", this.seekedListener);
     this.video?.addEventListener("emptied", this.emptiedListener);
   }
 
   removeListeners() {
     this.video?.removeEventListener("play", this.playListener);
     this.video?.removeEventListener("pause", this.pauseListener);
-    this.video?.removeEventListener("seeked", this.seekingListener);
+    this.video?.removeEventListener("seeked", this.seekedListener);
     this.video?.removeEventListener("emptied", this.emptiedListener);
   }
 
