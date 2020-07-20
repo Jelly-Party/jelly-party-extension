@@ -14,12 +14,9 @@ import { state as optionsState } from "@/store/options/index";
 import { state as partyState } from "@/store/party/index";
 import { stableWebsites } from "@/helpers/stableWebsites";
 import { IFrameMessenger } from "@/browser/Messenger";
-import {
-  DataFrameMediaVariantType,
-  MediaCommandFrame,
-  SimpleRequestFrame,
-} from "@/browser/Messenger";
+import { MediaCommandFrame, SimpleRequestFrame } from "@/browser/Messenger";
 import { VideoState } from "./videoHandler.js";
+import PromiseQueue from "@/helpers/promiseQueue";
 
 export default class JellyParty {
   // Root State
@@ -418,36 +415,42 @@ export default class JellyParty {
   }
 
   async playVideo(tick: number) {
-    ["seek", "play"].forEach((variant) => {
-      const msg: MediaCommandFrame = {
-        type: "media",
-        payload: {
-          type: "videoUpdate",
-          data: {
-            variant: variant as DataFrameMediaVariantType,
-            tick: tick,
-          },
+    await this.seek(tick);
+    const msg: MediaCommandFrame = {
+      type: "media",
+      payload: {
+        type: "videoUpdate",
+        data: {
+          variant: "play",
+          tick: tick,
         },
-        context: "JellyParty",
-      };
-      this.iFrameMessenger.sendData(msg);
+      },
+      context: "JellyParty",
+    };
+    PromiseQueue.enqueue(() => {
+      return this.iFrameMessenger.sendMediaCommandFrameAndWaitForConfirmation(
+        msg
+      );
     });
   }
 
   async pauseVideo(tick: number) {
-    ["seek", "pause"].forEach((variant) => {
-      const msg: MediaCommandFrame = {
-        type: "media",
-        payload: {
-          type: "videoUpdate",
-          data: {
-            variant: variant as DataFrameMediaVariantType,
-            tick: tick,
-          },
+    await this.seek(tick);
+    const msg: MediaCommandFrame = {
+      type: "media",
+      payload: {
+        type: "videoUpdate",
+        data: {
+          variant: "pause",
+          tick: tick,
         },
-        context: "JellyParty",
-      };
-      this.iFrameMessenger.sendData(msg);
+      },
+      context: "JellyParty",
+    };
+    PromiseQueue.enqueue(() => {
+      return this.iFrameMessenger.sendMediaCommandFrameAndWaitForConfirmation(
+        msg
+      );
     });
   }
 
@@ -463,7 +466,11 @@ export default class JellyParty {
       },
       context: "JellyParty",
     };
-    this.iFrameMessenger.sendData(msg);
+    PromiseQueue.enqueue(() => {
+      return this.iFrameMessenger.sendMediaCommandFrameAndWaitForConfirmation(
+        msg
+      );
+    });
   }
 
   async togglePlayPause() {
@@ -477,7 +484,11 @@ export default class JellyParty {
       },
       context: "JellyParty",
     };
-    this.iFrameMessenger.sendData(msg);
+    PromiseQueue.enqueue(() => {
+      return this.iFrameMessenger.sendMediaCommandFrameAndWaitForConfirmation(
+        msg
+      );
+    });
   }
 
   toggleFullScreen() {

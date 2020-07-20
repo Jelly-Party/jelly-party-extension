@@ -1,4 +1,6 @@
 import { MainFrameMessenger, MediaCommandFrame } from "@/browser/Messenger";
+import { sleep } from "@/helpers/sleep";
+
 // The VideoHandler handles playing, pausing & seeking videos
 // on different websites. For most websites the generic video.play(),
 // video.pause() & video.currentTime= will work, however some websites,
@@ -38,12 +40,7 @@ export default class VideoHandler {
         this.video = document.querySelector("video");
         if (this.video) {
           clearInterval(this.findVideoInterval);
-          // if (this.party.ws?.readyState === 1) {
-          //   this.party.updateMagicLink();
-          //   this.party.locallySyncPartyState();
-          // }
           console.log("Jelly-Party: Found video. Attaching to video..");
-          // this.notyf.success("Video detected!");
           this.addListeners();
         }
       } else {
@@ -75,7 +72,6 @@ export default class VideoHandler {
             console.log("Jelly-Party: Netflix Context: Received seek request");
             console.log(e);
             const tick = e.detail * 1000;
-            console.log(`tick is ${tick}`);
             getPlayer().seek(tick);
           });
           window.addEventListener("playRequest", function() {
@@ -133,10 +129,6 @@ export default class VideoHandler {
     }
   }
 
-  sleep(ms: number) {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-  }
-
   togglePlayPause() {
     console.log("Jelly-Party: Toggling play pause.");
     if (this.video?.paused) {
@@ -152,7 +144,7 @@ export default class VideoHandler {
       case "www.disneyplus.com": {
         return async () => {
           window.dispatchEvent(new CustomEvent("playRequest"));
-          await this.sleep(50);
+          await sleep(150);
         };
       }
       default:
@@ -190,13 +182,13 @@ export default class VideoHandler {
       case "www.disneyplus.com": {
         return async () => {
           window.dispatchEvent(new CustomEvent("pauseRequest"));
-          await this.sleep(50);
+          await sleep(150);
         };
       }
       default:
         return async () => {
           this.video?.pause();
-          await this.sleep(50);
+          await sleep(150);
         };
     }
   }
@@ -208,13 +200,13 @@ export default class VideoHandler {
           window.dispatchEvent(
             new CustomEvent<number>("seekRequest", { detail: tick })
           );
-          await this.sleep(50);
+          await sleep(150);
         };
       default:
         return async (tick: number) => {
           if (this.video?.currentTime) {
             this.video.currentTime = tick;
-            await this.sleep(50);
+            await sleep(150);
           }
         };
     }
@@ -264,7 +256,7 @@ export default class VideoHandler {
     this.mainFrameMessenger.sendData(dataframe);
   };
 
-  seekedListener = () => {
+  seekingListener = () => {
     console.log({ type: "seek", tick: this.video?.currentTime });
     // We triggered the seek, so forward it to everybody
     const dataframe: MediaCommandFrame = {
@@ -284,14 +276,14 @@ export default class VideoHandler {
   addListeners() {
     this.video?.addEventListener("play", this.playListener);
     this.video?.addEventListener("pause", this.pauseListener);
-    this.video?.addEventListener("seeked", this.seekedListener);
+    this.video?.addEventListener("seeking", this.seekingListener);
     this.video?.addEventListener("emptied", this.emptiedListener);
   }
 
   removeListeners() {
     this.video?.removeEventListener("play", this.playListener);
     this.video?.removeEventListener("pause", this.pauseListener);
-    this.video?.removeEventListener("seeked", this.seekedListener);
+    this.video?.removeEventListener("seeking", this.seekingListener);
     this.video?.removeEventListener("emptied", this.emptiedListener);
   }
 
