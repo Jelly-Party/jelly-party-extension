@@ -8,12 +8,12 @@
           >Simply head to the "Party" tab and press "Start a new party".
         </template>
       </QA>
-      <QA id="start-party-question">
+      <QA id="enable-fullscreen-question">
         <template v-slot:question>How do I enable fullscreen?</template>
         <template v-slot:answer
           >Some websites have a very obtrusive full-screen handler. In this
-          case, try toggling on fullscreen using the F11-key or the browser
-          menu.
+          case, try toggling fullscreen using the fullscreen button located in
+          the Controls-Bar under the Party tab.
         </template>
       </QA>
       <QA id="join-party-magic-link-question">
