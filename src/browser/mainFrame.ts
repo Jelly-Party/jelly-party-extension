@@ -13,6 +13,7 @@ import Notyf from "./libs/js/notyf.min.js";
 import "./libs/css/notyf.min.css";
 import { JoinPartyCommandFrame } from "@/browser/Messenger";
 import { sleep } from "@/helpers/sleep";
+import { primeHosts as potentialPrimeHosts } from "@/helpers/TLDs";
 
 export class MainFrame {
   host: string;
@@ -66,6 +67,10 @@ export class MainFrame {
   }
 
   customizeStyling(this: MainFrame, host: string) {
+    if (potentialPrimeHosts.includes(host)) {
+      // Normalize all amazon country TLDs to www.amazon.com
+      host = "www.amazon.com";
+    }
     switch (host) {
       case "www.netflix.com":
         this.IFrameIdentifier = ".sizing-wrapper";
@@ -184,6 +189,29 @@ export class MainFrame {
         };
         break;
       }
+      case "www.amazon.com": {
+        this.IFrameTarget = document.body;
+        const amazonRoot: HTMLElement | null = document.querySelector(
+          "#dv-web-player"
+        );
+        if (amazonRoot) {
+          amazonRoot.style.transition = "all 1s ease";
+        }
+        this.fixWebsiteDisplay = () => {
+          const amazonRoot: HTMLElement | null = document.querySelector(
+            "#dv-web-player"
+          );
+          if (amazonRoot) {
+            if (this.sideBarHidden) {
+              amazonRoot.style.width = "100%";
+            } else {
+              amazonRoot.style.width =
+                "calc(100vw - var(--jelly-party-sidebar-width))";
+            }
+          }
+        };
+        break;
+      }
       case "vimeo.com": {
         this.IFrameIdentifier = "#main";
         this.IFrameTarget = document.querySelector(this.IFrameIdentifier);
@@ -199,8 +227,8 @@ export class MainFrame {
         this.IFrameTarget = document.querySelector(this.IFrameIdentifier);
         await sleep(250);
       }
+      this.IFrameTarget.style.transition = "all 1s ease";
       if (!this.fixWebsiteDisplay) {
-        this.IFrameTarget.style.transition = "all 1s";
         this.fixWebsiteDisplay = function() {
           // Define generic fixWebsiteDisplay handler
           if (this.sideBarHidden && this.IFrameTarget) {
