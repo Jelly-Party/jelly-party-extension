@@ -45,6 +45,30 @@
       </div>
 
       <div
+        v-b-modal.modal-center
+        class="jelly-party-fullscreen-button"
+        @click="toggleFullScreen()"
+      >
+        <svg
+          width="1em"
+          height="1em"
+          xmlns="http://www.w3.org/2000/svg"
+          aria-hidden="true"
+          focusable="false"
+          data-prefix="fas"
+          data-icon="expand"
+          class="svg-inline--fa fa-expand fa-w-14"
+          role="img"
+          viewBox="0 0 448 512"
+        >
+          <path
+            fill="currentColor"
+            d="M0 180V56c0-13.3 10.7-24 24-24h124c6.6 0 12 5.4 12 12v40c0 6.6-5.4 12-12 12H64v84c0 6.6-5.4 12-12 12H12c-6.6 0-12-5.4-12-12zM288 44v40c0 6.6 5.4 12 12 12h84v84c0 6.6 5.4 12 12 12h40c6.6 0 12-5.4 12-12V56c0-13.3-10.7-24-24-24H300c-6.6 0-12 5.4-12 12zm148 276h-40c-6.6 0-12 5.4-12 12v84h-84c-6.6 0-12 5.4-12 12v40c0 6.6 5.4 12 12 12h124c13.3 0 24-10.7 24-24V332c0-6.6-5.4-12-12-12zM160 468v-40c0-6.6-5.4-12-12-12H64v-84c0-6.6-5.4-12-12-12H12c-6.6 0-12 5.4-12 12v124c0 13.3 10.7 24 24 24h124c6.6 0 12-5.4 12-12z"
+          />
+        </svg>
+      </div>
+
+      <div
         v-b-modal.people-inside-party-modal
         class="jelly-party-navbar-button"
       >
@@ -169,6 +193,10 @@ export default {
     togglePlayPause() {
       console.log("Jelly-Party: Toggling PlayPause.");
       this.$root.$party.togglePlayPause();
+    },
+    toggleFullScreen() {
+      console.log("Jelly-Party: Toggling fullscreen.");
+      this.$root.$party.toggleFullScreen();
     },
   },
 };

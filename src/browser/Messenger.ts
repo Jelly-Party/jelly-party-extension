@@ -46,7 +46,8 @@ export interface SimpleRequestFrame {
     | "videoStateRequest"
     | "joinPartyRequest"
     | "baseLinkRequest"
-    | "chatNotification";
+    | "chatNotification"
+    | "toggleFullScreen";
   context: "JellyParty";
 }
 
@@ -155,6 +156,14 @@ export class MainFrameMessenger {
         }
         case "chatNotification": {
           this.mainFrame.showChatNotificationIfMinimized();
+          break;
+        }
+        case "toggleFullScreen": {
+          if (document.fullscreenElement) {
+            document.exitFullscreen();
+          } else {
+            document.documentElement.requestFullscreen();
+          }
           break;
         }
         default: {

@@ -480,6 +480,14 @@ export default class JellyParty {
     this.iFrameMessenger.sendData(msg);
   }
 
+  toggleFullScreen() {
+    const msg: SimpleRequestFrame = {
+      type: "toggleFullScreen",
+      context: "JellyParty",
+    };
+    this.iFrameMessenger.sendData(msg);
+  }
+
   async getVideoState() {
     const dataframe: SimpleRequestFrame = {
       type: "videoStateRequest",
