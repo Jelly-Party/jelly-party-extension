@@ -414,7 +414,6 @@ if (window.location.host === "join.jelly-party.com") {
   // Redirect to options page that has full access to browser APIs
   const joinURL = new URL(browser.runtime.getURL("join.html"));
   joinURL.search = window.location.search;
-  console.log(joinURL);
   window.location.href = joinURL.toString();
 } else if (!document.querySelector("#jellyPartyRoot")) {
   console.log(`Jelly-Party: Initializing MainFrame!`);

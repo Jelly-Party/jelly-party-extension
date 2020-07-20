@@ -148,7 +148,6 @@ export default {
         return false;
       });
       if (!clickContainsEmojiPicker) {
-        console.log(`this.toggleEmojiPicker is ${this.toggleEmojiPicker}`);
         this.toggleEmojiPicker();
       }
     };

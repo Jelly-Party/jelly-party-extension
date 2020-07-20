@@ -256,7 +256,7 @@ export default class VideoHandler {
     this.mainFrameMessenger.sendData(dataframe);
   };
 
-  seekingListener = () => {
+  seekedListener = () => {
     console.log({ type: "seek", tick: this.video?.currentTime });
     // We triggered the seek, so forward it to everybody
     const dataframe: MediaCommandFrame = {
@@ -273,27 +273,27 @@ export default class VideoHandler {
     this.mainFrameMessenger.sendData(dataframe);
   };
 
-  addListeners() {
+  addListeners = () => {
     this.video?.addEventListener("play", this.playListener);
     this.video?.addEventListener("pause", this.pauseListener);
-    this.video?.addEventListener("seeking", this.seekingListener);
+    this.video?.addEventListener("seeked", this.seekedListener);
     this.video?.addEventListener("emptied", this.emptiedListener);
-  }
+  };
 
-  removeListeners() {
+  removeListeners = () => {
     this.video?.removeEventListener("play", this.playListener);
     this.video?.removeEventListener("pause", this.pauseListener);
-    this.video?.removeEventListener("seeking", this.seekingListener);
+    this.video?.removeEventListener("seeked", this.seekedListener);
     this.video?.removeEventListener("emptied", this.emptiedListener);
-  }
+  };
 
-  emptiedListener() {
+  emptiedListener = () => {
     // this.notyf.success("Video lost! Rescanning for video..");
     // Remove open event listeners
     this.removeListeners();
     this.video = null;
     this.findVideoInterval = setInterval(this.findVideoAndAttach, 1000);
-  }
+  };
 
   getVideoState(): VideoState {
     return { paused: this.video?.paused, currentTime: this.video?.currentTime };

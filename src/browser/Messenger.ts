@@ -363,7 +363,7 @@ export class IFrameMessenger {
         setTimeout(() => {
           delete this.deferredPromises[deferredPromiseId];
           reject("Jelly-Party: Deferred promise timed out.");
-        }, 250);
+        }, 500);
       }),
     ]);
   }
