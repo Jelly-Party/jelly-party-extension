@@ -12,6 +12,7 @@ import VideoHandler from "@/browser/videoHandler";
 import Notyf from "./libs/js/notyf.min.js";
 import "./libs/css/notyf.min.css";
 import { JoinPartyCommandFrame } from "@/browser/Messenger";
+import { sleep } from "@/helpers/sleep";
 
 export class MainFrame {
   host: string;
@@ -163,11 +164,29 @@ export class MainFrame {
         }, 3000);
         break;
       }
-      // case "www.disneyplus.com": {
-      //   break;
-      // }
+      case "www.disneyplus.com": {
+        this.IFrameIdentifier = "#app_body_content";
+        this.IFrameTarget = document.querySelector(this.IFrameIdentifier);
+        this.fixWebsiteDisplay = () => {
+          const hudsonWrapper: HTMLElement | null = document.querySelector(
+            "#hudson-wrapper"
+          );
+          if (hudsonWrapper) {
+            if (this.sideBarHidden) {
+              hudsonWrapper.style.left = "";
+              hudsonWrapper.style.width = "100%";
+            } else {
+              hudsonWrapper.style.left = "0px";
+              hudsonWrapper.style.width =
+                "calc(100vw - var(--jelly-party-sidebar-width))";
+            }
+          }
+        };
+        break;
+      }
       case "vimeo.com": {
-        this.IFrameTarget = document.querySelector("#main");
+        this.IFrameIdentifier = "#main";
+        this.IFrameTarget = document.querySelector(this.IFrameIdentifier);
         break;
       }
       default:
@@ -178,33 +197,21 @@ export class MainFrame {
       while (!this.IFrameTarget) {
         console.log(`Jelly-Party: Uh-oh. No IFrameTarget found.. Retrying..`);
         this.IFrameTarget = document.querySelector(this.IFrameIdentifier);
-        await new Promise((resolve, reject) =>
-          setTimeout(() => {
-            resolve();
-          }, 250)
-        );
+        await sleep(250);
       }
       if (!this.fixWebsiteDisplay) {
-        if (this.IFrameTarget) {
-          this.IFrameTarget.style.transition = "all 1s";
-          this.fixWebsiteDisplay = function() {
-            // Define generic fixWebsiteDisplay handler
-            if (!this.IFrameTarget) {
-              console.log(
-                `Jelly-Party: Cannot define fixWebsiteDisplay. Missing IFrameTarget.`
-              );
-            } else {
-              if (this.sideBarHidden) {
-                this.IFrameTarget.style.width = "100%";
-              } else {
-                this.IFrameTarget.style.width =
-                  "calc(100vw - var(--jelly-party-sidebar-width))";
-              }
-            }
-          };
-        } else {
-          console.log(`Jelly-Party: Missing IFrameTarget.`);
-        }
+        this.IFrameTarget.style.transition = "all 1s";
+        this.fixWebsiteDisplay = function() {
+          // Define generic fixWebsiteDisplay handler
+          if (this.sideBarHidden && this.IFrameTarget) {
+            this.IFrameTarget.style.width = "100%";
+          } else if (this.IFrameTarget) {
+            this.IFrameTarget.style.width =
+              "calc(100vw - var(--jelly-party-sidebar-width))";
+          } else {
+            console.error("Jelly-Party: Missing IFrameTarget.");
+          }
+        };
       }
       this.insertSideBar();
     })();
