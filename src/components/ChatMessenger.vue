@@ -2,6 +2,7 @@
   <div id="chatMessengerDiv" class="d-flex flex-column">
     <!-- All Chat Messenges -->
     <div id="chatMessagesContainer" style="overflow: auto;">
+      <GreetingChatMessage />
       <ChatMessage
         style="flex-grow: 1;"
         v-for="(chatMessage, index) in chatMessages"
@@ -17,11 +18,13 @@
 <script>
 import ChatMessage from "@/components/ChatMessage.vue";
 import ChatInput from "@/components/ChatInput.vue";
+import GreetingChatMessage from "@/helpers/greetingChatMessage";
 import { mapFields } from "vuex-map-fields";
 
 export default {
   components: {
     ChatMessage,
+    GreetingChatMessage,
     ChatInput,
   },
   computed: {

@@ -144,7 +144,7 @@ export default class VideoHandler {
       case "www.disneyplus.com": {
         return async () => {
           window.dispatchEvent(new CustomEvent("playRequest"));
-          await sleep(150);
+          await sleep(250);
         };
       }
       default:
@@ -182,13 +182,13 @@ export default class VideoHandler {
       case "www.disneyplus.com": {
         return async () => {
           window.dispatchEvent(new CustomEvent("pauseRequest"));
-          await sleep(150);
+          await sleep(250);
         };
       }
       default:
         return async () => {
           this.video?.pause();
-          await sleep(150);
+          await sleep(250);
         };
     }
   }
@@ -200,15 +200,16 @@ export default class VideoHandler {
           window.dispatchEvent(
             new CustomEvent<number>("seekRequest", { detail: tick })
           );
-          await sleep(150);
+          await sleep(250);
         };
-      default:
+      default: {
         return async (tick: number) => {
           if (this.video?.currentTime) {
             this.video.currentTime = tick;
-            await sleep(150);
+            await sleep(250);
           }
         };
+      }
     }
   }
 
@@ -256,7 +257,7 @@ export default class VideoHandler {
     this.mainFrameMessenger.sendData(dataframe);
   };
 
-  seekedListener = () => {
+  seekingListener = () => {
     console.log({ type: "seek", tick: this.video?.currentTime });
     // We triggered the seek, so forward it to everybody
     const dataframe: MediaCommandFrame = {
@@ -276,14 +277,14 @@ export default class VideoHandler {
   addListeners = () => {
     this.video?.addEventListener("play", this.playListener);
     this.video?.addEventListener("pause", this.pauseListener);
-    this.video?.addEventListener("seeked", this.seekedListener);
+    this.video?.addEventListener("seeking", this.seekingListener);
     this.video?.addEventListener("emptied", this.emptiedListener);
   };
 
   removeListeners = () => {
     this.video?.removeEventListener("play", this.playListener);
     this.video?.removeEventListener("pause", this.pauseListener);
-    this.video?.removeEventListener("seeked", this.seekedListener);
+    this.video?.removeEventListener("seeking", this.seekingListener);
     this.video?.removeEventListener("emptied", this.emptiedListener);
   };
 

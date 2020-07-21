@@ -88,8 +88,7 @@ export default {
       const padZero = (i) => (String(i).length === 2 ? String(i) : `0${i}`);
       const hours = padZero(date.getHours());
       const minutes = padZero(date.getMinutes());
-      const seconds = padZero(date.getSeconds());
-      const formattedDate = `${hours}:${minutes}:${seconds}`;
+      const formattedDate = `${hours}:${minutes}`;
       return formattedDate;
     },
   },

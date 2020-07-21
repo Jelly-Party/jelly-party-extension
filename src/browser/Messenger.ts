@@ -111,10 +111,6 @@ export class MainFrameMessenger {
         // Load the message
         const msg: MultiFrame = event.data;
         if (!(msg.context === "JellyParty")) {
-          console.log(
-            "Jelly-Party: Received message that's probably not from JellyParty. Event is:"
-          );
-          console.log(event);
           return;
         }
         switch (msg.type) {
@@ -208,7 +204,7 @@ export class MainFrameMessenger {
 }
 
 export class IFrameMessenger {
-  // Playing, pausing and seeking in this context means notifying peers
+  // Playing, pausing and seeking in this context means notifying peers.
   // We do not have access to the video inside the IFrame.
   party: JellyParty;
   messengerType: string;
@@ -225,10 +221,6 @@ export class IFrameMessenger {
         // Load the message
         const msg: MultiFrame = event.data;
         if (!(msg.context === "JellyParty")) {
-          console.log(
-            "Jelly-Party: Received message that's probably not from JellyParty. Event is:"
-          );
-          console.log(event);
           return;
         }
         switch (msg.type) {
@@ -349,14 +341,13 @@ export class IFrameMessenger {
     const deferredPromise = new DeferredPromise();
     // Save the deferred promise to a dictionary, so we can access it by Id later
     this.deferredPromises[deferredPromiseId] = deferredPromise;
-    // Send out the actualy request
+    // Send out the actual request
     window.parent.postMessage(dataFrame, "*");
-    // Return from async function if the deferred promise resolves
     deferredPromise.then(() => {
       // Remove the promise from the dictionary
-      console.log("Jelly-Party: Resolved deferred promise!");
       delete this.deferredPromises[deferredPromiseId];
     });
+    // Resolve either when the deferredPromise resolves or after a 500ms timeout
     return Promise.race([
       deferredPromise,
       new Promise((resolve, reject) => {

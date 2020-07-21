@@ -17,14 +17,14 @@ const initalPartyState: PartyState = {
   selfUUID: "",
   videoState: { paused: true, currentTime: 0 },
   chatMessages: [
-    {
-      type: "chatMessage",
-      peer: { uuid: "jellyPartySupportBot" },
-      data: {
-        text: "Welcome to Jelly-Party, friend!",
-        timestamp: Date.now(),
-      },
-    },
+    // {
+    //   type: "chatMessage",
+    //   peer: { uuid: "jellyPartySupportBot" },
+    //   data: {
+    //     text: "Welcome to Jelly-Party, friend!",
+    //     timestamp: Date.now(),
+    //   },
+    // },
   ],
   maxChatMessagesDisplay: 200,
 };
