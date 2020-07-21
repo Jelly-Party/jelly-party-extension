@@ -1,21 +1,20 @@
 <template>
-  <div>
-    <small>{{ readableoptionsKey }}</small>
-    <div class="avatar-slider-option mb-2 w-100 d-flex align-items-center">
+  <div class="text-center">
+    <div class="avatar-slider-option mb-1 w-100 d-flex align-items-center">
       <b-btn
-        style="border-top-right-radius: 0px; border-bottom-right-radius: 0px;"
+        class="avatar-slider-button avatar-slider-button--left avatar-selection"
         @click="previousOption"
         ><b-icon-arrow-left-short
           class="font-weight-bold"
         ></b-icon-arrow-left-short
       ></b-btn>
       <div
-        class="w-100 option-inline-text d-flex align-items-center justify-content-center"
+        class="w-100 option-inline-text d-flex align-items-center justify-content-center overflow-hidden"
       >
         <span class="font-weight-bold">{{ avatarState[this.optionsKey] }}</span>
       </div>
       <b-btn
-        style="border-top-left-radius: 0px; border-bottom-left-radius: 0px;"
+        class="avatar-slider-button avatar-slider-button--right avatar-selection"
         @click="nextOption"
       >
         <b-icon-arrow-right-short
@@ -27,82 +26,88 @@
 </template>
 
 <script>
-import store from "@/store.js";
-const readableOptions = {
-  accessoriesType: "Accessories",
-  clotheColor: "Clothes color",
-  clotheType: "Clothes",
-  eyebrowType: "Eye Brows",
-  eyeType: "Eyes",
-  facialHairColor: "Facial hair color",
-  facialHairType: "Facial hair",
-  graphicType: "Graphic",
-  hairColor: "Hair color",
-  mouthType: "Mouth",
-  skinColor: "Skin color",
-  topType: "Top"
-};
+import allOptions from "@/helpers/avatarOptions.js";
 
 export default {
   props: {
-    options: {
-      type: Array,
-      default: function() {
-        return ["White", "Pink", "Yellow"];
-      }
-    },
     optionsKey: {
       type: String,
-      default: "accessoriesType"
-    }
-  },
-  data: function() {
-    return {
-      avatarState: store.avatarState
-    };
+      required: true,
+    },
   },
   methods: {
     nextOption: function() {
-      let index = this.options.indexOf(this.avatarState[this.optionsKey]);
-      let newState = "";
-      if (index >= 0 && index < this.options.length - 1) {
-        newState = this.options[index + 1];
+      const index = this.optionsValues.indexOf(
+        this.avatarState[this.optionsKey]
+      );
+      let newOption = "";
+      if (index >= 0 && index < this.optionsValues.length - 1) {
+        newOption = this.optionsValues[index + 1];
       } else {
-        newState = this.options[0];
+        newOption = this.optionsValues[0];
       }
-      let update = {};
-      update[this.optionsKey] = newState;
-      store.updateAvatarState(update);
+      this.$store.dispatch("options/updateAvatarState", {
+        stateKey: this.optionsKey,
+        newState: newOption,
+      });
     },
     previousOption: function() {
-      let index = this.options.indexOf(this.avatarState[this.optionsKey]);
-      let newState = "";
-      if (index >= 1 && index < this.options.length) {
-        newState = this.options[index - 1];
+      const index = this.optionsValues.indexOf(
+        this.avatarState[this.optionsKey]
+      );
+      let newOption = "";
+      if (index >= 1 && index < this.optionsValues.length) {
+        newOption = this.optionsValues[index - 1];
       } else {
-        newState = this.options[this.options.length - 1];
+        newOption = this.optionsValues[this.optionsValues.length - 1];
       }
-      let update = {};
-      update[this.optionsKey] = newState;
-      store.updateAvatarState(update);
-    }
+      this.$store.dispatch("options/updateAvatarState", {
+        stateKey: this.optionsKey,
+        newState: newOption,
+      });
+    },
   },
   computed: {
-    readableoptionsKey: function() {
-      return readableOptions[this.optionsKey];
-    }
-  }
+    optionsValues: function() {
+      let key = this.optionsKey;
+      switch (this.optionsKey) {
+        case "facialHairColor":
+          key = "hairColor";
+          break;
+        case "clotheColor":
+          key = "hatAndShirtColor";
+          break;
+      }
+      const values = allOptions[key];
+      return values;
+    },
+    avatarState() {
+      return this.$store.state.options.avatarState;
+    },
+  },
 };
 </script>
 
-<style>
+<style lang="scss">
 .avatar-slider-option {
-  height: 100%;
   justify-content: space-between;
 }
+.avatar-slider-button {
+  background-color: transparent !important;
+  border: 2px solid white !important;
+  padding: calc(0.375rem - 1px) 0.75rem !important;
+  &--right {
+    border-top-left-radius: 0px !important;
+    border-bottom-left-radius: 0px !important;
+  }
+  &--left {
+    border-top-right-radius: 0px !important;
+    border-bottom-right-radius: 0px !important;
+  }
+}
 .option-inline-text {
-  border-top: 2px solid gray;
-  border-bottom: 2px solid gray;
+  border-top: 2px solid white;
+  border-bottom: 2px solid white;
   height: 38px;
 }
 </style>
