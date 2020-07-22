@@ -1,5 +1,6 @@
 import { MainFrameMessenger, MediaCommandFrame } from "@/browser/Messenger";
 import { sleep } from "@/helpers/sleep";
+import { DeferredPromise } from "@/helpers/deferredPromise";
 
 // The VideoHandler handles playing, pausing & seeking videos
 // on different websites. For most websites the generic video.play(),
@@ -17,10 +18,12 @@ export default class VideoHandler {
   mainFrameMessenger: MainFrameMessenger;
   findVideoInterval: number | undefined;
   video: HTMLVideoElement | null;
+  deferred!: DeferredPromise;
+  skipNextEvent: boolean;
   findVideoAndAttach: () => void;
-  play: () => Promise<void>;
-  pause: () => Promise<void>;
-  seek: (tick: number) => Promise<void>;
+  play: () => Promise<boolean>;
+  pause: () => Promise<boolean>;
+  seek: (tick: number) => Promise<any>;
   playAndForward: () => Promise<void>;
   pauseAndForward: () => Promise<void>;
 
@@ -30,7 +33,7 @@ export default class VideoHandler {
     mainFrameMessenger: MainFrameMessenger
   ) {
     this.host = host;
-    // this.notyf = notyf;
+    this.skipNextEvent = false;
     this.findVideoInterval;
     this.video = null;
     this.mainFrameMessenger = mainFrameMessenger;
@@ -100,6 +103,10 @@ export default class VideoHandler {
                 if (vid.paused) {
                   vid[key]?.memoizedProps?.onPointerUp?.();
                 }
+              } else {
+                console.error(
+                  "Jelly-Party: Disney+ Error. Cannot find react instance to attach to.."
+                );
               }
             }
           });
@@ -115,8 +122,12 @@ export default class VideoHandler {
               if (key) {
                 // Play only if currently playing
                 if (!vid.paused) {
-                  vid[key]?.memoizedProps?.onPointerUp?.();
+                  vid[key]?.memoizedProps?.onPointerUp();
                 }
+              } else {
+                console.error(
+                  "Jelly-Party: Disney+ Error. Cannot find react instance to attach to.."
+                );
               }
             }
           });
@@ -156,9 +167,12 @@ export default class VideoHandler {
 
   wrapPlayPauseHandler = (fun: () => Promise<void>) => {
     return async () => {
-      this.removeListeners();
-      await fun();
-      this.addListeners();
+      const deferred = this.initNewDeferred();
+      this.skipNextEvent = true;
+      fun();
+      return Promise.race([deferred, sleep(1000)]).then(
+        () => (this.skipNextEvent = false)
+      );
     };
   };
 
@@ -169,12 +183,20 @@ export default class VideoHandler {
       );
       if (timeDelta > 0.5) {
         // Seeking is actually worth it. We're off by more than half a second.
-        this.removeListeners();
-        await fun(tick);
-        this.addListeners();
+        const deferred = this.initNewDeferred();
+        this.skipNextEvent = true;
+        fun(tick);
+        return Promise.race([deferred, sleep(1000)]).then(
+          () => (this.skipNextEvent = false)
+        );
       }
     };
   };
+
+  initNewDeferred() {
+    this.deferred = new DeferredPromise();
+    return this.deferred;
+  }
 
   getPauseHook(host: string) {
     switch (host) {
@@ -182,13 +204,11 @@ export default class VideoHandler {
       case "www.disneyplus.com": {
         return async () => {
           window.dispatchEvent(new CustomEvent("pauseRequest"));
-          await sleep(250);
         };
       }
       default:
         return async () => {
           this.video?.pause();
-          await sleep(250);
         };
     }
   }
@@ -200,13 +220,11 @@ export default class VideoHandler {
           window.dispatchEvent(
             new CustomEvent<number>("seekRequest", { detail: tick })
           );
-          await sleep(250);
         };
       default: {
         return async (tick: number) => {
           if (this.video?.currentTime) {
             this.video.currentTime = tick;
-            await sleep(250);
           }
         };
       }
@@ -225,6 +243,17 @@ export default class VideoHandler {
 
   playListener = () => {
     console.log({ type: "play", tick: this.video?.currentTime });
+    if (this.skipNextEvent) {
+      // We get here by programatically triggering a video event
+      this.skipNextEvent = false;
+      console.log(
+        "Jelly-Party: Skipping event forwarding for event that we received."
+      );
+      // Therefore we must resolve our deferred
+      this.deferred.resolve();
+      return;
+    }
+    // We get here through a user action
     const dataframe: MediaCommandFrame = {
       type: "media",
       payload: {
@@ -241,8 +270,17 @@ export default class VideoHandler {
 
   pauseListener = () => {
     console.log({ type: "pause", tick: this.video?.currentTime });
-    // We triggered the PlayPause button, so forward it to everybody
-    // Trigger pause (will sync as well)
+    if (this.skipNextEvent) {
+      // We get here by programatically triggering a video event
+      this.skipNextEvent = false;
+      console.log(
+        "Jelly-Party: Skipping event forwarding for event that we received."
+      );
+      // Therefore we must resolve our deferred
+      this.deferred.resolve();
+      return;
+    }
+    // We get here through a user action
     const dataframe: MediaCommandFrame = {
       type: "media",
       payload: {
@@ -257,9 +295,19 @@ export default class VideoHandler {
     this.mainFrameMessenger.sendData(dataframe);
   };
 
-  seekingListener = () => {
+  seekedListener = () => {
     console.log({ type: "seek", tick: this.video?.currentTime });
-    // We triggered the seek, so forward it to everybody
+    if (this.skipNextEvent) {
+      // We get here by programatically triggering a video event
+      this.skipNextEvent = false;
+      console.log(
+        "Jelly-Party: Skipping event forwarding for event that we received."
+      );
+      // Therefore we must resolve our deferred
+      this.deferred.resolve();
+      return;
+    }
+    // We get here through a user action
     const dataframe: MediaCommandFrame = {
       type: "media",
       payload: {
@@ -277,20 +325,18 @@ export default class VideoHandler {
   addListeners = () => {
     this.video?.addEventListener("play", this.playListener);
     this.video?.addEventListener("pause", this.pauseListener);
-    this.video?.addEventListener("seeking", this.seekingListener);
+    this.video?.addEventListener("seeked", this.seekedListener);
     this.video?.addEventListener("emptied", this.emptiedListener);
   };
 
   removeListeners = () => {
     this.video?.removeEventListener("play", this.playListener);
     this.video?.removeEventListener("pause", this.pauseListener);
-    this.video?.removeEventListener("seeking", this.seekingListener);
+    this.video?.removeEventListener("seeked", this.seekedListener);
     this.video?.removeEventListener("emptied", this.emptiedListener);
   };
 
   emptiedListener = () => {
-    // this.notyf.success("Video lost! Rescanning for video..");
-    // Remove open event listeners
     this.removeListeners();
     this.video = null;
     this.findVideoInterval = setInterval(this.findVideoAndAttach, 1000);
