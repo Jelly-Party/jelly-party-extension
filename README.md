@@ -1,5 +1,7 @@
 # Jelly-Party-Extension
 
+This repo contains all code for the browser extension [Jelly-Party](https://chrome.google.com/webstore/detail/jelly-party/aiecbkandfgpphpdilbaaagnampmdgpd). Jelly-Party syncs video playback between a group of peers.
+
 ## Contribute using the staging server [easy]
 ```
 npm install
