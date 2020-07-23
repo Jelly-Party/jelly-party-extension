@@ -445,6 +445,17 @@ export class MainFrame {
   };
 }
 
+function waitForHTMLElement(cssSelector: string, callback: () => any) {
+  if (document.querySelector(cssSelector) === null) {
+    console.log(`Jelly-Party: Waiting for ${cssSelector}`);
+    setTimeout(function() {
+      waitForHTMLElement(cssSelector, callback);
+    }, 250);
+  } else {
+    callback();
+  }
+}
+
 if (window.location.host === "join.jelly-party.com") {
   // Redirect to options page that has full access to browser APIs
   const joinURL = new URL(browser.runtime.getURL("join.html"));
@@ -453,7 +464,19 @@ if (window.location.host === "join.jelly-party.com") {
 } else if (!document.querySelector("#jellyPartyRoot")) {
   console.log(`Jelly-Party: Initializing MainFrame!`);
   console.log(`Jelly-Party: Mode is ${process.env.NODE_ENV}`);
-  (window as any).MainFrame = new MainFrame(window.location.host);
+  switch (window.location.host) {
+    case "www.disneyplus.com": {
+      waitForHTMLElement("#app_index", () => {
+        (window as any).MainFrame = new MainFrame(window.location.host);
+      });
+      break;
+    }
+    default: {
+      setTimeout(() => {
+        (window as any).MainFrame = new MainFrame(window.location.host);
+      }, 250);
+    }
+  }
 } else {
   console.log(`Jelly-Party: Already loaded. Skipping loading.`);
 }

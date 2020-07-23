@@ -308,6 +308,7 @@ export class IFrameMessenger {
           }
           case "mediaPromiseResolved": {
             const promiseId = msg.payload.promiseId;
+            console.log(`Resolving promise with Id of ${promiseId}`);
             try {
               this.deferredPromises[promiseId].resolve();
             } catch (e) {
@@ -337,6 +338,7 @@ export class IFrameMessenger {
     const deferredPromiseId = uuidv4();
     // Add the unique Id to the dataframe, so we can match against the response frame Id
     dataFrame.payload.deferredPromiseId = deferredPromiseId;
+    console.log(`Creating deferred with Id of ${deferredPromiseId}`);
     // Create the deferred promise
     const deferredPromise = new DeferredPromise();
     // Save the deferred promise to a dictionary, so we can access it by Id later
@@ -347,14 +349,14 @@ export class IFrameMessenger {
       // Remove the promise from the dictionary
       delete this.deferredPromises[deferredPromiseId];
     });
-    // Resolve either when the deferredPromise resolves or after a 500ms timeout
+    // Resolve either when the deferredPromise resolves or after a 2s timeout
     return Promise.race([
       deferredPromise,
       new Promise((resolve, reject) => {
         setTimeout(() => {
           delete this.deferredPromises[deferredPromiseId];
           reject("Jelly-Party: Deferred promise timed out.");
-        }, 500);
+        }, 2000);
       }),
     ]);
   }
