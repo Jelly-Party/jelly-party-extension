@@ -101,18 +101,21 @@ export default class JellyParty {
   uploadPartyState = async () => {
     // We craft a command to let the server know about our new client state
     await this.locallySyncPartyState();
-    const serverCommand = {
-      type: "clientUpdate",
-      data: {
-        newClientState: {
-          currentlyWatching: this.partyState.magicLink,
-          videoState: this.partyState.videoState,
-          clientName: this.optionsState.clientName,
-          avatarState: this.optionsState.avatarState,
+    // Only sync to server if we're connected to server
+    if (store.state.connectedToServer) {
+      const serverCommand = {
+        type: "clientUpdate",
+        data: {
+          newClientState: {
+            currentlyWatching: this.partyState.magicLink,
+            videoState: this.partyState.videoState,
+            clientName: this.optionsState.clientName,
+            avatarState: this.optionsState.avatarState,
+          },
         },
-      },
-    };
-    this.ws.send(JSON.stringify(serverCommand));
+      };
+      this.ws.send(JSON.stringify(serverCommand));
+    }
   };
 
   startParty() {
@@ -151,7 +154,6 @@ export default class JellyParty {
       );
       return;
     }
-    // this.admin = Boolean(start);
     store.dispatch("party/setActive", true);
     const finalPartyId = start ? generateRoomWithoutSeparator() : partyId;
     store.dispatch("party/setPartyId", finalPartyId);

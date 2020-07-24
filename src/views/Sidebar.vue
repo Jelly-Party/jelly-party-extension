@@ -1,22 +1,44 @@
 <template>
   <div id="wrapper" :class="{ darkMode: darkMode }">
     <SidebarHeader />
-    <Tabs />
+    <Tabs v-if="!(connectingToServer || connectedToServer)" />
+    <div
+      v-if="connectingToServer"
+      style="display:flex; align-items:center; justify-content:center;"
+    >
+      <div>
+        <h3 class="text-center">Joining your awesome party..</h3>
+        <div class="text-center">
+          <b-spinner
+            style="width: 3rem; height: 3rem;"
+            variant="warning"
+            type="grow"
+            label="Spinning"
+          ></b-spinner>
+        </div>
+      </div>
+    </div>
+    <PartyView />
   </div>
 </template>
 
 <script>
 import SidebarHeader from "@/components/SidebarHeader.vue";
 import Tabs from "@/views/Tabs.vue";
+import PartyView from "@/components/PartyView";
 import { mapState } from "vuex";
 
 export default {
   name: "SideBar",
   components: {
     SidebarHeader,
+    PartyView,
     Tabs,
   },
-  computed: mapState("options", ["darkMode"]),
+  computed: {
+    ...mapState("options", ["darkMode"]),
+    ...mapState(["connectingToServer", "connectedToServer"]),
+  },
   mounted: function() {
     this.$store.dispatch("options/populateOptionsStateFromBrowserLocalStorage");
   },

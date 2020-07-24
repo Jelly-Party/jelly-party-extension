@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div id="jelly-party-header">
     <div class="d-flex justify-content-center align-items-center">
       <h3 id="jelly-party-heading-text" class="mr-2">Jelly-Party</h3>
       <img
@@ -9,17 +9,20 @@
         class="d-inline-block"
       />
     </div>
-    <div class="d-flex align-items-center justify-content-center">
-      <small class="text-center text-white m-0">{{ connectionString }}</small>
-      <span style="font-size: 0.5em" class="ml-1">
+    <div id="statusIcon">
+      <span style="font-size: 0.7em">
         <b-icon-circle-fill
           v-if="this.connectingToServer"
           style="fill: yellow"
           animation="throb"
+          v-b-tooltip.hover
+          :title="connectionString"
         ></b-icon-circle-fill>
         <b-icon-circle-fill
           v-else
           :style="this.connectedToServer ? 'fill: green;' : 'fill: red;'"
+          v-b-tooltip.hover
+          :title="connectionString"
         ></b-icon-circle-fill>
       </span>
     </div>
@@ -54,10 +57,18 @@ export default {
 </script>
 
 <style lang="scss">
+#jelly-party-header {
+  height: var(--jelly-party-header-height);
+}
 #jelly-party-heading-text {
   text-align: center;
   padding-top: 10px;
   color: white;
   display: "inline-block";
+}
+#statusIcon {
+  position: absolute;
+  right: 10px;
+  top: 5px;
 }
 </style>

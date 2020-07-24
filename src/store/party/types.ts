@@ -23,10 +23,10 @@ export interface PartyState {
   partyId: string;
   peers: Array<Peer>;
   cachedPeers: Array<Peer>;
-  wsIsConnected: boolean;
   websiteIsTested: boolean;
   magicLink: string;
   selfUUID: string;
+  showChat: boolean;
   chatMessages: Array<ChatMessage>;
   maxChatMessagesDisplay: number;
   videoState: { paused: boolean; currentTime: number };

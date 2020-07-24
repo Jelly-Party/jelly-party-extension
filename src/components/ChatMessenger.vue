@@ -1,7 +1,7 @@
 <template>
   <div id="chatMessengerDiv" class="d-flex flex-column">
     <!-- All Chat Messenges -->
-    <div id="chatMessagesContainer" style="overflow: auto;">
+    <div v-show="showChat" id="chatMessagesContainer" style="overflow: auto;">
       <GreetingChatMessage />
       <ChatMessage
         style="flex-grow: 1;"
@@ -11,7 +11,9 @@
       />
     </div>
     <!-- Text input -->
-    <ChatInput />
+    <ChatInput v-show="showChat" />
+    <!-- Jitsi Meet -->
+    <div v-show="!showChat" id="meet" class="h-100"></div>
   </div>
 </template>
 
@@ -31,7 +33,7 @@ export default {
     // When using nested data structures, the string
     // after the last dot (e.g. `firstName`) is used
     // for defining the name of the computed property.
-    ...mapFields("party", ["chatMessages"]),
+    ...mapFields("party", ["chatMessages", "showChat"]),
   },
 };
 </script>
@@ -40,5 +42,9 @@ export default {
 #chatMessengerDiv {
   flex-grow: 1;
   justify-content: space-between;
+  height: calc(
+    100vh - var(--jelly-party-controls-height) -
+      var(--jelly-party-header-height)
+  );
 }
 </style>
