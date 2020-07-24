@@ -260,7 +260,9 @@ export default class JellyParty {
             if (previousUUIDs.length === 0) {
               // Let's show all peers in the party
               for (const peer of msg.data.partyState.peers) {
-                const msg = `${peer.clientName} joined the party.`;
+                const msg = `${peer.clientName} ${
+                  peer.uuid === partyState.selfUUID ? "(you)" : ""
+                } joined the party.`;
                 this.displayNotification(msg);
                 this.logToChat(msg);
               }
