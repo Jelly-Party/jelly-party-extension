@@ -323,6 +323,7 @@ export default class VideoHandler {
   };
 
   addListeners = () => {
+    this.removeListeners();
     this.video?.addEventListener("play", this.playListener);
     this.video?.addEventListener("pause", this.pauseListener);
     this.video?.addEventListener("seeked", this.seekedListener);
