@@ -1,5 +1,5 @@
 <template>
-  <div class="py-4 container" style="flex-grow: 1;">
+  <div class="py-3 container" style="flex-grow: 1;">
     <div class="chatMessage-container">
       <div title="Jelly" style="height: 3.5em; width: 3.5em;">
         <img

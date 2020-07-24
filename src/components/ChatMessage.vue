@@ -1,5 +1,5 @@
 <template>
-  <b-container class="pb-4">
+  <b-container class="pb-3">
     <div
       v-if="chatMessage.peer.uuid === 'jellyPartyLogMessage'"
       class="text-center"
