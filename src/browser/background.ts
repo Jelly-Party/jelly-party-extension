@@ -1,8 +1,10 @@
 import { browser } from "webextension-polyfill-ts";
+import { userNames } from "@/helpers/userNames";
+import { sample as _sample } from "lodash-es";
 import uuidv4 from "@/helpers/uuidv4";
 
 browser.runtime.onInstalled.addListener(function() {
-  const options = { guid: uuidv4() };
+  const options = { guid: uuidv4(), clientName: _sample(userNames) };
   browser.storage.local.set({ options: options }).then(function() {
     console.log("Jelly-Party has been initialized.");
     console.log(options);
@@ -32,7 +34,7 @@ function redirectToParty(
     .update(undefined, { url: redirectURL })
     .then(async (tab) => {
       const activeTabId = tab.id;
-      const delays = [3000, 5000, 7000, 10000, 15000, 25000];
+      const delays = [3000];
       delays.forEach((delay) => {
         setTimeout(() => {
           console.log("Jelly-Party: Attempting script injection.");
