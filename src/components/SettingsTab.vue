@@ -78,8 +78,7 @@
     <b-collapse id="collapse-success" class="mt-2">
       <b-card>
         <p style="color: black" class="card-text text-justify">
-          Your changes have been saved. Please not that some changes, such as
-          your name, require you to rejoin the party until they are shown.
+          Your changes have been saved.
         </p>
       </b-card>
     </b-collapse>
@@ -128,7 +127,7 @@ export default {
       window.setTimeout(() => {
         this.$root.$emit("bv::toggle::collapse", "collapse-success");
 
-      }, 5000);
+      }, 1000);
       this.$root.$party.uploadPartyState();
       }
     },

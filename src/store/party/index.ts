@@ -11,11 +11,11 @@ const initalPartyState: PartyState = {
   partyId: "",
   peers: [],
   cachedPeers: [],
-  wsIsConnected: false,
   websiteIsTested: false,
   magicLink: "",
   selfUUID: "",
   videoState: { paused: true, currentTime: 0 },
+  showChat: true,
   chatMessages: [
     // {
     //   type: "chatMessage",
@@ -64,6 +64,9 @@ export const party: Module<PartyState, RootState> = {
         state.chatMessages.shift();
       }
       state.chatMessages.push(chatMessage);
+    },
+    toggleChatAndJitsi(state) {
+      state.showChat = !state.showChat;
     },
   },
   actions: {

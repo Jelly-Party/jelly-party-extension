@@ -61,7 +61,7 @@ const jellyFishToArrow = function() {
   d3.select("#jellyPartyFab")
     .transition()
     .style("position", "absolute")
-    .style("top", "10px")
+    .style("top", "4px")
     .style("bottom", "")
     .style("right", "310px")
     .style("left", "")

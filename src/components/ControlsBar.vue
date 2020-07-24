@@ -1,10 +1,12 @@
 <template>
-  <b-container class="mb-3">
+  <b-container class="my-2">
     <div id="jelly-party-controls-bar">
       <div
         v-b-modal.modal-center
         class="jelly-party-navbar-button"
         @click="togglePlayPause()"
+        v-b-tooltip.hover
+        :title="paused ? 'Play video' : 'Pause video'"
       >
         <svg
           v-if="paused"
@@ -46,8 +48,10 @@
 
       <div
         v-b-modal.modal-center
-        class="jelly-party-fullscreen-button"
+        class="jelly-party-navbar-button"
         @click="toggleFullScreen()"
+        v-b-tooltip.hover
+        title="Toggle fullscreen"
       >
         <svg
           width="1em"
@@ -69,8 +73,55 @@
       </div>
 
       <div
+        v-b-modal.modal-center
+        class="jelly-party-navbar-button"
+        @click="toggleChatAndJitsi()"
+        v-b-tooltip.hover
+        :title="showChat ? 'Switch to video chat' : 'Swich to text chat'"
+      >
+        <svg
+          v-if="showChat"
+          width="1em"
+          height="1em"
+          xmlns="http://www.w3.org/2000/svg"
+          aria-hidden="true"
+          focusable="false"
+          data-prefix="fas"
+          data-icon="video"
+          class="svg-inline--fa fa-video fa-w-18"
+          role="img"
+          viewBox="0 0 576 512"
+        >
+          <path
+            fill="currentColor"
+            d="M336.2 64H47.8C21.4 64 0 85.4 0 111.8v288.4C0 426.6 21.4 448 47.8 448h288.4c26.4 0 47.8-21.4 47.8-47.8V111.8c0-26.4-21.4-47.8-47.8-47.8zm189.4 37.7L416 177.3v157.4l109.6 75.5c21.2 14.6 50.4-.3 50.4-25.8V127.5c0-25.4-29.1-40.4-50.4-25.8z"
+          />
+        </svg>
+        <svg
+          v-else
+          width="1em"
+          height="1em"
+          xmlns="http://www.w3.org/2000/svg"
+          aria-hidden="true"
+          focusable="false"
+          data-prefix="fas"
+          data-icon="comments"
+          class="svg-inline--fa fa-comments fa-w-18"
+          role="img"
+          viewBox="0 0 576 512"
+        >
+          <path
+            fill="currentColor"
+            d="M416 192c0-88.4-93.1-160-208-160S0 103.6 0 192c0 34.3 14.1 65.9 38 92-13.4 30.2-35.5 54.2-35.8 54.5-2.2 2.3-2.8 5.7-1.5 8.7S4.8 352 8 352c36.6 0 66.9-12.3 88.7-25 32.2 15.7 70.3 25 111.3 25 114.9 0 208-71.6 208-160zm122 220c23.9-26 38-57.7 38-92 0-66.9-53.5-124.2-129.3-148.1.9 6.6 1.3 13.3 1.3 20.1 0 105.9-107.7 192-240 192-10.8 0-21.3-.8-31.7-1.9C207.8 439.6 281.8 480 368 480c41 0 79.1-9.2 111.3-25 21.8 12.7 52.1 25 88.7 25 3.2 0 6.1-1.9 7.3-4.8 1.3-2.9.7-6.3-1.5-8.7-.3-.3-22.4-24.2-35.8-54.5z"
+          />
+        </svg>
+      </div>
+
+      <div
         v-b-modal.people-inside-party-modal
         class="jelly-party-navbar-button"
+        v-b-tooltip.hover
+        title="Show people inside party"
       >
         <svg
           width="1.5em"
@@ -91,7 +142,12 @@
         </svg>
       </div>
 
-      <div v-b-modal.leave-party-modal class="jelly-party-navbar-button">
+      <div
+        v-b-modal.leave-party-modal
+        class="jelly-party-navbar-button"
+        v-b-tooltip.hover
+        title="Leave party"
+      >
         <svg
           width="1.3em"
           height="1.3em"
@@ -166,6 +222,8 @@
 
 <script>
 import { party as partyStore } from "@/store/party";
+import { options as optionsStore } from "@/store/options";
+import * as JitsiMeetExternalAPI from "lib-jitsi-meet-dist/dist/external_api.min.js";
 import Avataaars from "vuejs-avataaars";
 
 export default {
@@ -178,6 +236,9 @@ export default {
     },
     paused() {
       return partyStore.state.videoState.paused;
+    },
+    showChat() {
+      return partyStore.state.showChat;
     },
   },
   methods: {
@@ -198,6 +259,74 @@ export default {
       console.log("Jelly-Party: Toggling fullscreen.");
       this.$root.$party.toggleFullScreen();
     },
+    toggleChatAndJitsi() {
+      console.log("Jelly-Party: Toggling between chat & jitsi.");
+      if (!window.jitsiLoaded) {
+        window.jitsiLoaded = true;
+        const domain = "meet.jit.si";
+        const videoContainerName = "Jelly-Party VideoChat";
+        const options = {
+          roomName: `JellyParty/${partyStore.state.partyId}`,
+          width: "350px",
+          height: "100%",
+          parentNode: document.querySelector("#meet"),
+          interfaceConfigOverwrite: {
+            APP_NAME: videoContainerName,
+            DISABLE_TRANSCRIPTION_SUBTITLES: true,
+            DISPLAY_WELCOME_PAGE_CONTENT: true,
+            SHOW_CHROME_EXTENSION_BANNER: false,
+            HIDE_INVITE_MORE_HEADER: true,
+            MOBILE_APP_PROMO: false,
+            NATIVE_APP_NAME: videoContainerName,
+            CONNECTION_INDICATOR_DISABLED: true,
+            TOOLBAR_BUTTONS: [
+              "microphone",
+              "camera",
+              // "closedcaptions",
+              // "desktop",
+              // "embedmeeting",
+              // "fullscreen",
+              "fodeviceselection",
+              // "hangup",
+              // "profile",
+              // "chat",
+              // "recording",
+              // "livestreaming",
+              // "etherpad",
+              // "sharedvideo",
+              // "settings",
+              // "raisehand",
+              // "videoquality",
+              "filmstrip",
+              // "invite",
+              // "feedback",
+              // "stats",
+              // "shortcuts",
+              // "tileview",
+              // "videobackgroundblur",
+              // "download",
+              // "help",
+              // "mute-everyone",
+              // "security",
+            ],
+          },
+          configOverwrite: {
+            enableWelcomePage: false,
+            remoteVideoMenu: {
+              disableKick: true,
+            },
+            // disableRemoteMute: true,
+          },
+        };
+        // eslint-disable-next-line no-undef
+        const api = new JitsiMeetExternalAPI(domain, options);
+        api.executeCommand("displayName", optionsStore.state.clientName);
+      }
+      this.$store.commit("party/toggleChatAndJitsi");
+    },
+  },
+  beforeDestroy() {
+    window.jitsiLoaded = false;
   },
 };
 </script>

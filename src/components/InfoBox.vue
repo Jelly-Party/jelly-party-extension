@@ -1,10 +1,10 @@
 <template>
-  <b-container class="mt-3 mb-3">
-    <div class="jelly-party-infobox">
+  <b-container>
+    <div class="jelly-party-infobox" style="overflow: hidden;">
       <div class="jelly-party-minibox text-white">
         <p class="m-0" style="white-space: nowrap">{{ heading }}</p>
       </div>
-      <span style="white-space: nowrap; overflow: hidden; margin: 0em 0.5em">{{
+      <span id="magicLinkSpan">{{
         showSuccessText ? `${heading} copied.` : text
       }}</span>
       <div class="p-1">
@@ -92,5 +92,17 @@ export default {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+#magicLinkSpan {
+  white-space: nowrap;
+  overflow-x: scroll;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  width: 150px;
+  margin: 0em 0.5em;
+  height: 70px;
+  position: relative;
+  top: 25px;
 }
 </style>

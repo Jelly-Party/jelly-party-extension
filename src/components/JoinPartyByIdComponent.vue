@@ -6,7 +6,7 @@
         <b-icon
           icon="question-circle-fill"
           v-b-tooltip.hover
-          title="Necessary for some websites or if you want to sync up different video providers. See help tab for more information."
+          title="Necessary for some websites or if you want to sync up different video providers. Requires that you navigate to the video yourself. See help tab for more information."
         >
         </b-icon>
       </span>

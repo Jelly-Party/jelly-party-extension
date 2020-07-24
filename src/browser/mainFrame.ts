@@ -253,6 +253,7 @@ export class MainFrame {
     );
     jellyPartyWrapper.id = "jellyPartyWrapper";
     const jellyPartyRoot = document.createElement("iframe");
+    jellyPartyRoot.allow = "camera;microphone";
     jellyPartyRoot.id = "jellyPartyRoot";
     jellyPartyRoot.frameBorder = "0";
     jellyPartyRoot.style.zIndex = "99999";
@@ -352,7 +353,7 @@ export class MainFrame {
     jellyPartyFab.innerHTML = baseSVG;
     jellyPartyFab.setAttribute(
       "style",
-      "position: absolute; left: 5px; top: 10px; z-index: 99999"
+      "position: absolute; right: 310px; top: 4px; z-index: 99999"
     );
     const wrapper = document.querySelector("#jellyPartyWrapper");
     if (!wrapper) {
@@ -372,17 +373,17 @@ export class MainFrame {
     this.fixWebsiteDisplay();
     // Next, ensure that we hide the fab after X seconds
     this.jellyPartyFabTimer = 0;
-    document.addEventListener(
+    window.addEventListener(
       "mousemove",
       _throttle(() => {
         if (this.sideBarHidden) {
           this.showJellyPartyFab();
         }
-      }, 300).bind(this)
+      }, 200).bind(this)
     );
     window.setInterval(() => {
       if (this.sideBarHidden) {
-        if (Date.now() - this.jellyPartyFabTimer > 5000) {
+        if (Date.now() - this.jellyPartyFabTimer > 1500) {
           this.hideJellyPartyFab();
         }
       }
