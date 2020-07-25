@@ -34,7 +34,7 @@ function redirectToParty(
     .update(undefined, { url: redirectURL })
     .then(async (tab) => {
       const activeTabId = tab.id;
-      const delays = [3000];
+      const delays = [3000, 5000, 10000];
       delays.forEach((delay) => {
         setTimeout(() => {
           console.log("Jelly-Party: Attempting script injection.");
