@@ -68,7 +68,7 @@ export default {
 }
 #statusIcon {
   position: absolute;
-  right: 10px;
-  top: 5px;
+  left: 10px;
+  top: 10px;
 }
 </style>
