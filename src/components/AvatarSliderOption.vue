@@ -38,7 +38,7 @@ export default {
   methods: {
     nextOption: function() {
       const index = this.optionsValues.indexOf(
-        this.avatarState[this.optionsKey]
+        this.avatarState[this.optionsKey],
       );
       let newOption = "";
       if (index >= 0 && index < this.optionsValues.length - 1) {
@@ -53,7 +53,7 @@ export default {
     },
     previousOption: function() {
       const index = this.optionsValues.indexOf(
-        this.avatarState[this.optionsKey]
+        this.avatarState[this.optionsKey],
       );
       let newOption = "";
       if (index >= 1 && index < this.optionsValues.length) {

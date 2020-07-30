@@ -114,7 +114,7 @@ export default {
       _debounce(() => {
         const isAtBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 1;
         this.attached = isAtBottom;
-      }, 100)
+      }, 100),
     );
   },
   computed: {
@@ -135,7 +135,7 @@ export default {
     // the next click on #toggleEmojiPicker, which
     // otherwise opens & immediately closes the Picker
     this.skipNext = true;
-    this.customEventListener = (e) => {
+    this.customEventListener = e => {
       if (this.skipNext) {
         this.skipNext = false;
         return;

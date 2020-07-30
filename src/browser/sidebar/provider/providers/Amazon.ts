@@ -24,7 +24,7 @@ export class Amazon extends Provider {
       _debounce(() => {
         console.log("Jelly-Party: Handling Amazon resize event.");
         this.adjustView;
-      }, 1000).bind(this)
+      }, 1000).bind(this),
     );
 
     // Styles
@@ -32,7 +32,7 @@ export class Amazon extends Provider {
       this.rootTarget.style.transition = "all 0.2s ease";
     } else {
       console.log(
-        "Jelly-Party: Amazon Provider -> Constructor -> No rootTarget found!"
+        "Jelly-Party: Amazon Provider -> Constructor -> No rootTarget found!",
       );
     }
 
@@ -68,7 +68,7 @@ export class Amazon extends Provider {
       this.iFrameTarget.style.width = "100%";
     } else {
       console.log(
-        "Jelly-Party: Amazon Provider -> enterFullScreen() -> No iFrameTarget found!"
+        "Jelly-Party: Amazon Provider -> enterFullScreen() -> No iFrameTarget found!",
       );
     }
   }
@@ -78,7 +78,7 @@ export class Amazon extends Provider {
       this.iFrameTarget.style.width = "100%";
     } else {
       console.log(
-        "Jelly-Party: Amazon Provider -> exitFullScreen() -> No iFrameTarget found!"
+        "Jelly-Party: Amazon Provider -> exitFullScreen() -> No iFrameTarget found!",
       );
     }
   }
@@ -90,7 +90,7 @@ export class Amazon extends Provider {
         "calc(100vw - var(--jelly-party-sidebar-width))";
     } else {
       console.log(
-        "Jelly-Party: Amazon Provider -> contractView() ->  No rootTarget found!"
+        "Jelly-Party: Amazon Provider -> contractView() ->  No rootTarget found!",
       );
     }
   }
@@ -101,7 +101,7 @@ export class Amazon extends Provider {
       this.rootTarget.style.width = "100%";
     } else {
       console.log(
-        "Jelly-Party: Amazon Provider -> expandView() ->  No rootTarget found!"
+        "Jelly-Party: Amazon Provider -> expandView() ->  No rootTarget found!",
       );
     }
   }

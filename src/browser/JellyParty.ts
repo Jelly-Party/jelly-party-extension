@@ -55,7 +55,7 @@ export default class JellyParty {
         ["staging", "development"].includes(this.rootState.appMode)
           ? "enabled"
           : "disabled"
-      }.`
+      }.`,
     );
     this.iFrameMessenger = new IFrameMessenger(this);
     this.displayNotification("Jelly Party loaded!", true);
@@ -144,13 +144,15 @@ export default class JellyParty {
     // Start a new party if no partyId is given, else join an existing party
     const start = partyId ? false : true;
     log.info(
-      `Jelly-Party: ${start ? "Starting a new party." : "Joining a new party."}`
+      `Jelly-Party: ${
+        start ? "Starting a new party." : "Joining a new party."
+      }`,
     );
     if (this.partyState.isActive) {
       log.error(
         `Jelly-Party: Error. Cannot ${
           start ? "start" : "join"
-        } a party while still in an active party.`
+        } a party while still in an active party.`,
       );
       return;
     }
@@ -189,11 +191,11 @@ export default class JellyParty {
               avatarState: this.optionsState.avatarState,
             },
           },
-        })
+        }),
       );
       this.locallySyncPartyStateInterval = setInterval(
         this.locallySyncPartyState,
-        200
+        200,
       );
     }.bind(this);
 
@@ -203,7 +205,7 @@ export default class JellyParty {
         case "videoUpdate": {
           // Find out which peer caused the event
           const peer = this.partyState.peers.filter(
-            (peer) => peer.uuid === msg.data.peer.uuid
+            peer => peer.uuid === msg.data.peer.uuid,
           )[0].clientName;
           switch (msg.data.variant) {
             case "play": {
@@ -232,15 +234,13 @@ export default class JellyParty {
         case "partyStateUpdate": {
           if (this.partyState.peers.length > msg.data.partyState.peers.length) {
             // Somebody left the party; Let's find out who
-            const previousUUIDs = this.partyState.peers.map(
-              (peer) => peer.uuid
-            );
+            const previousUUIDs = this.partyState.peers.map(peer => peer.uuid);
             const newUUIDs = msg.data.partyState.peers.map(
-              (peer: PeerType) => peer.uuid
+              (peer: PeerType) => peer.uuid,
             );
             const peerWhoLeft = this.partyState.peers.filter(
               (peer: PeerType) =>
-                peer.uuid === _difference(previousUUIDs, newUUIDs)[0]
+                peer.uuid === _difference(previousUUIDs, newUUIDs)[0],
             )[0];
             if (peerWhoLeft) {
               const msg = `${peerWhoLeft.clientName} left the party.`;
@@ -252,10 +252,10 @@ export default class JellyParty {
           ) {
             // Somebody joined the party
             const previousUUIDs = this.partyState.peers.map(
-              (peer: PeerType) => peer.uuid
+              (peer: PeerType) => peer.uuid,
             );
             const newUUIDs = msg.data.partyState.peers.map(
-              (peer: PeerType) => peer.uuid
+              (peer: PeerType) => peer.uuid,
             );
             if (previousUUIDs.length === 0) {
               // Let's show all peers in the party
@@ -270,7 +270,7 @@ export default class JellyParty {
               // Show only the peer that joined
               const peerWhoJoined = msg.data.partyState.peers.filter(
                 (peer: PeerType) =>
-                  peer.uuid === _difference(newUUIDs, previousUUIDs)[0]
+                  peer.uuid === _difference(newUUIDs, previousUUIDs)[0],
               )[0];
               if (peerWhoJoined) {
                 const msg = `${peerWhoJoined.clientName} joined the party.`;
@@ -298,7 +298,7 @@ export default class JellyParty {
         }
         default: {
           log.debug(
-            `Jelly-Party: Received unknown message: ${JSON.stringify(msg)}`
+            `Jelly-Party: Received unknown message: ${JSON.stringify(msg)}`,
           );
         }
       }
@@ -433,7 +433,7 @@ export default class JellyParty {
     };
     PromiseQueue.enqueue(() => {
       return this.iFrameMessenger.sendMediaCommandFrameAndWaitForConfirmation(
-        msg
+        msg,
       );
     });
   }
@@ -453,7 +453,7 @@ export default class JellyParty {
     };
     PromiseQueue.enqueue(() => {
       return this.iFrameMessenger.sendMediaCommandFrameAndWaitForConfirmation(
-        msg
+        msg,
       );
     });
   }
@@ -472,7 +472,7 @@ export default class JellyParty {
     };
     PromiseQueue.enqueue(() => {
       return this.iFrameMessenger.sendMediaCommandFrameAndWaitForConfirmation(
-        msg
+        msg,
       );
     });
   }
@@ -490,7 +490,7 @@ export default class JellyParty {
     };
     PromiseQueue.enqueue(() => {
       return this.iFrameMessenger.sendMediaCommandFrameAndWaitForConfirmation(
-        msg
+        msg,
       );
     });
   }

@@ -188,17 +188,17 @@ export class MainFrameMessenger {
           }
           default: {
             console.log(
-              `Jelly-Party: ${this.messengerType} received erroneous message:`
+              `Jelly-Party: ${this.messengerType} received erroneous message:`,
             );
             console.log(msg);
           }
         }
-      }
+      },
     );
   }
   sendData(dataFrame: MultiFrame) {
     (document.querySelector(
-      "#jellyPartyRoot"
+      "#jellyPartyRoot",
     ) as any).contentWindow.postMessage(dataFrame, "*");
   }
 }
@@ -256,7 +256,7 @@ export class IFrameMessenger {
                 case "seek": {
                   if (optionsState?.showNotificationsForSelf) {
                     const notificationText = `You jumped to ${toHHMMSS(
-                      msg.payload.data.tick
+                      msg.payload.data.tick,
                     )}.`;
                     if (optionsState.statusNotificationsNotyf) {
                       this.party.displayNotification(notificationText);
@@ -271,14 +271,14 @@ export class IFrameMessenger {
                 }
                 default: {
                   console.log(
-                    `Jelly-Party: ${this.messengerType} received erroneous message:`
+                    `Jelly-Party: ${this.messengerType} received erroneous message:`,
                   );
                   console.error(msg);
                 }
               }
             } else {
               console.log(
-                `Jelly-Party: ${this.messengerType} received erroneous message:`
+                `Jelly-Party: ${this.messengerType} received erroneous message:`,
               );
               console.log(event);
             }
@@ -301,7 +301,7 @@ export class IFrameMessenger {
             magicLink.searchParams.append("redirectURL", redirectURL);
             magicLink.searchParams.append(
               "jellyPartyId",
-              this.party.partyState.partyId
+              this.party.partyState.partyId,
             );
             this.party.resolveMagicLink(magicLink.toString());
             break;
@@ -319,12 +319,12 @@ export class IFrameMessenger {
           }
           default: {
             console.log(
-              `Jelly-Party: ${this.messengerType} received erroneous message:`
+              `Jelly-Party: ${this.messengerType} received erroneous message:`,
             );
             console.log(msg);
           }
         }
-      }
+      },
     );
   }
   sendData(dataFrame: MultiFrame) {
@@ -332,7 +332,7 @@ export class IFrameMessenger {
   }
 
   async sendMediaCommandFrameAndWaitForConfirmation(
-    dataFrame: MediaCommandFrame
+    dataFrame: MediaCommandFrame,
   ) {
     // Create a unique identifier for the deferred promise
     const deferredPromiseId = uuidv4();

@@ -78,14 +78,14 @@ export default {
         return { clientName: "Jelly" };
       } else {
         const peer = partyStore.state.cachedPeers.find(
-          (peer) => this.chatMessage.peer.uuid === peer.uuid
+          peer => this.chatMessage.peer.uuid === peer.uuid,
         );
         return peer;
       }
     },
     timestamp: function() {
       const date = new Date(this.chatMessage.data.timestamp);
-      const padZero = (i) => (String(i).length === 2 ? String(i) : `0${i}`);
+      const padZero = i => (String(i).length === 2 ? String(i) : `0${i}`);
       const hours = padZero(date.getHours());
       const minutes = padZero(date.getMinutes());
       const formattedDate = `${hours}:${minutes}`;

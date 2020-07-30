@@ -22,7 +22,7 @@ browser.storage.local.get("options").then((options: any) => {
 function redirectToParty(
   redirectURL: string,
   resolve: (arg0?: any) => void,
-  reject: (arg0?: any) => void
+  reject: (arg0?: any) => void,
 ) {
   // We attempt to inject the content script several times. If we've been
   // successful, further injections will yield no effect.
@@ -32,10 +32,10 @@ function redirectToParty(
   // into a void inbetween join.jelly-party.com and redirectURL.
   browser.tabs
     .update(undefined, { url: redirectURL })
-    .then(async (tab) => {
+    .then(async tab => {
       const activeTabId = tab.id;
       const delays = [3000, 5000, 10000];
-      delays.forEach((delay) => {
+      delays.forEach(delay => {
         setTimeout(() => {
           console.log("Jelly-Party: Attempting script injection.");
           browser.tabs
@@ -45,12 +45,12 @@ function redirectToParty(
             .then(() => {
               resolve("Jelly-Party: Redirection to party successful.");
             })
-            .catch((err) => {
+            .catch(err => {
               if (delay === delays.splice(-1)[0]) {
                 reject("Jelly-Party: Redirection to party failed.");
               } else {
                 console.log(
-                  `Could not redirect to party. Will attempt redirection again in ${delay}.`
+                  `Could not redirect to party. Will attempt redirection again in ${delay}.`,
                 );
                 console.log(err);
               }
@@ -58,7 +58,7 @@ function redirectToParty(
         }, delay);
       });
     })
-    .catch((e) => console.log(e));
+    .catch(e => console.log(e));
 }
 
 export interface RedirectFrame {

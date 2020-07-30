@@ -13,6 +13,6 @@
 <script>
 export default {
   name: "InputfieldButton",
-  props: ["buttonText", "inputPlaceholder"]
+  props: ["buttonText", "inputPlaceholder"],
 };
 </script>

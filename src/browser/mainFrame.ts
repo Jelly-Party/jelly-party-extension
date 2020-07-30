@@ -62,16 +62,16 @@ export class MainFrame {
     });
     this.magicLinkUsed = false;
     this.partyIdFromURL = new URLSearchParams(window.location.search).get(
-      "jellyPartyId"
+      "jellyPartyId",
     );
     this.showNotification = (msg: string) => this.notyf.success(msg);
     this.mainFrameMessenger = new MainFrameMessenger(
       this.showNotification,
-      this
+      this,
     );
     this.videoHandler = new VideoHandler(
       window.location.host,
-      this.mainFrameMessenger
+      this.mainFrameMessenger,
     );
     this.mainFrameMessenger.videoHandler = this.videoHandler;
     this.customizeStyling(host);
@@ -147,7 +147,7 @@ export class MainFrame {
       this.setupSideBarToggle();
     } else {
       console.error(
-        `Jelly-Party: Error attaching IFrame. this.IFrameTarget not found.`
+        `Jelly-Party: Error attaching IFrame. this.IFrameTarget not found.`,
       );
     }
   }
@@ -266,9 +266,9 @@ export class MainFrame {
         if (!(video && controls && this.IFrameTarget)) {
           console.log(
             `Jelly-Party: Missing video: ${Boolean(
-              video
+              video,
             )}. Missing controls: ${Boolean(controls)}.
-            Missing video: ${Boolean(this.IFrameTarget)}.`
+            Missing video: ${Boolean(this.IFrameTarget)}.`,
           );
           return;
         }
@@ -283,7 +283,7 @@ export class MainFrame {
           // Sidebar is hidden & we're NOT in fullscreen
           this.IFrameTarget.style.width = "100%";
           const player: HTMLElement | null = document.querySelector(
-            "#ytd-player"
+            "#ytd-player",
           );
           if (!player) {
             console.log(`Jelly-Party: Missing youtube player: #ytd-player.`);
@@ -308,7 +308,7 @@ export class MainFrame {
           this.IFrameTarget.style.width =
             "calc(100vw - var(--jelly-party-sidebar-width))";
           const player: HTMLElement | null = document.querySelector(
-            "#ytd-player"
+            "#ytd-player",
           );
           if (!player) {
             console.log(`Jelly-Party: Missing youtube player: #ytd-player.`);
@@ -330,7 +330,7 @@ export class MainFrame {
         _debounce(() => {
           console.log("Jelly-Party: Handling Youtube resize event.");
           this.fixWebsiteDisplay();
-        }, 1000).bind(this)
+        }, 1000).bind(this),
       );
       setTimeout(() => {
         this.fixWebsiteDisplay();
@@ -343,7 +343,7 @@ export class MainFrame {
     this.IFrameTarget = document.querySelector(this.IFrameIdentifier);
     this.fixWebsiteDisplay = () => {
       const hudsonWrapper: HTMLElement | null = document.querySelector(
-        "#hudson-wrapper"
+        "#hudson-wrapper",
       );
       if (hudsonWrapper) {
         if (!this.sideBarVisible) {
@@ -361,14 +361,14 @@ export class MainFrame {
   initAmazon() {
     this.IFrameTarget = document.body;
     const amazonRoot: HTMLElement | null = document.querySelector(
-      "#dv-web-player"
+      "#dv-web-player",
     );
     if (amazonRoot) {
       amazonRoot.style.transition = "all 0.2s ease";
     }
     this.fixWebsiteDisplay = () => {
       const amazonRoot: HTMLElement | null = document.querySelector(
-        "#dv-web-player"
+        "#dv-web-player",
       );
       if (amazonRoot) {
         if (!this.sideBarVisible) {
@@ -489,7 +489,7 @@ export class MainFrame {
       const fullscreenElement = document.fullscreenElement;
       if (!fullscreenElement) {
         console.log(
-          `Jelly-Party: Error. fullscreenHandler called, but not fullscreenElement present.`
+          `Jelly-Party: Error. fullscreenHandler called, but not fullscreenElement present.`,
         );
       } else {
         const notyfContainer = document.querySelector(".notyf");
@@ -497,7 +497,7 @@ export class MainFrame {
           fullscreenElement.appendChild(notyfContainer);
         } else {
           console.log(
-            `Jelly-Party: Error. Could not find notyf Container to move to fullscreen Element.`
+            `Jelly-Party: Error. Could not find notyf Container to move to fullscreen Element.`,
           );
         }
         // Unfortunately, we cannot move an IFrame within the DOM without losing its state, see

@@ -243,7 +243,7 @@ export default {
   },
   methods: {
     getPeer(uuid) {
-      const peer = partyStore.state.peers.find((peer) => uuid === peer.uuid);
+      const peer = partyStore.state.peers.find(peer => uuid === peer.uuid);
       return peer;
     },
     leaveParty(cancel) {

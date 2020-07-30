@@ -30,7 +30,7 @@ export default class VideoHandler {
   constructor(
     host: string,
     // notyf: any,
-    mainFrameMessenger: MainFrameMessenger
+    mainFrameMessenger: MainFrameMessenger,
   ) {
     this.host = host;
     this.skipNextEvent = false;
@@ -68,7 +68,7 @@ export default class VideoHandler {
             const videoPlayer = (window as any).netflix.appContext.state.playerApp.getAPI()
               .videoPlayer;
             return videoPlayer.getVideoPlayerBySessionId(
-              videoPlayer.getAllPlayerSessionIds()[0]
+              videoPlayer.getAllPlayerSessionIds()[0],
             );
           };
           window.addEventListener("seekRequest", function(e: any) {
@@ -83,7 +83,7 @@ export default class VideoHandler {
           });
           window.addEventListener("pauseRequest", function() {
             console.log(
-              "Jelly-Party: Netflix Context: Received pause request."
+              "Jelly-Party: Netflix Context: Received pause request.",
             );
             getPlayer().pause();
           });
@@ -95,8 +95,8 @@ export default class VideoHandler {
             console.log("Jelly-Party: Disney+ Context: Received play request.");
             const vid: any = document.querySelector("video");
             if (vid) {
-              const key: string | undefined = Object.keys(vid).find((elem) =>
-                elem.includes("reactInternalInstance")
+              const key: string | undefined = Object.keys(vid).find(elem =>
+                elem.includes("reactInternalInstance"),
               );
               if (key) {
                 // Play only if currently paused
@@ -105,19 +105,19 @@ export default class VideoHandler {
                 }
               } else {
                 console.error(
-                  "Jelly-Party: Disney+ Error. Cannot find react instance to attach to.."
+                  "Jelly-Party: Disney+ Error. Cannot find react instance to attach to..",
                 );
               }
             }
           });
           window.addEventListener("pauseRequest", function() {
             console.log(
-              "Jelly-Party: Disney+ Context: Received pause request."
+              "Jelly-Party: Disney+ Context: Received pause request.",
             );
             const vid: any = document.querySelector("video");
             if (vid) {
-              const key: string | undefined = Object.keys(vid).find((elem) =>
-                elem.includes("reactInternalInstance")
+              const key: string | undefined = Object.keys(vid).find(elem =>
+                elem.includes("reactInternalInstance"),
               );
               if (key) {
                 // Play only if currently playing
@@ -126,7 +126,7 @@ export default class VideoHandler {
                 }
               } else {
                 console.error(
-                  "Jelly-Party: Disney+ Error. Cannot find react instance to attach to.."
+                  "Jelly-Party: Disney+ Error. Cannot find react instance to attach to..",
                 );
               }
             }
@@ -135,7 +135,7 @@ export default class VideoHandler {
         break;
       default:
         console.log(
-          `Jelly-Party: No custom initialization required for ${this.host}.`
+          `Jelly-Party: No custom initialization required for ${this.host}.`,
         );
     }
   }
@@ -171,7 +171,7 @@ export default class VideoHandler {
       this.skipNextEvent = true;
       fun();
       return Promise.race([deferred, sleep(1000)]).then(
-        () => (this.skipNextEvent = false)
+        () => (this.skipNextEvent = false),
       );
     };
   };
@@ -179,7 +179,7 @@ export default class VideoHandler {
   wrapSeekHandler = (fun: (tick: number) => Promise<void>) => {
     return async (tick: number) => {
       const timeDelta = Math.abs(
-        tick - (this.getVideoState().currentTime ?? tick)
+        tick - (this.getVideoState().currentTime ?? tick),
       );
       if (timeDelta > 0.5) {
         // Seeking is actually worth it. We're off by more than half a second.
@@ -187,7 +187,7 @@ export default class VideoHandler {
         this.skipNextEvent = true;
         fun(tick);
         return Promise.race([deferred, sleep(1000)]).then(
-          () => (this.skipNextEvent = false)
+          () => (this.skipNextEvent = false),
         );
       }
     };
@@ -218,7 +218,7 @@ export default class VideoHandler {
       case "www.netflix.com":
         return async (tick: number) => {
           window.dispatchEvent(
-            new CustomEvent<number>("seekRequest", { detail: tick })
+            new CustomEvent<number>("seekRequest", { detail: tick }),
           );
         };
       default: {
@@ -247,7 +247,7 @@ export default class VideoHandler {
       // We get here by programatically triggering a video event
       this.skipNextEvent = false;
       console.log(
-        "Jelly-Party: Skipping event forwarding for event that we received."
+        "Jelly-Party: Skipping event forwarding for event that we received.",
       );
       // Therefore we must resolve our deferred
       this.deferred.resolve();
@@ -274,7 +274,7 @@ export default class VideoHandler {
       // We get here by programatically triggering a video event
       this.skipNextEvent = false;
       console.log(
-        "Jelly-Party: Skipping event forwarding for event that we received."
+        "Jelly-Party: Skipping event forwarding for event that we received.",
       );
       // Therefore we must resolve our deferred
       this.deferred.resolve();
@@ -301,7 +301,7 @@ export default class VideoHandler {
       // We get here by programatically triggering a video event
       this.skipNextEvent = false;
       console.log(
-        "Jelly-Party: Skipping event forwarding for event that we received."
+        "Jelly-Party: Skipping event forwarding for event that we received.",
       );
       // Therefore we must resolve our deferred
       this.deferred.resolve();

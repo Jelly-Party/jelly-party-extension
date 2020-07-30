@@ -1,6 +1,5 @@
-
-import { debounce as _debounce, throttle as _throttle } from "lodash-es";
-import { Provider } from '../Provider';
+import { debounce as _debounce } from "lodash-es";
+import { Provider } from "../Provider";
 
 export class YouTube extends Provider {
   public contracted = false;
@@ -26,16 +25,21 @@ export class YouTube extends Provider {
 
     // Listeners
     window.addEventListener("fullscreenchange", this.adjustView);
-    window.addEventListener("resize", _debounce(() => {
-      console.log("Jelly-Party: Handling YouTube resize event.");
-      this.adjustView;
-    }, 1000).bind(this));
+    window.addEventListener(
+      "resize",
+      _debounce(() => {
+        console.log("Jelly-Party: Handling YouTube resize event.");
+        this.adjustView;
+      }, 1000).bind(this)
+    );
 
     // Styles
     if (this.iFrameTarget) {
       this.iFrameTarget.style.overflow = "hidden";
     } else {
-      console.log(`Jelly-Party: YouTube Provider -> Constructor -> Missing IFrame target.`);
+      console.log(
+        `Jelly-Party: YouTube Provider -> Constructor -> Missing IFrame target.`
+      );
     }
 
     // Update view
@@ -50,17 +54,14 @@ export class YouTube extends Provider {
       // Sidebar OFF & Fullscreen ON
       this.contractView();
       this.enterFullScreen();
-
     } else if (!this.contracted && !document.fullscreenElement) {
       // Sidebar OFF & Fullscreen OFF
       this.contractView();
       this.exitFullScreen();
-
     } else if (this.contracted && document.fullscreenElement) {
       // Sidebar ON & Fullscreen ON
       this.expandView();
       this.enterFullScreen();
-
     } else if (this.contracted && !document.fullscreenElement) {
       // Sidebar ON & Fullscreen OFF
       this.expandView();
@@ -72,19 +73,25 @@ export class YouTube extends Provider {
     if (this.iFrameTarget) {
       this.iFrameTarget.style.width = "100%";
     } else {
-      console.log("Jelly-Party: YouTube Provider -> enterFullScreen() -> No iFrameTarget found!");
+      console.log(
+        "Jelly-Party: YouTube Provider -> enterFullScreen() -> No iFrameTarget found!"
+      );
     }
     if (this.videoTarget) {
       this.videoTarget.style.width = "100vw";
       this.videoTarget.style.height = "100vh";
       this.videoTarget.style.top = `0px`;
     } else {
-      console.log("Jelly-Party: YouTube Provider -> enterFullScreen() -> No videoTarget found!");
+      console.log(
+        "Jelly-Party: YouTube Provider -> enterFullScreen() -> No videoTarget found!"
+      );
     }
     if (this.controlsTarget) {
       this.controlsTarget.style.width = "calc(100vw - 30px)";
     } else {
-      console.log("Jelly-Party: YouTube Provider -> enterFullScreen() -> No controlsTarget found!");
+      console.log(
+        "Jelly-Party: YouTube Provider -> enterFullScreen() -> No controlsTarget found!"
+      );
     }
   }
 
@@ -92,26 +99,37 @@ export class YouTube extends Provider {
     if (this.iFrameTarget) {
       this.iFrameTarget.style.width = "100%";
     } else {
-      console.log("Jelly-Party: YouTube Provider -> exitFullScreen() -> No iFrameTarget found!");
+      console.log(
+        "Jelly-Party: YouTube Provider -> exitFullScreen() -> No iFrameTarget found!"
+      );
     }
     if (this.videoTarget) {
       if (this.playerTarget) {
         this.videoTarget.style.width = `${this.playerTarget.offsetWidth}px`;
         this.videoTarget.style.height = `${this.playerTarget.offsetHeight}px`;
       } else {
-        console.log("Jelly-Party: YouTube Provider -> exitFullScreen() -> No playerTarget found!");
+        console.log(
+          "Jelly-Party: YouTube Provider -> exitFullScreen() -> No playerTarget found!"
+        );
       }
     } else {
-      console.log("Jelly-Party: YouTube Provider -> exitFullScreen() -> No videoTarget found!");
+      console.log(
+        "Jelly-Party: YouTube Provider -> exitFullScreen() -> No videoTarget found!"
+      );
     }
     if (this.controlsTarget) {
       if (this.playerTarget) {
-        this.controlsTarget.style.width = `${this.playerTarget.offsetWidth - 30}px`;
+        this.controlsTarget.style.width = `${this.playerTarget.offsetWidth -
+          30}px`;
       } else {
-        console.log("Jelly-Party: YouTube Provider -> exitFullScreen() -> No playerTarget found!");
+        console.log(
+          "Jelly-Party: YouTube Provider -> exitFullScreen() -> No playerTarget found!"
+        );
       }
     } else {
-      console.log("Jelly-Party: YouTube Provider -> exitFullScreen() -> No controlsTarget found!");
+      console.log(
+        "Jelly-Party: YouTube Provider -> exitFullScreen() -> No controlsTarget found!"
+      );
     }
   }
 
@@ -119,9 +137,11 @@ export class YouTube extends Provider {
     if (this.iFrameTarget) {
       this.contracted = true;
       this.iFrameTarget.style.width =
-            "calc(100vw - var(--jelly-party-sidebar-width))";
+        "calc(100vw - var(--jelly-party-sidebar-width))";
     } else {
-      console.log("Jelly-Party: YouTube Provider -> contractView() -> No iFrameTarget found!");
+      console.log(
+        "Jelly-Party: YouTube Provider -> contractView() -> No iFrameTarget found!"
+      );
     }
   }
 
@@ -130,7 +150,9 @@ export class YouTube extends Provider {
       this.contracted = false;
       this.iFrameTarget.style.width = "100%";
     } else {
-      console.log("Jelly-Party: YouTube Provider -> expandView() -> No iFrameTarget found!");
+      console.log(
+        "Jelly-Party: YouTube Provider -> expandView() -> No iFrameTarget found!"
+      );
     }
   }
 }

@@ -44,7 +44,7 @@ module.exports = {
     //   libraryTarget: "var"
     // }
   },
-  chainWebpack: (config) => {
+  chainWebpack: config => {
     config.optimization.splitChunks(false);
     const svgRule = config.module.rule("svg");
     svgRule.uses.clear();
@@ -58,7 +58,7 @@ module.exports = {
       .rule("images")
       .use("url-loader")
       .loader("url-loader")
-      .tap((options) => Object.assign(options, { limit: 100240 }));
+      .tap(options => Object.assign(options, { limit: 100240 }));
   },
   // TODO: Look into webpack's side effects: https://github.com/vuejs/vue-cli/issues/1287
   css: {

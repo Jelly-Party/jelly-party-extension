@@ -9,14 +9,14 @@ export default {
   props: {
     goto: {
       type: String,
-      default: "/"
-    }
+      default: "/",
+    },
   },
   methods: {
     goBack: function() {
       this.$router.replace({ path: this.goto });
-    }
-  }
+    },
+  },
 };
 </script>
 

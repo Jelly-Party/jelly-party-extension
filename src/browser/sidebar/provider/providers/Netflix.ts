@@ -1,90 +1,97 @@
-
-import { debounce as _debounce, throttle as _throttle } from "lodash-es";
-import { Provider } from '../Provider';
+import { debounce as _debounce } from "lodash-es"
+import { Provider } from "../Provider"
 
 export class Netflix extends Provider {
-  public contracted = false;
+  public contracted = false
 
-  private iFrameIdentifier = ".sizing-wrapper";
-  public iFrameTarget: HTMLElement | null;
+  private iFrameIdentifier = ".sizing-wrapper"
+  public iFrameTarget: HTMLElement | null
 
   constructor() {
-    super("www.netflix.com");
+    super("www.netflix.com")
 
     // Targets
-    this.iFrameTarget = document.querySelector(this.iFrameIdentifier);
+    this.iFrameTarget = document.querySelector(this.iFrameIdentifier)
 
     // Listeners
-    window.addEventListener("fullscreenchange", this.adjustView);
-    window.addEventListener("resize", _debounce(() => {
-      console.log("Jelly-Party: Handling Netflix resize event.");
-      this.adjustView;
-    }, 1000).bind(this));
+    window.addEventListener("fullscreenchange", this.adjustView)
+    window.addEventListener(
+      "resize",
+      _debounce(() => {
+        console.log("Jelly-Party: Handling Netflix resize event.")
+        this.adjustView
+      }, 1000).bind(this),
+    )
 
     // Styles
 
     // Update view
     setTimeout(() => {
-      this.adjustView;
-    }, 3000);
+      this.adjustView
+    }, 3000)
   }
 
   public adjustView() {
-    console.log("Jelly-Party: Adjusting website Display");
+    console.log("Jelly-Party: Adjusting website Display")
     if (!this.contracted && document.fullscreenElement) {
       // Sidebar OFF & Fullscreen ON
-      this.contractView();
-      this.enterFullScreen();
-
+      this.contractView()
+      this.enterFullScreen()
     } else if (!this.contracted && !document.fullscreenElement) {
       // Sidebar OFF & Fullscreen OFF
-      this.contractView();
-      this.exitFullScreen();
-
+      this.contractView()
+      this.exitFullScreen()
     } else if (this.contracted && document.fullscreenElement) {
       // Sidebar ON & Fullscreen ON
-      this.expandView();
-      this.enterFullScreen();
-
+      this.expandView()
+      this.enterFullScreen()
     } else if (this.contracted && !document.fullscreenElement) {
       // Sidebar ON & Fullscreen OFF
-      this.expandView();
-      this.exitFullScreen();
+      this.expandView()
+      this.exitFullScreen()
     }
   }
 
   public enterFullScreen() {
     if (this.iFrameTarget) {
-      this.iFrameTarget.style.width = "100%";
+      this.iFrameTarget.style.width = "100%"
     } else {
-      console.log("Jelly-Party: Netflix Provider -> enterFullScreen() -> No iFrameTarget found!");
+      console.log(
+        "Jelly-Party: Netflix Provider -> enterFullScreen() -> No iFrameTarget found!",
+      )
     }
   }
 
   public exitFullScreen() {
     if (this.iFrameTarget) {
-      this.iFrameTarget.style.width = "100%";
+      this.iFrameTarget.style.width = "100%"
     } else {
-      console.log("Jelly-Party: Netflix Provider -> exitFullScreen() -> No iFrameTarget found!");
+      console.log(
+        "Jelly-Party: Netflix Provider -> exitFullScreen() -> No iFrameTarget found!",
+      )
     }
   }
 
   public contractView() {
     if (this.iFrameTarget) {
-      this.contracted = true;
+      this.contracted = true
       this.iFrameTarget.style.width =
-            "calc(100vw - var(--jelly-party-sidebar-width))";
+        "calc(100vw - var(--jelly-party-sidebar-width))"
     } else {
-      console.log("Jelly-Party: Netflix Provider -> contractView() -> No iFrameTarget found!");
+      console.log(
+        "Jelly-Party: Netflix Provider -> contractView() -> No iFrameTarget found!",
+      )
     }
   }
 
   public expandView() {
     if (this.iFrameTarget) {
-      this.contracted = false;
-      this.iFrameTarget.style.width = "100%";
+      this.contracted = false
+      this.iFrameTarget.style.width = "100%"
     } else {
-      console.log("Jelly-Party: Netflix Provider -> expandView() -> No iFrameTarget found!");
+      console.log(
+        "Jelly-Party: Netflix Provider -> expandView() -> No iFrameTarget found!",
+      )
     }
   }
 }

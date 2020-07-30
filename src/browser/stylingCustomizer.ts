@@ -22,7 +22,7 @@ export default class {
     }
     while (!this.IFrameTarget) {
       const target: HTMLElement | null = document.querySelector(
-        this.IFrameIdentifier
+        this.IFrameIdentifier,
       );
       if (target) {
         this.IFrameTarget = target;
