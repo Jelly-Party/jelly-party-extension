@@ -3,9 +3,9 @@ import { debounce as _debounce, throttle as _throttle } from "lodash-es";
 import { Provider } from '../Provider';
 
 export class Netflix extends Provider {
-  public contracted: boolean = false;
+  public contracted = false;
 
-  private iFrameIdentifier: string = ".sizing-wrapper";
+  private iFrameIdentifier = ".sizing-wrapper";
   public iFrameTarget: HTMLElement | null;
 
   constructor() {

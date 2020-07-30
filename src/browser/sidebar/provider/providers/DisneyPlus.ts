@@ -3,10 +3,10 @@ import { debounce as _debounce, throttle as _throttle } from "lodash-es";
 import { Provider } from '../Provider';
 
 export class DisneyPlus extends Provider {
-  public contracted: boolean = false;
+  public contracted = false;
 
-  private iFrameIdentifier: string = "#app_body_content";
-  private wrapperIdentifier: string = "#hudson-wrapper";
+  private iFrameIdentifier = "#app_body_content";
+  private wrapperIdentifier = "#hudson-wrapper";
 
   public iFrameTarget: HTMLElement | null;
   public wrapperTarget: HTMLElement | null;

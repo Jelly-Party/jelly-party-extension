@@ -3,9 +3,9 @@ import { debounce as _debounce, throttle as _throttle } from "lodash-es";
 import { Provider } from '../Provider';
 
 export class Vimeo extends Provider{
-  public contracted: boolean = false;
+  public contracted = false;
 
-  private iFrameIdentifier: string = "#main";
+  private iFrameIdentifier = "#main";
 
   public iFrameTarget: HTMLElement | null;
 

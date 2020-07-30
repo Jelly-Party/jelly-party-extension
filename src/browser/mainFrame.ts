@@ -1,10 +1,7 @@
-import { debounce as _debounce, throttle as _throttle } from "lodash-es";
+import { debounce as _debounce } from "lodash-es";
 import {
-  baseSVG,
   jellyFishWithNotification,
   jellyFishWithoutNotification,
-  jellyFishToArrow,
-  arrowToJellyFish,
   closeButton,
 } from "./jellyPartyFab.js";
 import { browser } from "webextension-polyfill-ts";
@@ -98,7 +95,6 @@ export class MainFrame {
     this.closeButton.style.zIndex = "99999";
   }
 
-
   private createFab() {
     console.log("Jelly-Party: Fab createFab called");
     this.jellyPartyFab = document.createElement("div");
@@ -168,9 +164,8 @@ export class MainFrame {
       this.toggleSideBar();
     });
     this.fixWebsiteDisplay();
-    document.addEventListener('mousemove', this.onMouseMove);
+    document.addEventListener("mousemove", this.onMouseMove);
   }
-
 
   showSideBar() {
     if (!this.jellyPartyWrapper) {
@@ -219,7 +214,8 @@ export class MainFrame {
       this.fabVisible = true;
       this.jellyPartyFab.style.opacity = "1";
       this.jellyPartyFab.style.visibility = "visible";
-      this.jellyPartyFab.style.transition = "visibility 0.2s 0s, opacity 0.2s 0s";
+      this.jellyPartyFab.style.transition =
+        "visibility 0.2s 0s, opacity 0.2s 0s";
     }
   }
 
@@ -230,7 +226,8 @@ export class MainFrame {
       this.fabVisible = false;
       this.jellyPartyFab.style.opacity = "0";
       this.jellyPartyFab.style.visibility = "hidden";
-      this.jellyPartyFab.style.transition = "visibility 0.2s 0s, opacity 0.2s 0s";
+      this.jellyPartyFab.style.transition =
+        "visibility 0.2s 0s, opacity 0.2s 0s";
     }
   }
 
@@ -242,7 +239,7 @@ export class MainFrame {
         this.hideFab();
       }, 500);
     }
-  }
+  };
 
   initNetflix() {
     this.IFrameIdentifier = ".sizing-wrapper";
@@ -301,8 +298,7 @@ export class MainFrame {
           // Sidebar is showing & we're in fullscreen mode
           this.IFrameTarget.style.width =
             "calc(100vw - var(--jelly-party-sidebar-width))";
-          video.style.width =
-            "calc(100vw - var(--jelly-party-sidebar-width))";
+          video.style.width = "calc(100vw - var(--jelly-party-sidebar-width))";
           video.style.height = `100vh`;
           video.style.top = `0px`;
           controls.style.width =
@@ -523,8 +519,6 @@ export class MainFrame {
     RootHead.appendChild(styleScript);
   }
 }
-
-
 
 function waitForHTMLElement(cssSelector: string, callback: () => any) {
   if (document.querySelector(cssSelector) === null) {

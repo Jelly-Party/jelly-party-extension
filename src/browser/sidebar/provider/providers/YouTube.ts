@@ -3,12 +3,12 @@ import { debounce as _debounce, throttle as _throttle } from "lodash-es";
 import { Provider } from '../Provider';
 
 export class YouTube extends Provider {
-  public contracted: boolean = false;
+  public contracted = false;
 
-  private iFrameIdentifier: string = "ytd-app";
-  private playerIdentifier: string = "#ytd-player";
-  private videoIdentifier: string = "video";
-  private controlsIdentifier: string = ".ytp-chrome-bottom";
+  private iFrameIdentifier = "ytd-app";
+  private playerIdentifier = "#ytd-player";
+  private videoIdentifier = "video";
+  private controlsIdentifier = ".ytp-chrome-bottom";
 
   public iFrameTarget: HTMLElement | null;
   public playerTarget: HTMLElement | null;

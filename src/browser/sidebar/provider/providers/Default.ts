@@ -1,10 +1,10 @@
-import { debounce as _debounce, throttle as _throttle } from "lodash-es";
-import { Provider } from '../Provider';
+import { debounce as _debounce } from "lodash-es";
+import { Provider } from "../Provider";
 
 export class Default extends Provider {
-  public contracted: boolean = false;
+  public contracted = false;
 
-  private iFrameIdentifier: string = "iFrame";
+  private iFrameIdentifier = "iFrame";
 
   public iFrameTarget: HTMLElement | null;
 
@@ -12,14 +12,19 @@ export class Default extends Provider {
     super("www.domain.com");
 
     this.iFrameTarget = document.body;
-    console.log(`Jelly-Party: Default Provider -> Constructor -> No customization intended for this host`);
+    console.log(
+      `Jelly-Party: Default Provider -> Constructor -> No customization intended for this host`
+    );
 
     // Listeners
     window.addEventListener("fullscreenchange", this.adjustView);
-    window.addEventListener("resize", _debounce(() => {
-      console.log("Jelly-Party: Handling Default resize event.");
-      this.adjustView;
-    }, 1000).bind(this));
+    window.addEventListener(
+      "resize",
+      _debounce(() => {
+        console.log("Jelly-Party: Handling Default resize event.");
+        this.adjustView;
+      }, 1000).bind(this)
+    );
 
     // Styles
 
@@ -35,17 +40,14 @@ export class Default extends Provider {
       // Sidebar OFF & Fullscreen ON
       this.contractView();
       this.enterFullScreen();
-
     } else if (!this.contracted && !document.fullscreenElement) {
       // Sidebar OFF & Fullscreen OFF
       this.contractView();
       this.exitFullScreen();
-
     } else if (this.contracted && document.fullscreenElement) {
       // Sidebar ON & Fullscreen ON
       this.expandView();
       this.enterFullScreen();
-
     } else if (this.contracted && !document.fullscreenElement) {
       // Sidebar ON & Fullscreen OFF
       this.expandView();
@@ -57,7 +59,9 @@ export class Default extends Provider {
     if (this.iFrameTarget) {
       this.iFrameTarget.style.width = "100%";
     } else {
-      console.log("Jelly-Party: Default Provider -> enterFullScreen() -> No iFrameTarget found!");
+      console.log(
+        "Jelly-Party: Default Provider -> enterFullScreen() -> No iFrameTarget found!"
+      );
     }
   }
 
@@ -65,7 +69,9 @@ export class Default extends Provider {
     if (this.iFrameTarget) {
       this.iFrameTarget.style.width = "100%";
     } else {
-      console.log("Jelly-Party: Default Provider -> exitFullScreen() -> No iFrameTarget found!");
+      console.log(
+        "Jelly-Party: Default Provider -> exitFullScreen() -> No iFrameTarget found!"
+      );
     }
   }
 
@@ -73,9 +79,11 @@ export class Default extends Provider {
     if (this.iFrameTarget) {
       this.contracted = true;
       this.iFrameTarget.style.width =
-            "calc(100vw - var(--jelly-party-sidebar-width))";
+        "calc(100vw - var(--jelly-party-sidebar-width))";
     } else {
-      console.log("Jelly-Party: Default Provider -> contractView() -> No iFrameTarget found!");
+      console.log(
+        "Jelly-Party: Default Provider -> contractView() -> No iFrameTarget found!"
+      );
     }
   }
 
@@ -84,7 +92,9 @@ export class Default extends Provider {
       this.contracted = false;
       this.iFrameTarget.style.width = "100%";
     } else {
-      console.log("Jelly-Party: Default Provider -> expandView() -> No iFrameTarget found!");
+      console.log(
+        "Jelly-Party: Default Provider -> expandView() -> No iFrameTarget found!"
+      );
     }
   }
 }
