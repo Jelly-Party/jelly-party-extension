@@ -84,7 +84,7 @@ export class MainFrame {
     this.closeButton.innerHTML = closeButton;
     this.closeButton.style.color = "#FFF";
     this.closeButton.style.position = "absolute";
-    this.closeButton.style.right = "10px";
+    this.closeButton.style.right = "16px";
     this.closeButton.style.top = "10px";
     this.closeButton.style.height = "20px";
     this.closeButton.style.width = "20px";
