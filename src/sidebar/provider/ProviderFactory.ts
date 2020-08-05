@@ -18,9 +18,12 @@ export class ProviderFactory {
     if (potentialPrimeHosts.includes(this.host)) {
       this.host = "www.amazon.com";
     }
+    console.log(
+      `Jelly-Party: ProviderFactory is creating provider for ${this.host}`,
+    );
 
     // Configure provider
-    switch (host) {
+    switch (this.host) {
       case "www.netflix.com": {
         this.provider = new Netflix();
         break;
@@ -42,6 +45,7 @@ export class ProviderFactory {
         break;
       }
       default: {
+        console.log("Jelly-Party: Using default provider.");
         this.provider = new Default();
       }
     }
