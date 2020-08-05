@@ -13,7 +13,8 @@
         <template v-slot:answer
           >Some websites have a very obtrusive full-screen handler. In this
           case, try toggling fullscreen using the fullscreen button located in
-          the Controls-Bar under the Party tab.
+          the Controls-Bar under the Party tab (visible after you have joined a
+          party).
         </template>
       </QA>
       <QA id="join-party-magic-link-question">
