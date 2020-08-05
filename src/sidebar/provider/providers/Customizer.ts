@@ -3,33 +3,42 @@ import { sharedState } from "@/sidebar/Sidebar";
 
 export abstract class Customizer {
   constructor() {
-    window.addEventListener("fullscreenchange", this.adjustView);
+    window.addEventListener("fullscreenchange", () => {
+      console.log("Jelly-Party: Handling fullscreen change");
+      this.adjustView();
+    });
     window.addEventListener(
       "resize",
       _debounce(() => {
         console.log("Jelly-Party: Handling resize event.");
-        this.adjustView;
+        this.adjustView();
       }, 200).bind(this),
     );
     this.initNotyfFullscreenHandler();
     // Update view shortly after initialization
     setTimeout(() => {
-      this.adjustView;
+      this.adjustView.bind(this);
     }, 3000);
   }
 
   adjustView() {
-    if (document.fullscreen && !sharedState.sidebarVisible) {
+    if (document.fullscreen && sharedState.sidebarVisible) {
       // Fullscreen && sidebar showing
+      console.log("Jelly-Party: Adjusting for fullscreen && sidebar showing");
       this.adjustForFullscreenAndSidebar();
-    } else if (document.fullscreen && sharedState.sidebarVisible) {
+    } else if (document.fullscreen && !sharedState.sidebarVisible) {
       // Fullscreen and sidebar hidden
+      console.log("Jelly-Party: Adjusting for fullscreen && sidebar hideen");
       this.adjustForFullscreenAndNoSidebar();
-    } else if (!document.fullscreen && !sharedState.sidebarVisible) {
+    } else if (!document.fullscreen && sharedState.sidebarVisible) {
       // Non-fullscreen and sidebar showing
+      console.log(
+        "Jelly-Party: Adjusting for no fullscreen && sidebar showing",
+      );
       this.adjustForNoFullscreenAndSidebar();
     } else {
       // Non-fullscreen and sidebar hidden
+      console.log("Jelly-Party: Adjusting for no fullscreen && sidebar hidden");
       this.adjustForNoFullscreenAndNoSidebar();
     }
   }
