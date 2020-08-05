@@ -1,9 +1,9 @@
 import { Customizer } from "../Customizer";
 
 export class DisneyPlusCustomizer extends Customizer {
-  public styleTargetSelector = "#app_body_content";
+  public styleTargetSelector = "#hudson-wrapper";
   public styleTarget: HTMLElement | null;
-  private wrapperIdentifier = "#hudson-wrapper";
+  private wrapperIdentifier = "#app_body_content";
   public wrapperTarget: HTMLElement | null;
 
   constructor() {
@@ -16,6 +16,7 @@ export class DisneyPlusCustomizer extends Customizer {
   adjustForFullscreenAndNoSidebar() {
     if (this.styleTarget) {
       this.styleTarget.style.width = "100%";
+      this.styleTarget.style.left = "";
     }
   }
 
@@ -23,19 +24,15 @@ export class DisneyPlusCustomizer extends Customizer {
     if (this.styleTarget) {
       this.styleTarget.style.width =
         "calc(100vw - var(--jelly-party-sidebar-width))";
+      this.styleTarget.style.left = "0";
     }
   }
 
   adjustForNoFullscreenAndNoSidebar() {
-    if (this.styleTarget) {
-      this.styleTarget.style.width = "100%";
-    }
+    this.adjustForFullscreenAndNoSidebar();
   }
 
   adjustForNoFullscreenAndSidebar() {
-    if (this.styleTarget) {
-      this.styleTarget.style.width =
-        "calc(100vw - var(--jelly-party-sidebar-width))";
-    }
+    this.adjustForFullscreenAndSidebar();
   }
 }
