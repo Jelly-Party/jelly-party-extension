@@ -3,6 +3,7 @@ import { Sidebar } from "./Sidebar";
 import { ProviderFactory } from "./provider/ProviderFactory";
 import { Provider } from "./provider/Provider";
 import { hostMessenger } from "@/messaging/HostMessenger";
+import { primeHosts as potentialPrimeHosts } from "@/helpers/TLDs";
 
 export class JellyPartyController {
   public provider: Provider;
@@ -15,6 +16,11 @@ export class JellyPartyController {
     (window as any).JellyPartySidebar = this.sidebar;
     hostMessenger.attachJellyPartyControllerAndStartListening(this);
     this.insertHostStyles();
+    if (potentialPrimeHosts.includes(window.location.host)) {
+      this.sidebar.showNotification(
+        "Please navigate to a video for the sidebar to show.",
+      );
+    }
   }
 
   waitForHTMLElementThenInit() {
