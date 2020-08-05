@@ -15,7 +15,11 @@ export abstract class Customizer {
     }, 3000);
   }
 
-  adjustView() {
+  querySelector(selector: string) {
+    return document.querySelector(selector) as HTMLElement;
+  }
+
+  adjustView = () => {
     if (document.fullscreen && sharedState.sidebarVisible) {
       // Fullscreen && sidebar showing
       console.log("Jelly-Party: Adjusting for fullscreen && sidebar showing");
@@ -35,7 +39,7 @@ export abstract class Customizer {
       console.log("Jelly-Party: Adjusting for no fullscreen && sidebar hidden");
       this.adjustForNoFullscreenAndNoSidebar();
     }
-  }
+  };
 
   // Unfortunately, we cannot move an IFrame within the DOM without losing its state, see
   // https://stackoverflow.com/questions/8318264/how-to-move-an-iframe-in-the-dom-without-losing-its-state
