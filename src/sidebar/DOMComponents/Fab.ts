@@ -2,7 +2,7 @@ import {
   jellyFishWithoutNotification,
   jellyFishWithNotification,
 } from "@/sidebar/DOMComponents/jellyPartyFab";
-import { sharedState } from "./Sidebar";
+import { sharedState } from "../Sidebar";
 
 export class Fab {
   public fabElement: HTMLDivElement;
@@ -13,7 +13,7 @@ export class Fab {
     this.fabElement.id = "jellyPartyFab";
     this.fabElement.innerHTML = jellyFishWithoutNotification;
     this.fabElement.style.position = "absolute";
-    this.fabElement.style.bottom = "100px";
+    this.fabElement.style.bottom = "20vh";
     this.fabElement.style.right = "400px";
     this.fabElement.style.zIndex = "99999";
     this.fabElement.style.visibility = "hidden";

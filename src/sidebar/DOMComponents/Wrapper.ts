@@ -1,4 +1,4 @@
-import { Fab } from "../Fab";
+import { Fab } from "./Fab";
 import { IFrame } from "./IFrame";
 import { CloseButton } from "./CloseButton";
 

@@ -1,6 +1,6 @@
 import { Provider } from "./provider/Provider";
 import { notyf } from "./notyf/notyf";
-import { Fab } from "./Fab";
+import { Fab } from "./DOMComponents/Fab";
 import { Wrapper } from "./DOMComponents/Wrapper";
 import { IFrame } from "./DOMComponents/IFrame";
 import { CloseButton } from "./DOMComponents/CloseButton";
