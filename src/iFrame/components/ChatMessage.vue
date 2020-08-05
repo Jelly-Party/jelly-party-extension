@@ -53,7 +53,7 @@
 <script>
 import Avataaars from "vuejs-avataaars";
 import { party as partyStore } from "../store/party/index";
-import { baseSVG as JellyPartySVG } from "@/sidebar/DOMComponents/jellyPartyFab";
+import { jellyFishWithoutNotification as JellyPartySVG } from "@/sidebar/DOMComponents/jellyPartyFab";
 
 export default {
   components: {
