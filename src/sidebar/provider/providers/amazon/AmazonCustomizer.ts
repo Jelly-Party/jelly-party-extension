@@ -2,44 +2,44 @@ import { Customizer } from "../Customizer";
 
 export class AmazonCustomizer extends Customizer {
   public styleIdentifier = "#dv-web-player";
-  public styleTarget: HTMLElement | null;
+  public pausedOverlayIdentifier = ".pausedOverlay";
+  public controlsOverlayIdentifier = ".controlsOverlay";
+  public videoIdentifier = "video";
 
   constructor() {
     super();
     // Styles
-    this.styleTarget = document.querySelector(this.styleIdentifier);
-    if (this.styleTarget) {
-      this.styleTarget.style.transition = "all 0.2s ease";
-    } else {
-      console.log(
-        "Jelly-Party: Amazon Provider -> Constructor -> No rootTarget found!",
-      );
-    }
+    this.querySelector(this.styleIdentifier).style.transition = "all 0.2s ease";
   }
 
   adjustForFullscreenAndNoSidebar() {
-    if (this.styleTarget) {
-      this.styleTarget.style.width = "100%";
-    }
+    [
+      this.styleIdentifier,
+      this.pausedOverlayIdentifier,
+      this.controlsOverlayIdentifier,
+      this.videoIdentifier,
+    ].forEach(e => {
+      this.querySelector(e).style.width = "100vw";
+    });
   }
 
   adjustForFullscreenAndSidebar() {
-    if (this.styleTarget) {
-      this.styleTarget.style.width =
+    [
+      this.styleIdentifier,
+      this.pausedOverlayIdentifier,
+      this.controlsOverlayIdentifier,
+      this.videoIdentifier,
+    ].forEach(e => {
+      this.querySelector(e).style.width =
         "calc(100vw - var(--jelly-party-sidebar-width))";
-    }
+    });
   }
 
   adjustForNoFullscreenAndNoSidebar() {
-    if (this.styleTarget) {
-      this.styleTarget.style.width = "100%";
-    }
+    this.adjustForFullscreenAndNoSidebar();
   }
 
   adjustForNoFullscreenAndSidebar() {
-    if (this.styleTarget) {
-      this.styleTarget.style.width =
-        "calc(100vw - var(--jelly-party-sidebar-width))";
-    }
+    this.adjustForFullscreenAndSidebar();
   }
 }

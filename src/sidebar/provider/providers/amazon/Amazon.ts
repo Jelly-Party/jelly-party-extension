@@ -14,7 +14,7 @@ export class Amazon extends Provider {
 
   constructor() {
     super();
-    this.iFrameTargetSelector = "body";
+    this.iFrameTargetSelector = ".cascadesContainer";
     this.awaitCSSSelector = "body";
     this.host = window.location.host;
     this.controller = new AmazonController();
