@@ -3,17 +3,11 @@ import { sharedState } from "@/sidebar/Sidebar";
 
 export abstract class Customizer {
   constructor() {
-    window.addEventListener("fullscreenchange", () => {
-      console.log("Jelly-Party: Handling fullscreen change");
+    const debouncedAdjustView = _debounce(() => {
       this.adjustView();
-    });
-    window.addEventListener(
-      "resize",
-      _debounce(() => {
-        console.log("Jelly-Party: Handling resize event.");
-        this.adjustView();
-      }, 200).bind(this),
-    );
+    }).bind(this);
+    window.addEventListener("fullscreenchange", debouncedAdjustView);
+    window.addEventListener("resize", debouncedAdjustView);
     this.initNotyfFullscreenHandler();
     // Update view shortly after initialization
     setTimeout(() => {
