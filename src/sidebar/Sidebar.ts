@@ -51,6 +51,8 @@ export class Sidebar {
         `Jelly-Party: Error attaching IFrame. provider.iFrameTarget not found.`,
       );
     }
+    // Lastly, adjust the screen after initialization
+    this.provider.customizer.adjustView();
   }
 
   public showNotification = (msg: string) => {
