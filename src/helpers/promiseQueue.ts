@@ -31,12 +31,12 @@ export default class Queue {
       this.workingOnPromise = true;
       item
         .promise()
-        .then((value) => {
+        .then(value => {
           this.workingOnPromise = false;
           item.resolve(value);
           this.dequeue();
         })
-        .catch((err) => {
+        .catch(err => {
           this.workingOnPromise = false;
           item.reject(err);
           this.dequeue();

@@ -260,6 +260,6 @@ export const tlds = [
   ".zw",
 ];
 
-export const primeHosts = tlds.map((tld) => {
+export const primeHosts = tlds.map(tld => {
   return `www.amazon${tld}`;
 });
