@@ -31,13 +31,13 @@ export class NetflixController extends Controller {
 
   getPlayHook() {
     return async () => {
-      window.dispatchEvent(new CustomEvent("pauseRequest"));
+      window.dispatchEvent(new CustomEvent("playRequest"));
     };
   }
 
   getPauseHook() {
     return async () => {
-      window.dispatchEvent(new CustomEvent("playRequest"));
+      window.dispatchEvent(new CustomEvent("pauseRequest"));
       await sleep(250);
     };
   }
