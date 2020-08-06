@@ -69,10 +69,19 @@ export abstract class Controller {
     this.findVideoInterval = setInterval(this.findVideoAndAttach, 1000);
   }
 
+  getReferenceToLargestVideo() {
+    const videos = document.querySelectorAll("video");
+    const videoSizes = Array.from(videos).map(
+      v => v.offsetHeight * v.offsetWidth,
+    );
+    const maxIndex = videoSizes.indexOf(Math.max(...videoSizes));
+    return videos[maxIndex];
+  }
+
   findVideoAndAttach = () => {
     if (!this.video) {
       console.log("Jelly-Party: Scanning for video to attach to.");
-      this.video = document.querySelector("video");
+      this.video = this.getReferenceToLargestVideo();
       if (this.video) {
         clearInterval(this.findVideoInterval);
         console.log("Jelly-Party: Found video. Attaching to video..");
