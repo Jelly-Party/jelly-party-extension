@@ -19,8 +19,11 @@ interface SharedState {
 export const sharedState: SharedState = {
   sidebarVisible: false,
   magicLinkUsed: false,
-  partyIdFromURL: "",
+  partyIdFromURL:
+    new URLSearchParams(window.location.search).get("jellyPartyId") ?? "",
 };
+
+console.log(`Sharedstate is ${JSON.stringify(sharedState)}`);
 
 export class Sidebar {
   public notyf: any;

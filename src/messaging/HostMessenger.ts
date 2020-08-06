@@ -157,7 +157,7 @@ export class HostMessenger extends AbstractMessenger {
       const msg: JoinPartyCommandFrame = {
         type: "joinPartyCommand",
         payload: {
-          partyId: (window as any).partyIdFromURL,
+          partyId: sharedState.partyIdFromURL,
         },
         context: "JellyParty",
       };
