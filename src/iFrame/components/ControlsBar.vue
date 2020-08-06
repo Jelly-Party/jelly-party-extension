@@ -77,7 +77,11 @@
         class="jelly-party-navbar-button"
         @click="toggleChatAndJitsi()"
         v-b-tooltip.hover
-        :title="showChat ? 'Switch to video chat' : 'Swich to text chat'"
+        :title="
+          showChat
+            ? 'Switch to video chat (experimental)'
+            : 'Swich to text chat'
+        "
       >
         <svg
           v-if="showChat"
