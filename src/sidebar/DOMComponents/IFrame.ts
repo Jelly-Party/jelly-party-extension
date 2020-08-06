@@ -10,6 +10,7 @@ export class IFrame {
     this.frameElement.style.zIndex = "99999";
     this.frameElement.style.height = "100vh";
     this.frameElement.style.width = "var(--jelly-party-sidebar-width)";
+    this.frameElement.allow = "camera *;microphone *";
     this.frameElement.src = browser.runtime.getURL("iframe.html");
   }
 }

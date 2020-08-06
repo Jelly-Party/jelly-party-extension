@@ -291,7 +291,7 @@ export default {
               // "embedmeeting",
               // "fullscreen",
               "fodeviceselection",
-              // "hangup",
+              "hangup",
               // "profile",
               // "chat",
               // "recording",
