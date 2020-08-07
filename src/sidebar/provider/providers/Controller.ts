@@ -3,6 +3,7 @@ import { DeferredPromise } from "@/helpers/deferredPromise";
 import { MediaCommandFrame } from "@/messaging/AbstractMessenger";
 import { hostMessenger } from "@/messaging/HostMessenger";
 import { Sidebar, sidebar } from "@/sidebar/Sidebar";
+import { getReferenceToLargestVideo } from "@/helpers/querySelectors";
 
 // The VideoHandler handles playing, pausing & seeking videos
 // on different websites. For most websites the generic video.play(),
@@ -69,19 +70,10 @@ export abstract class Controller {
     this.findVideoInterval = setInterval(this.findVideoAndAttach, 1000);
   }
 
-  getReferenceToLargestVideo() {
-    const videos = document.querySelectorAll("video");
-    const videoSizes = Array.from(videos).map(
-      v => v.offsetHeight * v.offsetWidth,
-    );
-    const maxIndex = videoSizes.indexOf(Math.max(...videoSizes));
-    return videos[maxIndex];
-  }
-
   findVideoAndAttach = () => {
     if (!this.video) {
       console.log("Jelly-Party: Scanning for video to attach to.");
-      this.video = this.getReferenceToLargestVideo();
+      this.video = getReferenceToLargestVideo();
       if (this.video) {
         clearInterval(this.findVideoInterval);
         console.log("Jelly-Party: Found video. Attaching to video..");
