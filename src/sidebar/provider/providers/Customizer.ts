@@ -23,7 +23,20 @@ export abstract class Customizer {
       console.log(mutationsList);
       debouncedAdjustView();
     });
-    this.observer.observe(getReferenceToLargestVideo(), mutationObserverInit);
+    const maybeStartObservation = () => {
+      try {
+        this.observer.observe(
+          getReferenceToLargestVideo(),
+          mutationObserverInit,
+        );
+      } catch {
+        console.log(
+          "Jelly-Party: Cannot initialize observer. Will try again in 500ms.",
+        );
+        setTimeout(maybeStartObservation, 500);
+      }
+    };
+    maybeStartObservation();
     // Add event listeners for fullscreenchange and resize
     window.addEventListener("fullscreenchange", debouncedAdjustView);
     window.addEventListener("resize", debouncedAdjustView);
