@@ -1,6 +1,6 @@
 {
   "name": "Jelly Party",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "description": "Watch videos with your friends — in sync!",
   "permissions": ["activeTab", "storage"],
   "optional_permissions": ["http://*/*", "https://*/*"],
