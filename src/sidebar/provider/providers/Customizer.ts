@@ -1,5 +1,6 @@
 import { debounce as _debounce } from "lodash-es";
 import { sharedState } from "@/sidebar/Sidebar";
+import { deepQuerySelectorAll, querySelector } from "@/helpers/querySelectors";
 
 export abstract class Customizer {
   constructor() {
@@ -15,9 +16,9 @@ export abstract class Customizer {
     }, 3000);
   }
 
-  querySelector(selector: string) {
-    return document.querySelector(selector) as HTMLElement;
-  }
+  deepQuerySelectorAll = deepQuerySelectorAll;
+
+  querySelector = querySelector;
 
   adjustView = () => {
     if (document.fullscreen && sharedState.sidebarVisible) {

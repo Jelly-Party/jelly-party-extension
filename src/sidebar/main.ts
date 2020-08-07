@@ -24,7 +24,7 @@ export class JellyPartyController {
   }
 
   waitForHTMLElementThenInit() {
-    if (document.querySelector(this.provider.awaitCSSSelector) === null) {
+    if (!document.querySelector(this.provider.awaitCSSSelector)) {
       console.log(`Jelly-Party: Waiting for ${this.provider.awaitCSSSelector}`);
       setTimeout(() => {
         // Check again in 1 second if we can find the required DOM element

@@ -10,16 +10,12 @@ export class NetflixCustomizer extends Customizer {
   }
 
   adjustForFullscreenAndNoSidebar() {
-    if (this.styleTarget) {
-      this.styleTarget.style.width = "100%";
-    }
+    this.querySelector(this.styleTargetSelector).style.width = "100%";
   }
 
   adjustForNoFullscreenAndSidebar() {
-    if (this.styleTarget) {
-      this.styleTarget.style.width =
-        "calc(100vw - var(--jelly-party-sidebar-width))";
-    }
+    this.querySelector(this.styleTargetSelector).style.width =
+      "calc(100vw - var(--jelly-party-sidebar-width))";
   }
 
   adjustForNoFullscreenAndNoSidebar() {
