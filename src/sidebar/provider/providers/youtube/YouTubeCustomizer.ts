@@ -4,18 +4,12 @@ export class YouTubeCustomizer extends Customizer {
   public containerTargetSelector = "ytd-app";
   public containerTarget: HTMLElement | null;
   public playerSelector = "#ytd-player";
-  public playerTarget: HTMLElement | null;
   public videoSelector = "video";
-  public videoTarget: HTMLElement | null;
   public controlsSelector = ".ytp-chrome-bottom";
-  public controlsTarget: HTMLElement | null;
 
   constructor() {
     super();
     this.containerTarget = document.querySelector(this.containerTargetSelector);
-    this.playerTarget = document.querySelector(this.playerSelector);
-    this.videoTarget = document.querySelector(this.videoSelector);
-    this.controlsTarget = document.querySelector(this.controlsSelector);
     if (this.containerTarget) {
       this.containerTarget.style.overflow = "hidden";
     } else {
