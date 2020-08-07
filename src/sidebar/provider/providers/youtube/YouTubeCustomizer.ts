@@ -26,68 +26,48 @@ export class YouTubeCustomizer extends Customizer {
   }
 
   adjustForFullscreenAndNoSidebar() {
-    if (this.containerTarget && this.videoTarget && this.controlsTarget) {
-      this.containerTarget.style.width = "100%";
-      this.videoTarget.style.width = "100vw";
-      this.videoTarget.style.height = "100vh";
-      this.videoTarget.style.top = `0px`;
-      this.controlsTarget.style.width = "calc(100vw - 30px)";
-    }
+    this.querySelector(this.containerTargetSelector).style.width = "100%";
+    this.querySelector(this.videoSelector).style.width = `100vw`;
+    this.querySelector(this.videoSelector).style.height = `100vh`;
+    this.querySelector(this.videoSelector).style.top = `0px`;
+    this.querySelector(this.controlsSelector).style.width =
+      "calc(100vw - 30px)";
   }
 
   adjustForNoFullscreenAndSidebar() {
-    if (
-      this.containerTarget &&
-      this.videoTarget &&
-      this.controlsTarget &&
-      this.playerTarget
-    ) {
-      this.containerTarget.style.width =
-        "calc(100vw - var(--jelly-party-sidebar-width))";
-      const playerWidth = this.playerTarget.offsetWidth;
-      const playerHeight = this.playerTarget.offsetHeight;
-      this.videoTarget.style.width = `${playerWidth}px`;
-      this.videoTarget.style.height = `${playerHeight}px`;
-      this.controlsTarget.style.width = `${playerWidth - 30}px`;
-    }
+    this.querySelector(this.containerTargetSelector).style.width =
+      "calc(100vw - var(--jelly-party-sidebar-width))";
+    const playerWidth = this.querySelector(this.playerSelector).offsetWidth;
+    const playerHeight = this.querySelector(this.playerSelector).offsetHeight;
+    this.querySelector(this.videoSelector).style.width = `${playerWidth}px`;
+    this.querySelector(this.videoSelector).style.height = `${playerHeight}px`;
+    this.querySelector(this.controlsSelector).style.width = `${playerWidth -
+      30}px`;
   }
 
   adjustForNoFullscreenAndNoSidebar() {
-    if (
-      this.containerTarget &&
-      this.videoTarget &&
-      this.controlsTarget &&
-      this.playerTarget
-    ) {
-      this.containerTarget.style.width = "100%";
-      const player: HTMLElement | null = document.querySelector("#ytd-player");
-      if (!player) {
-        console.log(`Jelly-Party: Missing youtube player: #ytd-player.`);
-        return;
-      }
-      const playerWidth = player.offsetWidth;
-      const playerHeight = player.offsetHeight;
-      this.videoTarget.style.width = `${playerWidth}px`;
-      this.videoTarget.style.height = `${playerHeight}px`;
-      this.controlsTarget.style.width = `${playerWidth - 30}px`;
+    this.querySelector(this.containerTargetSelector).style.width = "100%";
+    const player: HTMLElement | null = document.querySelector("#ytd-player");
+    if (!player) {
+      console.log(`Jelly-Party: Missing youtube player: #ytd-player.`);
+      return;
     }
+    const playerWidth = player.offsetWidth;
+    const playerHeight = player.offsetHeight;
+    this.querySelector(this.videoSelector).style.width = `${playerWidth}px`;
+    this.querySelector(this.videoSelector).style.height = `${playerHeight}px`;
+    this.querySelector(this.controlsSelector).style.width = `${playerWidth -
+      30}px`;
   }
 
   adjustForFullscreenAndSidebar() {
-    if (
-      this.containerTarget &&
-      this.videoTarget &&
-      this.controlsTarget &&
-      this.playerTarget
-    ) {
-      this.containerTarget.style.width =
-        "calc(100vw - var(--jelly-party-sidebar-width))";
-      this.videoTarget.style.width =
-        "calc(100vw - var(--jelly-party-sidebar-width))";
-      this.videoTarget.style.height = `100vh`;
-      this.videoTarget.style.top = `0px`;
-      this.controlsTarget.style.width =
-        "calc(100vw - var(--jelly-party-sidebar-width) - 30px)";
-    }
+    this.querySelector(this.containerTargetSelector).style.width =
+      "calc(100vw - var(--jelly-party-sidebar-width))";
+    this.querySelector(this.videoSelector).style.width =
+      "calc(100vw - var(--jelly-party-sidebar-width))";
+    this.querySelector(this.videoSelector).style.height = `100vh`;
+    this.querySelector(this.videoSelector).style.top = `0px`;
+    this.querySelector(this.controlsSelector).style.width =
+      "calc(100vw - var(--jelly-party-sidebar-width) - 30px)";
   }
 }
