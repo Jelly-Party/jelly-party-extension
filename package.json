@@ -6,8 +6,10 @@
     "build": "vue-cli-service build --mode production",
     "lint": "vue-cli-service lint",
     "format": "prettier --config .prettierrc --write */**/*.*",
-    "dev": "concurrently --kill-others \"vue-cli-service build --watch --mode development\" \"npx vue-devtools\"",
-    "stage": "concurrently --kill-others \"vue-cli-service build --watch --mode staging\" \"npx vue-devtools\""
+    "dev": "vue-cli-service build --watch --mode development",
+    "dev devtools": "concurrently --kill-others \"vue-cli-service build --watch --mode development\" \"npx vue-devtools\"",
+    "stage": "vue-cli-service build --watch --mode staging",
+    "stage devtools": "concurrently --kill-others \"vue-cli-service build --watch --mode staging\" \"npx vue-devtools\""
   },
   "dependencies": {
     "@types/lodash-es": "^4.17.3",

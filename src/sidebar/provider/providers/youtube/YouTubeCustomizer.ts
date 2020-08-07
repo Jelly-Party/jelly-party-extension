@@ -36,22 +36,20 @@ export class YouTubeCustomizer extends Customizer {
   }
 
   adjustForNoFullscreenAndSidebar() {
-    setTimeout(() => {
-      if (
-        this.containerTarget &&
-        this.videoTarget &&
-        this.controlsTarget &&
-        this.playerTarget
-      ) {
-        this.containerTarget.style.width =
-          "calc(100vw - var(--jelly-party-sidebar-width))";
-        const playerWidth = this.playerTarget.offsetWidth;
-        const playerHeight = this.playerTarget.offsetHeight;
-        this.videoTarget.style.width = `${playerWidth}px`;
-        this.videoTarget.style.height = `${playerHeight}px`;
-        this.controlsTarget.style.width = `${playerWidth - 30}px`;
-      }
-    }, 1000);
+    if (
+      this.containerTarget &&
+      this.videoTarget &&
+      this.controlsTarget &&
+      this.playerTarget
+    ) {
+      this.containerTarget.style.width =
+        "calc(100vw - var(--jelly-party-sidebar-width))";
+      const playerWidth = this.playerTarget.offsetWidth;
+      const playerHeight = this.playerTarget.offsetHeight;
+      this.videoTarget.style.width = `${playerWidth}px`;
+      this.videoTarget.style.height = `${playerHeight}px`;
+      this.controlsTarget.style.width = `${playerWidth - 30}px`;
+    }
   }
 
   adjustForNoFullscreenAndNoSidebar() {
