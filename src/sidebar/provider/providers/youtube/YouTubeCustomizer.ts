@@ -6,6 +6,7 @@ export class YouTubeCustomizer extends Customizer {
   public playerSelector = "#ytd-player";
   public videoSelector = "video";
   public controlsSelector = ".ytp-chrome-bottom";
+  public historySelector = ".ytp-chapter-hover-container";
 
   constructor() {
     super();
@@ -19,39 +20,50 @@ export class YouTubeCustomizer extends Customizer {
     }
   }
 
+  centerVideoHorizontallyAndVertically() {
+    const playerRect = this.querySelector(
+      this.playerSelector,
+    ).getBoundingClientRect();
+    const videoRect = this.querySelector(
+      this.videoSelector,
+    ).getBoundingClientRect();
+    this.querySelector(this.videoSelector).style.left = `${(playerRect.width -
+      videoRect.width) /
+      2}px`;
+    this.querySelector(this.videoSelector).style.top = `${(playerRect.height -
+      videoRect.height) /
+      2}px`;
+  }
+
   adjustForFullscreenAndNoSidebar() {
     this.querySelector(this.containerTargetSelector).style.width = "100%";
     this.querySelector(this.videoSelector).style.width = `100vw`;
     this.querySelector(this.videoSelector).style.height = `100vh`;
-    this.querySelector(this.videoSelector).style.top = `0px`;
-    this.querySelector(this.controlsSelector).style.width =
-      "calc(100vw - 30px)";
+    [this.controlsSelector, this.historySelector].forEach(selector => {
+      this.querySelector(selector).style.width = "calc(100vw - 30px)";
+    });
+    this.centerVideoHorizontallyAndVertically();
   }
 
   adjustForNoFullscreenAndSidebar() {
     this.querySelector(this.containerTargetSelector).style.width =
       "calc(100vw - var(--jelly-party-sidebar-width))";
-    const playerWidth = this.querySelector(this.playerSelector).offsetWidth;
-    const playerHeight = this.querySelector(this.playerSelector).offsetHeight;
-    this.querySelector(this.videoSelector).style.width = `${playerWidth}px`;
-    this.querySelector(this.videoSelector).style.height = `${playerHeight}px`;
-    this.querySelector(this.controlsSelector).style.width = `${playerWidth -
-      30}px`;
+    [this.controlsSelector, this.historySelector].forEach(selector => {
+      this.querySelector(selector).style.width = `${this.querySelector(
+        this.playerSelector,
+      ).offsetWidth - 30}px`;
+    });
+    this.centerVideoHorizontallyAndVertically();
   }
 
   adjustForNoFullscreenAndNoSidebar() {
     this.querySelector(this.containerTargetSelector).style.width = "100%";
-    const player: HTMLElement | null = document.querySelector("#ytd-player");
-    if (!player) {
-      console.log(`Jelly-Party: Missing youtube player: #ytd-player.`);
-      return;
-    }
-    const playerWidth = player.offsetWidth;
-    const playerHeight = player.offsetHeight;
-    this.querySelector(this.videoSelector).style.width = `${playerWidth}px`;
-    this.querySelector(this.videoSelector).style.height = `${playerHeight}px`;
-    this.querySelector(this.controlsSelector).style.width = `${playerWidth -
-      30}px`;
+    [this.controlsSelector, this.historySelector].forEach(selector => {
+      this.querySelector(selector).style.width = `${this.querySelector(
+        this.playerSelector,
+      ).offsetWidth - 30}px`;
+    });
+    this.centerVideoHorizontallyAndVertically();
   }
 
   adjustForFullscreenAndSidebar() {
@@ -60,8 +72,10 @@ export class YouTubeCustomizer extends Customizer {
     this.querySelector(this.videoSelector).style.width =
       "calc(100vw - var(--jelly-party-sidebar-width))";
     this.querySelector(this.videoSelector).style.height = `100vh`;
-    this.querySelector(this.videoSelector).style.top = `0px`;
-    this.querySelector(this.controlsSelector).style.width =
-      "calc(100vw - var(--jelly-party-sidebar-width) - 30px)";
+    [this.controlsSelector, this.historySelector].forEach(selector => {
+      this.querySelector(selector).style.width =
+        "calc(100vw - var(--jelly-party-sidebar-width) - 30px)";
+    });
+    this.centerVideoHorizontallyAndVertically();
   }
 }
