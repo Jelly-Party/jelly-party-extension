@@ -1,27 +1,22 @@
 import { Customizer } from "../Customizer";
 
 export class DefaultCustomizer extends Customizer {
-  public styleTarget: HTMLElement | null;
+  public styleTargetSelector = "body";
 
   constructor() {
     super();
-    this.styleTarget = document.body;
     console.log(
       `Jelly-Party: Default Provider -> Constructor -> No customization intended for this host`,
     );
   }
 
   adjustForFullscreenAndSidebar() {
-    if (this.styleTarget) {
-      this.styleTarget.style.width =
-        "calc(100vw - var(--jelly-party-sidebar-width))";
-    }
+    this.querySelector(this.styleTargetSelector).style.width =
+      "calc(100vw - var(--jelly-party-sidebar-width))";
   }
 
   adjustForNoFullscreenAndNoSidebar() {
-    if (this.styleTarget) {
-      this.styleTarget.style.width = "100%";
-    }
+    this.querySelector(this.styleTargetSelector).style.width = "100%";
   }
 
   adjustForFullscreenAndNoSidebar() {
