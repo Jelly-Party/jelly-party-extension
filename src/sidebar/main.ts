@@ -27,14 +27,10 @@ export class JellyPartyController {
     if (!document.querySelector(this.provider.awaitCSSSelector)) {
       console.log(`Jelly-Party: Waiting for ${this.provider.awaitCSSSelector}`);
       setTimeout(() => {
-        // Check again in 1 second if we can find the required DOM element
         this.waitForHTMLElementThenInit();
-      }, 1000);
+      }, 100);
     } else {
-      // Wait for 1 second, then attach sidebar
-      setTimeout(() => {
-        this.sidebar.attachSidebarToDOM();
-      }, 1000);
+      this.sidebar.attachSidebarToDOM();
     }
   }
 

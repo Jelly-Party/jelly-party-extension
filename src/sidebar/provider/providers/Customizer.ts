@@ -10,10 +10,7 @@ export abstract class Customizer {
     window.addEventListener("fullscreenchange", debouncedAdjustView);
     window.addEventListener("resize", debouncedAdjustView);
     this.initNotyfFullscreenHandler();
-    // Update view shortly after initialization
-    setTimeout(() => {
-      this.adjustView.bind(this);
-    }, 3000);
+    this.adjustForNoFullscreenAndSidebar();
   }
 
   deepQuerySelectorAll = deepQuerySelectorAll;
