@@ -9,10 +9,12 @@
     "dev": "vue-cli-service build --watch --mode development",
     "dev devtools": "concurrently --kill-others \"vue-cli-service build --watch --mode development\" \"npx vue-devtools\"",
     "stage": "vue-cli-service build --watch --mode staging",
-    "stage devtools": "concurrently --kill-others \"vue-cli-service build --watch --mode staging\" \"npx vue-devtools\""
+    "stage devtools": "concurrently --kill-others \"vue-cli-service build --watch --mode staging\" \"npx vue-devtools\"",
+    "test": "tsc -p tests && node tests/build/index.js"
   },
   "dependencies": {
     "@types/lodash-es": "^4.17.3",
+    "@types/puppeteer": "^3.0.1",
     "bootstrap": "^4.5.1",
     "bootstrap-vue": "^2.16.0",
     "clipboard": "^2.0.6",
@@ -20,6 +22,7 @@
     "lib-jitsi-meet-dist": "^2.1.2",
     "lodash-es": "^4.17.15",
     "loglevel": "^1.6.8",
+    "puppeteer": "^5.2.1",
     "v-emoji-picker": "^2.3.0",
     "vue": "^2.6.11",
     "vue-class-component": "^7.2.5",
