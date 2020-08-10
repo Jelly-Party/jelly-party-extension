@@ -16,7 +16,7 @@ export interface VideoState {
 }
 
 export abstract class Controller {
-  findVideoInterval: number | undefined;
+  findVideoInterval!: NodeJS.Timeout;
   video: HTMLVideoElement | null;
   deferred!: DeferredPromise;
   skipNextEvent: boolean;
