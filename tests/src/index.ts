@@ -12,7 +12,6 @@ interface ProviderConfig {
   magicLink: string;
   url: string;
   requireCookies?: boolean;
-  cookieURLs?: string[];
   cookies?: any;
 }
 
@@ -22,7 +21,6 @@ const providerConfigs: Dictionary<ProviderConfig> = {
       "https://join.jelly-party.com/?redirectURL=https%253A%252F%252Fwww.netflix.com%252Fwatch%252F80204865%253FtrackId%253D14170286%2526tctx%253D1%25252C0%25252C92e27003-6b57-4973-b937-dfd8fec88f16-886148430%25252Ca4764d81-a08c-4151-b6cc-5abf55366f17_7080660X3XX1597077054308%25252Ca4764d81-a08c-4151-b6cc-5abf55366f17_ROOT%25252C&jellyPartyId=interesting-areas-assure-precisely",
     url: "https://www.netflix.com/",
     requireCookies: true,
-    cookieURLs: ["https://www.netflix.com", "https://netflix.com"],
     cookies: config.cookies.netflix,
   },
   vimeo: {
@@ -73,8 +71,6 @@ const providerConfigs: Dictionary<ProviderConfig> = {
       const pages = await browser.pages();
       if (providerConfig.requireCookies && providerConfig.cookies) {
         await pages[0].goto(providerConfig.url);
-        // const cookies: puppeteer.Cookie[] = await getCookies(cookieURL);
-        // const cookies: puppeteer.Cookie[] = providerConfig.cookies
         for (const cookie of providerConfig.cookies) {
           try {
             await pages[0].setCookie(cookie);
@@ -85,7 +81,6 @@ const providerConfigs: Dictionary<ProviderConfig> = {
             console.log(cookie);
           }
         }
-        // await pages[0].setCookie(...cookies);
       }
       await pages[0].goto(providerConfig.magicLink);
     }
