@@ -10,8 +10,7 @@ interface Dictionary<T> {
 
 interface ProviderConfig {
   magicLink: string;
-  url: string;
-  requireCookies?: boolean;
+  setCookiesAtURL?: string;
   cookies?: any;
 }
 
@@ -19,26 +18,25 @@ const providerConfigs: Dictionary<ProviderConfig> = {
   netflix: {
     magicLink:
       "https://join.jelly-party.com/?redirectURL=https%253A%252F%252Fwww.netflix.com%252Fwatch%252F80204865%253FtrackId%253D14170286%2526tctx%253D1%25252C0%25252C92e27003-6b57-4973-b937-dfd8fec88f16-886148430%25252Ca4764d81-a08c-4151-b6cc-5abf55366f17_7080660X3XX1597077054308%25252Ca4764d81-a08c-4151-b6cc-5abf55366f17_ROOT%25252C&jellyPartyId=interesting-areas-assure-precisely",
-    url: "https://www.netflix.com/",
-    requireCookies: true,
+    setCookiesAtURL: "https://www.netflix.com/",
     cookies: config.cookies.netflix,
   },
   vimeo: {
     magicLink:
       "https://join.jelly-party.com/?redirectURL=https%253A%252F%252Fvimeo.com%252F10650175&jellyPartyId=parliamentary-mornings-betray-in",
-    url: "https://vimeo.com/",
   },
   youtube: {
     magicLink:
       "https://join.jelly-party.com/?redirectURL=https%253A%252F%252Fwww.youtube.com%252Fwatch%253Fv%253DdQw4w9WgXcQ&jellyPartyId=comprehensive-experiences-collaborate-ruthlessly",
-    url: "https://www.youtube.com/",
   },
 };
 
 (async () => {
-  for (const [, providerConfig] of Object.entries(providerConfigs)) {
+  for (const [providerName, providerConfig] of Object.entries(
+    providerConfigs,
+  )) {
     const browserClosedPromises: Promise<any>[] = [];
-    console.log(`Moving to ${providerConfig.url}`);
+    console.log(`Moving to ${providerName}`);
     for (let i = 0; i < 2; i++) {
       const browser = await puppeteer.launch({
         headless: false,
@@ -69,8 +67,8 @@ const providerConfigs: Dictionary<ProviderConfig> = {
       console.log(browserClosedPromise);
       browserClosedPromises.push(browserClosedPromise);
       const pages = await browser.pages();
-      if (providerConfig.requireCookies && providerConfig.cookies) {
-        await pages[0].goto(providerConfig.url);
+      if (providerConfig.cookies && providerConfig.setCookiesAtURL) {
+        await pages[0].goto(providerConfig.setCookiesAtURL);
         for (const cookie of providerConfig.cookies) {
           try {
             await pages[0].setCookie(cookie);
