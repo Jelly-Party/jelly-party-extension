@@ -10,7 +10,7 @@
     "dev devtools": "concurrently --kill-others \"vue-cli-service build --watch --mode development\" \"npx vue-devtools\"",
     "stage": "vue-cli-service build --watch --mode staging",
     "stage devtools": "concurrently --kill-others \"vue-cli-service build --watch --mode staging\" \"npx vue-devtools\"",
-    "test": "tsc -p tests && node tests/build/index.js"
+    "test": "tsc -p tests && node tests/build/src/index.js"
   },
   "dependencies": {
     "@types/lodash-es": "^4.17.3",
