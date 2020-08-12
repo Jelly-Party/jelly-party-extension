@@ -24,7 +24,8 @@
     <div v-if="lastPartyId" class="text-center">
       <small
         ><span style="user-select: none;">Your last party Id was </span>
-        <b>{{ lastPartyId }}</b></small
+        <b>{{ lastPartyId }} </b
+        ><a id="rejoinButton" @click="rejoinParty">Rejoin</a></small
       >
     </div>
   </b-container>
@@ -46,6 +47,9 @@ export default {
     joinParty() {
       this.$root.$party.joinParty(this.partyId);
     },
+    rejoinParty() {
+      this.$root.$party.joinParty(this.lastPartyId);
+    },
   },
   computed: {
     lastPartyId() {
@@ -55,4 +59,12 @@ export default {
 };
 </script>
 
-<style></style>
+<style lang="scss">
+#rejoinButton {
+  cursor: pointer;
+  color: #007bff;
+  &:hover {
+    color: white;
+  }
+}
+</style>
