@@ -5,7 +5,7 @@ import { VideoState } from "@/sidebar/provider/providers/Controller";
 // Every frame must have a context and a deferred promise Id
 interface BaseFrame {
   deferredPromiseId?: string;
-  context: "JellyParty";
+  context: "Jelly-Party";
 }
 
 export interface NotyfFrame extends BaseFrame {

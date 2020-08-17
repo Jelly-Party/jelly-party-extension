@@ -158,7 +158,7 @@ export abstract class Controller {
           tick: this.video?.currentTime,
         },
       },
-      context: "JellyParty",
+      context: "Jelly-Party",
     };
     hostMessenger.sendMessage(dataframe);
   };
@@ -185,7 +185,7 @@ export abstract class Controller {
           tick: this.video?.currentTime,
         },
       },
-      context: "JellyParty",
+      context: "Jelly-Party",
     };
     hostMessenger.sendMessage(dataframe);
   };
@@ -212,7 +212,7 @@ export abstract class Controller {
           tick: this.video?.currentTime,
         },
       },
-      context: "JellyParty",
+      context: "Jelly-Party",
     };
     hostMessenger.sendMessage(dataframe);
   };

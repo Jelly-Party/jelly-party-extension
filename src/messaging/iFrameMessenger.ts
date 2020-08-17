@@ -4,7 +4,7 @@ import { JoinMessage } from "./messages/JoinMessage";
 import { LinkMessage } from "./messages/LinkMessage";
 import { MediaMessage } from "./messages/MediaMessage";
 import { VideoStateMessage } from "./messages/VideoStateMessage";
-
+import { ProtoframePubsub } from "protoframe";
 import { AbstractMessenger, MultiFrame } from "./AbstractMessenger";
 import JellyParty from "@/iFrame/JellyParty";
 import { state as optionsState } from "@/iFrame/store/options/index";
@@ -27,20 +27,17 @@ export class IFrameMessenger extends AbstractMessenger {
   }
 
   // Handle received message
-  handleMessage(msg: { context: "Jelly-Party"; data: Message }) {
-    // Ignore non-Jelly-Party messages
-    if (msg.data.context === "Jelly-Party") {
-      // Handle the message based on its type
-      switch (msg.data.type) {
-        case "join":
-          return this.handleJoin(msg.data);
-        case "link":
-          return this.handleLink(msg.data);
-        case "media":
-          return this.handleMedia(msg.data);
-        case "state":
-          return this.handleVideoState(msg.data);
-      }
+  handleMessage(msg: Message) {
+    // Handle the message based on its type
+    switch (msg.type) {
+      case "join":
+        return this.handleJoin(msg);
+      case "link":
+        return this.handleLink(msg);
+      case "media":
+        return this.handleMedia(msg);
+      case "state":
+        return this.handleVideoState(msg);
     }
   }
 
@@ -118,16 +115,11 @@ export class IFrameMessenger extends AbstractMessenger {
       "message",
       async (event: Event & { data?: any }) => {
         // Load the message
-        const msg: MultiFrame = event.data;
-        if (!(msg.context === "JellyParty")) {
+        const msg: Message = event.data;
+        if (!(msg.context === "Jelly-Party")) {
           return;
-        }
-        if (msg.type === "messageResolved") {
-          // We must not send a confirmation, but rather resolve one
-          // of our previously sent dataframes
-          this.resolvePromise(msg.deferredPromiseId as string);
         } else {
-          this.handleMessage(msg.type);
+          this.handleMessage(msg);
         }
       },
     );

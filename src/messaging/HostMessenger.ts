@@ -38,7 +38,7 @@ export class HostMessenger extends AbstractMessenger {
           const messageResolvedFrame: MessageResolvedFrame = {
             type: "messageResolved",
             deferredPromiseId: msg.deferredPromiseId,
-            context: "JellyParty",
+            context: "Jelly-Party",
           };
           this.sendDataFrame(messageResolvedFrame);
         };
@@ -91,7 +91,7 @@ export class HostMessenger extends AbstractMessenger {
                 type: "videoStateResponse",
                 deferredPromiseId: msg.deferredPromiseId,
                 payload: this.jellyPartyController.provider.controller.getVideoState(),
-                context: "JellyParty",
+                context: "Jelly-Party",
               };
               this.sendMessage(videoStateDataFrame);
               break;
@@ -105,7 +105,7 @@ export class HostMessenger extends AbstractMessenger {
                 payload: {
                   baseLink: baseLink,
                 },
-                context: "JellyParty",
+                context: "Jelly-Party",
               };
               this.sendMessage(baseLinkResponse);
               break;
@@ -159,7 +159,7 @@ export class HostMessenger extends AbstractMessenger {
         payload: {
           partyId: sharedState.partyIdFromURL,
         },
-        context: "JellyParty",
+        context: "Jelly-Party",
       };
       this.sendMessage(msg);
     } else {

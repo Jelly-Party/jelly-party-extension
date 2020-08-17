@@ -64,7 +64,7 @@ export default class JellyParty {
     // Let's request autojoin
     this.iFrameMessenger.sendMessage({
       type: "joinPartyRequest",
-      context: "JellyParty",
+      context: "Jelly-Party",
     });
     this.logToChat("Press play/pause once to start the sync.");
   }
@@ -79,7 +79,7 @@ export default class JellyParty {
     });
     const request: SimpleRequestFrame = {
       type: "baseLinkRequest",
-      context: "JellyParty",
+      context: "Jelly-Party",
     };
     this.iFrameMessenger.sendMessage(request);
     magicLink = await magicLink;
@@ -136,7 +136,7 @@ export default class JellyParty {
           type: "notification" as "notification",
           message: notificationText,
         },
-        context: "JellyParty" as "JellyParty",
+        context: "Jelly-Party" as "JellyParty",
       };
       this.iFrameMessenger.sendMessage(notyfDataFrame);
     }
@@ -289,7 +289,7 @@ export default class JellyParty {
           store.commit("party/addChatMessage", chatMessage);
           const request: SimpleRequestFrame = {
             type: "chatNotification",
-            context: "JellyParty",
+            context: "Jelly-Party",
           };
           this.iFrameMessenger.sendMessage(request);
           break;
@@ -431,7 +431,7 @@ export default class JellyParty {
           tick: tick,
         },
       },
-      context: "JellyParty",
+      context: "Jelly-Party",
     };
     PromiseQueue.enqueue(() => {
       return this.iFrameMessenger.sendMessage(msg);
@@ -449,7 +449,7 @@ export default class JellyParty {
           tick: tick,
         },
       },
-      context: "JellyParty",
+      context: "Jelly-Party",
     };
     PromiseQueue.enqueue(() => {
       return this.iFrameMessenger.sendMessage(msg);
@@ -466,7 +466,7 @@ export default class JellyParty {
           tick: tick,
         },
       },
-      context: "JellyParty",
+      context: "Jelly-Party",
     };
     PromiseQueue.enqueue(() => {
       return this.iFrameMessenger.sendMessage(msg);
@@ -482,7 +482,7 @@ export default class JellyParty {
           variant: "togglePlayPause",
         },
       },
-      context: "JellyParty",
+      context: "Jelly-Party",
     };
     PromiseQueue.enqueue(() => {
       return this.iFrameMessenger.sendMessage(msg);
@@ -492,7 +492,7 @@ export default class JellyParty {
   toggleFullScreen() {
     const msg: SimpleRequestFrame = {
       type: "toggleFullScreen",
-      context: "JellyParty",
+      context: "Jelly-Party",
     };
     this.iFrameMessenger.sendMessage(msg);
   }
@@ -502,7 +502,7 @@ export default class JellyParty {
   async getVideoState() {
     const dataframe: SimpleRequestFrame = {
       type: "videoStateRequest",
-      context: "JellyParty",
+      context: "Jelly-Party",
     };
     this.iFrameMessenger.sendMessage(dataframe);
     // We must await the asynchronous response. We do this by exposing the resolve method

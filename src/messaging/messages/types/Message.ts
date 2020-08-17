@@ -1,5 +1,5 @@
 import { MediaMessage } from "../MediaMessage";
-import { StateMessage } from "../VideoStateMessage";
+import { VideoStateMessage } from "../VideoStateMessage";
 import { JoinMessage } from "../JoinMessage";
 import { LinkMessage } from "../LinkMessage";
 import { ChatMessage } from "../ChatMessage";
@@ -11,4 +11,4 @@ export type Message =
   | LinkMessage
   | MediaMessage
   | NotyfMessage
-  | StateMessage;
+  | VideoStateMessage;

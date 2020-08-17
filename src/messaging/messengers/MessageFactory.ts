@@ -4,7 +4,7 @@ import { LinkMessage } from "../messages/LinkMessage";
 import { MediaEvent } from "../messages/types/MediaEvent";
 import { MediaMessage } from "../messages/MediaMessage";
 import { NotyfMessage } from "../messages/NotyfMessage";
-import { StateMessage } from "../messages/VideoStateMessage";
+import { VideoStateMessage } from "../messages/VideoStateMessage";
 
 export class MessageFactory {
   chat(message: string): ChatMessage {
@@ -16,20 +16,20 @@ export class MessageFactory {
     return msg;
   }
 
-  join(party: string): JoinMessage {
+  join(partyId: string): JoinMessage {
     const msg: JoinMessage = {
       context: "Jelly-Party",
       type: "join",
-      party: party,
+      partyId: partyId,
     };
     return msg;
   }
 
-  link(link: string): LinkMessage {
+  link(redirectURL: string): LinkMessage {
     const msg: LinkMessage = {
       context: "Jelly-Party",
       type: "link",
-      link: link,
+      redirectURL: redirectURL,
     };
     return msg;
   }
@@ -53,8 +53,8 @@ export class MessageFactory {
     return msg;
   }
 
-  state(paused: boolean, tick: number): StateMessage {
-    const msg: StateMessage = {
+  state(paused: boolean, tick: number): VideoStateMessage {
+    const msg: VideoStateMessage = {
       context: "Jelly-Party",
       type: "state",
       paused: paused,
