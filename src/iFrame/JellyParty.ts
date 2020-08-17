@@ -497,6 +497,8 @@ export default class JellyParty {
     this.iFrameMessenger.sendMessage(msg);
   }
 
+  setVideoState(msg: VideoStateMessage) {}
+
   async getVideoState() {
     const dataframe: SimpleRequestFrame = {
       type: "videoStateRequest",
