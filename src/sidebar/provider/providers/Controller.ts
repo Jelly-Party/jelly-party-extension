@@ -32,28 +32,38 @@ export abstract class Controller {
     this.skipNextEvent = false;
     this.video = null;
     this.initializeHost();
-    this.setHooks();
+    this.setupNavigationListener();
+    this.setupVideoHooks();
   }
 
   initializeHost(): void {
+    // Override this method for custom initialization
     console.log(
       "Jelly-Party: No video controller customization in place for this host",
     );
   }
 
+  navigateToVideo(url: URL): void {
+    // Override this method for custom navigation
+    console.log("Jelly-Party: No navigation in place for this website");
+  }
+
   getPlayHook(): () => Promise<void> {
+    // Override this method for a custom play hook
     return async () => {
       await this.video?.play();
     };
   }
 
   getPauseHook(): () => Promise<void> {
+    // Override this method for a custom pause hook
     return async () => {
       this.video?.pause();
     };
   }
 
   getSeekHook(): (tick: number) => Promise<void> {
+    // Override this method for a custom seek hook
     return async (tick: number) => {
       if (this.video?.currentTime) {
         this.video.currentTime = tick;
@@ -61,7 +71,7 @@ export abstract class Controller {
     };
   }
 
-  setHooks() {
+  setupVideoHooks() {
     this.play = this.wrapPlayPauseHandler(this.getPlayHook());
     this.pause = this.wrapPlayPauseHandler(this.getPauseHook());
     this.seek = this.wrapSeekHandler(this.getSeekHook());
@@ -215,6 +225,18 @@ export abstract class Controller {
       context: "JellyParty",
     };
     hostMessenger.sendMessage(dataframe);
+  };
+
+  navigationListener = () => {
+    console.log(
+      "Jelly-Party: No navigation listener in place for this website.",
+    );
+  };
+
+  setupNavigationListener = () => {
+    ["popstate", "replacestate", "pushstate"].forEach(eventName => {
+      document.addEventListener(eventName, this.navigationListener);
+    });
   };
 
   addListeners = () => {
