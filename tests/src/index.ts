@@ -1,3 +1,4 @@
+//@ts-ignore
 import puppeteer = require("puppeteer");
 import { config } from "../config";
 

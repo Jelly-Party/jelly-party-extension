@@ -1,27 +1,20 @@
-export function deepQuerySelectorAll(selector: string) {
+export function deepQuerySelectorAll(selector: string, baseDoc = document) {
   const elements: Array<Element> = [];
-  document
+  baseDoc
     .querySelectorAll(selector)
     .forEach((elem: Element) => elements.push(elem));
-  document.querySelectorAll("iframe").forEach(iframe => {
-    // Let's check that the iframe is same origin. Otherwise, this is a lost cause anyways.
-    try {
-      if (!(new URL(iframe.src).host === window.location.host)) {
-        console.log("Jelly-Party: Not scanning cross-origin iFrame.");
+  // Next, check nested iFrames
+  baseDoc
+    .querySelectorAll("iframe:not([id=jellyPartyRoot])")
+    .forEach(iframe => {
+      try {
+        const nextDoc: Document = (iframe as HTMLIFrameElement).contentWindow
+          ?.document as Document;
+        elements.push(...deepQuerySelectorAll(selector, nextDoc));
+      } catch {
         return;
       }
-    } catch {
-      return;
-    }
-    const iframeElements = (iframe as HTMLIFrameElement).contentWindow?.document.querySelectorAll(
-      selector,
-    );
-    if (iframeElements) {
-      iframeElements.forEach((elem: Element) => {
-        elements.push(elem);
-      });
-    }
-  });
+    });
   return elements;
 }
 

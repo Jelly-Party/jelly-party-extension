@@ -7,7 +7,9 @@ import { party } from "./party/index";
 import { getField, updateField } from "vuex-map-fields";
 // import { browser } from "webextension-polyfill-ts";
 
-Vue.config.devtools = ["development", "staging"].includes(process.env.NODE_ENV);
+Vue.config.devtools = ["development", "staging"].includes(
+  process.env.NODE_ENV ?? "",
+);
 Vue.use(Vuex);
 
 const store: StoreOptions<RootState> = {
@@ -15,8 +17,8 @@ const store: StoreOptions<RootState> = {
     sideBarMinimized: false,
     connectedToServer: false,
     connectingToServer: false,
-    appTitle: process.env.VUE_APP_TITLE,
-    appMode: process.env.VUE_APP_MODE,
+    appTitle: process.env.VUE_APP_TITLE ?? "JellyParty",
+    appMode: process.env.VUE_APP_MODE ?? "unknown",
   },
   modules: {
     options,

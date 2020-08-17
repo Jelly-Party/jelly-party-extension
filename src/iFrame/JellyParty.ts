@@ -28,7 +28,7 @@ export default class JellyParty {
   // Party State
   readonly partyState: PartyStateType;
   // Local state
-  locallySyncPartyStateInterval: number | undefined;
+  locallySyncPartyStateInterval!: NodeJS.Timeout;
   ws!: WebSocket & { uuid?: string };
   notyf: any;
   stableWebsite!: boolean;
@@ -46,7 +46,6 @@ export default class JellyParty {
         this.stableWebsite = true;
       }
     }
-    this.locallySyncPartyStateInterval = undefined;
     if (["staging", "development"].includes(this.rootState.appMode)) {
       log.enableAll();
     } else {

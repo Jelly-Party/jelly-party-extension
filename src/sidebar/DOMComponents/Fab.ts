@@ -6,7 +6,7 @@ import { sharedState } from "../Sidebar";
 
 export class Fab {
   public fabElement: HTMLDivElement;
-  private fabTimer!: number;
+  private fabTimer!: NodeJS.Timeout;
 
   constructor() {
     this.fabElement = document.createElement("div");
