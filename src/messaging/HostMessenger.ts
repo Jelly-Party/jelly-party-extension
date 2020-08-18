@@ -19,8 +19,8 @@ export class HostMessenger {
     } else {
       this.messenger = ProtoframePubsub.parent(Protocol, iframe);
       await ProtoframePubsub.connect(this.messenger);
-      this.messenger.handleTell("replayMediaEvent", mediaEvent => {
-        this.replayMediaEvent(mediaEvent);
+      this.messenger.handleAsk("replayMediaEvent", async mediaEvent => {
+        return await this.replayMediaEvent(mediaEvent);
       });
       this.messenger.handleTell("showNotyf", ({ message }) => {
         this.jellyPartyController.sidebar.showNotification(message);
@@ -55,6 +55,7 @@ export class HostMessenger {
   }
 
   async replayMediaEvent(mediaMessage: MediaMessage) {
+    console.log(`attempting to replay ${JSON.stringify(mediaMessage)}`);
     switch (mediaMessage.event) {
       case "play": {
         await this.jellyPartyController.provider.controller.play();
@@ -75,6 +76,7 @@ export class HostMessenger {
         break;
       }
     }
+    return { success: true };
   }
 
   attemptAutojoin = () => {
