@@ -1,5 +1,5 @@
 import { ProtoframeDescriptor } from "protoframe";
-import { MediaEvent } from "./types/MediaEvent";
+import { MediaEvent } from "./MediaEvent";
 
 export interface VideoState {
   paused: boolean;
@@ -12,7 +12,7 @@ export interface MediaMessage {
   tick: number;
 }
 
-export const JellyPartyProtocol: ProtoframeDescriptor<{
+export const Protocol: ProtoframeDescriptor<{
   joinParty: {
     body: { partyId: string };
   };

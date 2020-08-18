@@ -4,6 +4,7 @@ import { ProviderFactory } from "./provider/ProviderFactory";
 import { Provider } from "./provider/Provider";
 import { hostMessenger } from "@/messaging/HostMessenger";
 import { primeHosts as potentialPrimeHosts } from "@/helpers/TLDs";
+import { timeoutQuerySelector } from "@/helpers/querySelectors";
 
 export class JellyPartyController {
   public provider: Provider;
@@ -23,15 +24,9 @@ export class JellyPartyController {
     }
   }
 
-  waitForHTMLElementThenInit() {
-    if (!document.querySelector(this.provider.awaitCSSSelector)) {
-      console.log(`Jelly-Party: Waiting for ${this.provider.awaitCSSSelector}`);
-      setTimeout(() => {
-        this.waitForHTMLElementThenInit();
-      }, 100);
-    } else {
-      this.sidebar.attachSidebarToDOM();
-    }
+  async waitForHTMLElementThenInit() {
+    await timeoutQuerySelector(this.provider.awaitCSSSelector);
+    this.sidebar.attachSidebarToDOM();
   }
 
   insertHostStyles = () => {

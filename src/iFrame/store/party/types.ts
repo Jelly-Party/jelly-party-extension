@@ -1,5 +1,5 @@
 import { AvatarState } from "../options/types";
-import { VideoState } from "@/messaging/protocol";
+import { VideoState } from "@/messaging/protocols/Protocol";
 
 export interface ChatMessage {
   type: "chatMessage";

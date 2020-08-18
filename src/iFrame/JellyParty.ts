@@ -1,8 +1,6 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { difference as _difference } from "lodash-es";
 import log from "loglevel";
 import generateRoomWithoutSeparator from "@/helpers/randomName.js";
-// @ts-ignore
 import toHHMMSS from "../helpers/toHHMMSS.js";
 import { Peer as PeerType, ChatMessage } from "@/iFrame/store/party/types";
 import store from "@/iFrame/store/store";
@@ -14,7 +12,7 @@ import { state as partyState } from "@/iFrame/store/party/index";
 import { stableWebsites } from "@/helpers/stableWebsites";
 import { IFrameMessenger } from "@/messaging/iFrameMessenger";
 import PromiseQueue from "@/helpers/promiseQueue";
-import { VideoState, MediaMessage } from "@/messaging/protocol.js";
+import { VideoState, MediaMessage } from "@/messaging/protocols/Protocol";
 
 export default class JellyParty {
   // Root State
@@ -74,7 +72,7 @@ export default class JellyParty {
     magicLink.searchParams.append("redirectURL", redirectURL);
     magicLink.searchParams.append("jellyPartyId", this.partyState.partyId);
     this.partyState.magicLink = magicLink.toString();
-    store.dispatch("party/setMagicLink", magicLink);
+    store.dispatch("party/setMagicLink", magicLink.toString());
   }
 
   locallySyncPartyState = async () => {
@@ -117,6 +115,7 @@ export default class JellyParty {
   }
 
   displayNotification(notificationText: string, forceDisplay = false) {
+    console.log("Jelly-Party: Displaying notification.");
     if (forceDisplay || optionsState.statusNotificationsNotyf) {
       this.iFrameMessenger.messenger.tell("showNotyf", {
         message: notificationText,

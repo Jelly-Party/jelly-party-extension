@@ -3,7 +3,7 @@ import { DeferredPromise } from "@/helpers/deferredPromise";
 import { hostMessenger } from "@/messaging/HostMessenger";
 import { Sidebar, sidebar } from "@/sidebar/Sidebar";
 import { getReferenceToLargestVideo } from "@/helpers/querySelectors";
-import { VideoState } from "@/messaging/protocol";
+import { VideoState } from "@/messaging/protocols/Protocol";
 
 // The VideoHandler handles playing, pausing & seeking videos
 // on different websites. For most websites the generic video.play(),
@@ -212,7 +212,7 @@ export abstract class Controller {
 
   getVideoState(): VideoState {
     return {
-      paused: this.video?.paused ?? false,
+      paused: this.video?.paused ?? true,
       tick: this.video?.currentTime ?? 0,
     };
   }

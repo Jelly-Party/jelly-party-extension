@@ -1,61 +1,51 @@
 import { sharedState } from "@/sidebar/Sidebar";
 import { JellyPartyController } from "@/sidebar/main";
 import { ProtoframePubsub } from "protoframe";
-import { JellyPartyProtocol, MediaMessage } from "./protocol";
+import { Protocol, MediaMessage } from "./protocols/Protocol";
+import { timeoutQuerySelector } from "@/helpers/querySelectors";
 
 // Playing, pausing and seeking means actually playing, pausing and seeking the video in this context
 // We have direct access to the video, but no access to the JellyParty object.
-const typedMessenger = ProtoframePubsub.iframe(JellyPartyProtocol);
+const typedMessenger = ProtoframePubsub.iframe(Protocol);
 
 export class HostMessenger {
   public jellyPartyController!: JellyPartyController;
   public messenger!: typeof typedMessenger;
 
-  constructor() {
-    this.initializeMessenger();
-  }
-
   async initializeMessenger() {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const waitForJellyPartyRoot = async () => {
-      const iframe = document.getElementById(
-        "jellyPartyRoot",
-      ) as HTMLIFrameElement | null;
-      if (!iframe) {
-        console.log(`Jelly-Party: HostMessenger waiting for jellyPartyRoot`);
-        setTimeout(() => {
-          waitForJellyPartyRoot();
-        }, 100);
-      } else {
-        this.messenger = ProtoframePubsub.parent(JellyPartyProtocol, iframe);
-        await ProtoframePubsub.connect(this.messenger);
-        this.messenger.handleTell("replayMediaEvent", mediaEvent => {
-          this.replayMediaEvent(mediaEvent);
-        });
-        this.messenger.handleTell("showNotyf", ({ message }) => {
-          this.jellyPartyController.sidebar.showNotification(message);
-        });
-        this.messenger.handleTell("requestAutojoin", () => {
-          this.attemptAutojoin();
-        });
-        this.messenger.handleTell("showUnreadNotification", () => {
-          this.jellyPartyController.sidebar.fab.showUnreadNotificationIfMinimized();
-        });
-        this.messenger.handleTell("toggleFullscreen", () => {
-          if (document.fullscreenElement) {
-            document.exitFullscreen();
-          } else {
-            document.documentElement.requestFullscreen();
-          }
-        });
-        this.messenger.handleAsk("getVideoState", async () => {
-          return this.jellyPartyController.provider.controller.getVideoState();
-        });
-        this.messenger.handleAsk("getBaseLink", async () => {
-          return { baseLink: this.getBaseLink() };
-        });
-      }
-    };
+    const iframe = await timeoutQuerySelector("#jellyPartyRoot");
+    if (!iframe) {
+      console.log(`Jelly-Party: Cannot init messenger without jellyPartyRoot`);
+    } else {
+      this.messenger = ProtoframePubsub.parent(Protocol, iframe);
+      await ProtoframePubsub.connect(this.messenger);
+      this.messenger.handleTell("replayMediaEvent", mediaEvent => {
+        this.replayMediaEvent(mediaEvent);
+      });
+      this.messenger.handleTell("showNotyf", ({ message }) => {
+        console.log("handling tell");
+        this.jellyPartyController.sidebar.showNotification(message);
+      });
+      this.messenger.handleTell("requestAutojoin", () => {
+        this.attemptAutojoin();
+      });
+      this.messenger.handleTell("showUnreadNotification", () => {
+        this.jellyPartyController.sidebar.fab.showUnreadNotificationIfMinimized();
+      });
+      this.messenger.handleTell("toggleFullscreen", () => {
+        if (document.fullscreenElement) {
+          document.exitFullscreen();
+        } else {
+          document.documentElement.requestFullscreen();
+        }
+      });
+      this.messenger.handleAsk("getVideoState", async () => {
+        return this.jellyPartyController.provider.controller.getVideoState();
+      });
+      this.messenger.handleAsk("getBaseLink", async () => {
+        return { baseLink: this.getBaseLink() };
+      });
+    }
   }
 
   attachJellyPartyControllerAndStartListening(

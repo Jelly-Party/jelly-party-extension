@@ -19,8 +19,9 @@ export abstract class Customizer {
       this.observer.observe(getReferenceToLargestVideo(), mutationObserverInit);
     }).bind(this);
     this.observer = new MutationObserver((mutationsList, observer) => {
-      console.log("Jelly-Party: Observed a video change. Recomputing styles.");
-      console.log(mutationsList);
+      console.log(
+        "Jelly-Party: Observed a video style change. Recomputing styles.",
+      );
       debouncedAdjustView();
     });
     const maybeStartObservation = () => {

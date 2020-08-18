@@ -2,11 +2,11 @@ import { ProtoframePubsub } from "protoframe";
 import JellyParty from "@/iFrame/JellyParty";
 import { state as optionsState } from "@/iFrame/store/options/index";
 import toHHMMSS from "@/helpers/toHHMMSS";
-import { JellyPartyProtocol, MediaMessage } from "./protocol";
+import { Protocol, MediaMessage } from "./protocols/Protocol";
 
 // Playing, pausing and seeking in this context means notifying peers.
 // We do not have access to the video inside the IFrame.
-const typedMessenger = ProtoframePubsub.iframe(JellyPartyProtocol);
+const typedMessenger = ProtoframePubsub.iframe(Protocol);
 
 export class IFrameMessenger {
   private party: JellyParty;
@@ -14,11 +14,12 @@ export class IFrameMessenger {
 
   constructor(party: JellyParty) {
     this.party = party;
-    this.messenger = ProtoframePubsub.iframe(JellyPartyProtocol);
+    this.messenger = ProtoframePubsub.iframe(Protocol);
     this.initializeMessenger();
   }
 
   initializeMessenger() {
+    console.log("Jelly-Party: Initializing iFrameMessenger");
     this.messenger.handleTell("joinParty", ({ partyId }) => {
       this.joinParty(partyId);
     });
