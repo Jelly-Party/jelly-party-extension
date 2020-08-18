@@ -1,7 +1,6 @@
 import { sleep } from "@/helpers/sleep";
 import { DeferredPromise } from "@/helpers/deferredPromise";
 import { hostMessenger } from "@/messaging/HostMessenger";
-import { Sidebar, sidebar } from "@/sidebar/Sidebar";
 import { getReferenceToLargestVideo } from "@/helpers/querySelectors";
 import { VideoState } from "@/messaging/protocols/Protocol";
 
@@ -15,7 +14,6 @@ export abstract class Controller {
   video: HTMLVideoElement | null;
   deferred!: DeferredPromise;
   skipNextEvent: boolean;
-  sidebar: Sidebar;
   play!: () => Promise<boolean>;
   pause!: () => Promise<boolean>;
   seek!: (tick: number) => Promise<any>;
@@ -23,7 +21,6 @@ export abstract class Controller {
   pauseAndForward!: () => Promise<void>;
 
   constructor() {
-    this.sidebar = sidebar;
     this.skipNextEvent = false;
     this.video = null;
     this.initializeHost();
