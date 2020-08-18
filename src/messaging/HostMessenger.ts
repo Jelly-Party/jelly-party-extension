@@ -23,7 +23,6 @@ export class HostMessenger {
         this.replayMediaEvent(mediaEvent);
       });
       this.messenger.handleTell("showNotyf", ({ message }) => {
-        console.log("handling tell");
         this.jellyPartyController.sidebar.showNotification(message);
       });
       this.messenger.handleTell("requestAutojoin", () => {

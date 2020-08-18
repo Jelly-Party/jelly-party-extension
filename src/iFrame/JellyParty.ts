@@ -115,7 +115,6 @@ export default class JellyParty {
   }
 
   displayNotification(notificationText: string, forceDisplay = false) {
-    console.log("Jelly-Party: Displaying notification.");
     if (forceDisplay || optionsState.statusNotificationsNotyf) {
       this.iFrameMessenger.messenger.tell("showNotyf", {
         message: notificationText,
