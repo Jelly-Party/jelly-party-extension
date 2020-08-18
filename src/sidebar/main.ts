@@ -38,7 +38,6 @@ export class JellyPartyController {
     RootHead.appendChild(styleScript);
   };
 }
-
 if (window.location.host === "join.jelly-party.com") {
   // Redirect to options page that has full access to browser APIs
   const joinURL = new URL(browser.runtime.getURL("join.html"));

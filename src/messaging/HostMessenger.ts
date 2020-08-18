@@ -18,15 +18,11 @@ export class HostMessenger {
       console.log(`Jelly-Party: Cannot init messenger without jellyPartyRoot`);
     } else {
       this.messenger = ProtoframePubsub.parent(Protocol, iframe);
-      await ProtoframePubsub.connect(this.messenger);
       this.messenger.handleAsk("replayMediaEvent", async mediaEvent => {
         return await this.replayMediaEvent(mediaEvent);
       });
       this.messenger.handleTell("showNotyf", ({ message }) => {
         this.jellyPartyController.sidebar.showNotification(message);
-      });
-      this.messenger.handleTell("requestAutojoin", () => {
-        this.attemptAutojoin();
       });
       this.messenger.handleTell("showUnreadNotification", () => {
         this.jellyPartyController.sidebar.fab.showUnreadNotificationIfMinimized();
@@ -44,6 +40,10 @@ export class HostMessenger {
       this.messenger.handleAsk("getBaseLink", async () => {
         return { baseLink: this.getBaseLink() };
       });
+      this.messenger.handleAsk("requestAutoJoin", async () => {
+        return { partyId: sharedState.partyIdFromURL };
+      });
+      await ProtoframePubsub.connect(this.messenger);
     }
   }
 
@@ -78,19 +78,6 @@ export class HostMessenger {
     }
     return { success: true };
   }
-
-  attemptAutojoin = () => {
-    console.log("Jelly-Party: Attempting to autojoin.");
-    if (!sharedState.magicLinkUsed && sharedState.partyIdFromURL) {
-      console.log("Jelly-Party: Joining party once via magic link.");
-      sharedState.magicLinkUsed = true;
-      this.messenger.tell("requestAutojoin", {
-        partyId: sharedState.partyIdFromURL,
-      });
-    } else {
-      console.log("Jelly-Party: No party found or already used magic link.");
-    }
-  };
 
   getBaseLink = () => {
     const baseLink: URL = new URL(window.location.href);

@@ -52,12 +52,23 @@ export default class JellyParty {
     );
     this.iFrameMessenger = new IFrameMessenger(this);
     this.displayNotification("Jelly Party loaded!", true);
-    // Let's request autojoin
-    this.iFrameMessenger.messenger.tell("requestAutojoin", {
-      partyId: this.partyState.partyId,
-    });
     this.logToChat("Press play/pause once to start the sync.");
+    this.attemptAutoJoin();
   }
+
+  async attemptAutoJoin() {
+    const { partyId } = await this.iFrameMessenger.messenger.ask(
+      "requestAutoJoin",
+      {},
+    );
+    console.log(`Jelly-Party: attemptAutoJoin: partyId resolved to ${partyId}`);
+    if (partyId) {
+      this.joinParty(partyId);
+    } else {
+      console.log("Jelly-Party: No partyId found from URL. Skipping AutoJoin.");
+    }
+  }
+
   resetPartyState() {
     store.dispatch("party/resetPartyState");
   }

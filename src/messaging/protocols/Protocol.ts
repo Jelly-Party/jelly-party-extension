@@ -16,8 +16,9 @@ export const Protocol: ProtoframeDescriptor<{
   joinParty: {
     body: { partyId: string };
   };
-  requestAutojoin: {
-    body: { partyId: string };
+  requestAutoJoin: {
+    body: {};
+    response: { partyId: string };
   };
   replayMediaEvent: {
     body: MediaMessage;
