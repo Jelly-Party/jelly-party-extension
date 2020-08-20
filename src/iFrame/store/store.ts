@@ -17,8 +17,8 @@ const store: StoreOptions<RootState> = {
     sideBarMinimized: false,
     connectedToServer: false,
     connectingToServer: false,
-    appTitle: process.env.VUE_APP_TITLE ?? "JellyParty",
-    appMode: process.env.VUE_APP_MODE ?? "unknown",
+    appTitle: process.env.VUE_APP_TITLE ?? "appTitle",
+    appMode: process.env.VUE_APP_MODE ?? "appMode",
   },
   modules: {
     options,

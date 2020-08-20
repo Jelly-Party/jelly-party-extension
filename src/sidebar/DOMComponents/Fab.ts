@@ -53,7 +53,7 @@ export class Fab {
     }
   };
 
-  public showChatNotificationIfMinimized = () => {
+  public showUnreadNotificationIfMinimized = () => {
     if (this.fabElement && !sharedState.sidebarVisible) {
       this.fabElement.innerHTML = jellyFishWithNotification;
       this.showFab();

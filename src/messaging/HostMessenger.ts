@@ -1,171 +1,88 @@
-import {
-  AbstractMessenger,
-  MultiFrame,
-  BaseLinkResponseFrame,
-  VideoStateResponseFrame,
-  JoinPartyCommandFrame,
-  MessageResolvedFrame,
-} from "./AbstractMessenger";
 import { sharedState } from "@/sidebar/Sidebar";
 import { JellyPartyController } from "@/sidebar/main";
+import { ProtoframePubsub } from "protoframe";
+// import { Protocol, MediaMessage } from "./protocols/Protocol";
+import {
+  MediaMessage,
+  ProtocolInterface,
+  Protocol,
+} from "./protocols/Protocol";
+import { timeoutQuerySelector } from "@/helpers/querySelectors";
 
 // Playing, pausing and seeking means actually playing, pausing and seeking the video in this context
 // We have direct access to the video, but no access to the JellyParty object.
 
-export class HostMessenger extends AbstractMessenger {
+export class HostMessenger {
   public jellyPartyController!: JellyPartyController;
-  constructor() {
-    super("HostMessenger");
+  public messenger!: ProtoframePubsub<ProtocolInterface>;
+
+  async initializeMessenger() {
+    const iframe = await timeoutQuerySelector("#jellyPartyRoot");
+    if (!iframe) {
+      console.log(`Jelly-Party: Cannot init messenger without jellyPartyRoot`);
+    } else {
+      this.messenger = ProtoframePubsub.parent(Protocol, iframe);
+      this.messenger.handleAsk("replayMediaEvent", async mediaEvent => {
+        return await this.replayMediaEvent(mediaEvent);
+      });
+      this.messenger.handleTell("showNotyf", ({ message }) => {
+        this.jellyPartyController.sidebar.showNotification(message);
+      });
+      this.messenger.handleTell("showUnreadNotification", () => {
+        this.jellyPartyController.sidebar.fab.showUnreadNotificationIfMinimized();
+      });
+      this.messenger.handleTell("toggleFullscreen", () => {
+        if (document.fullscreenElement) {
+          document.exitFullscreen();
+        } else {
+          document.documentElement.requestFullscreen();
+        }
+      });
+      this.messenger.handleAsk("getVideoState", async () => {
+        return this.jellyPartyController.provider.controller.getVideoState();
+      });
+      this.messenger.handleAsk("getBaseLink", async () => {
+        return { baseLink: this.getBaseLink() };
+      });
+      this.messenger.handleAsk("requestAutoJoin", async () => {
+        return { partyId: sharedState.partyIdFromURL };
+      });
+      await ProtoframePubsub.connect(this.messenger);
+    }
   }
 
   attachJellyPartyControllerAndStartListening(
     jellyPartyController: JellyPartyController,
   ) {
     this.jellyPartyController = jellyPartyController;
-    this.setupMessageHandler();
+    this.initializeMessenger();
   }
 
-  setupMessageHandler() {
-    window.addEventListener(
-      "message",
-      async (event: Event & { data?: any }) => {
-        // Load the message
-        const msg: MultiFrame = event.data;
-        if (msg.context !== "JellyParty") {
-          return;
-        }
-        const confirmMessage = () => {
-          const messageResolvedFrame: MessageResolvedFrame = {
-            type: "messageResolved",
-            deferredPromiseId: msg.deferredPromiseId,
-            context: "JellyParty",
-          };
-          this.sendDataFrame(messageResolvedFrame);
-        };
-        if (msg.type === "messageResolved") {
-          // We must not send a confirmation, but rather resolve one
-          // of our previously sent dataframes
-          this.resolvePromise(msg.deferredPromiseId as string);
-        } else {
-          switch (msg.type) {
-            case "media": {
-              switch (msg.payload.data.variant) {
-                case "play": {
-                  await this.jellyPartyController.provider.controller.play();
-                  break;
-                }
-                case "pause": {
-                  await this.jellyPartyController.provider.controller.pause();
-                  break;
-                }
-                case "seek": {
-                  await this.jellyPartyController.provider.controller.seek(
-                    msg.payload.data.tick ?? 0,
-                  );
-                  break;
-                }
-                case "togglePlayPause": {
-                  await this.jellyPartyController.provider.controller.togglePlayPause();
-                  break;
-                }
-              }
-              // After we have resolved the media action, we must confirm this
-              break;
-            }
-            case "notyf": {
-              // Call showNotification to trigger a notyf
-              this.jellyPartyController.sidebar.showNotification(
-                msg.payload.message,
-              );
-              break;
-            }
-            case "joinPartyRequest": {
-              this.attemptAutojoin();
-              // We only confirm the attempt
-              break;
-            }
-            case "videoStateRequest": {
-              // We must respond to this request with the current video state
-              // We pass the deferredPromiseId within the VideoStateResponseFrame
-              const videoStateDataFrame: VideoStateResponseFrame = {
-                type: "videoStateResponse",
-                deferredPromiseId: msg.deferredPromiseId,
-                payload: this.jellyPartyController.provider.controller.getVideoState(),
-                context: "JellyParty",
-              };
-              this.sendMessage(videoStateDataFrame);
-              break;
-            }
-            case "baseLinkRequest": {
-              // We must respond to this request with the current base link
-              // We pass the deferredPromiseId within the BaseLinkResponseFrame
-              const baseLink = this.getBaseLink();
-              const baseLinkResponse: BaseLinkResponseFrame = {
-                type: "baseLinkResponse",
-                payload: {
-                  baseLink: baseLink,
-                },
-                context: "JellyParty",
-              };
-              this.sendMessage(baseLinkResponse);
-              break;
-            }
-            case "chatNotification": {
-              this.jellyPartyController.sidebar.fab.showChatNotificationIfMinimized();
-              break;
-            }
-            case "toggleFullScreen": {
-              if (document.fullscreenElement) {
-                document.exitFullscreen();
-              } else {
-                document.documentElement.requestFullscreen();
-              }
-              break;
-            }
-            default: {
-              console.log(
-                `Jelly-Party: ${this.messengerType} received erroneous message:`,
-              );
-              console.log(msg);
-            }
-          }
-          // Finally, we must confirm that we have handled the message
-          confirmMessage();
-        }
-      },
-    );
-  }
-
-  sendDataFrame(dataFrame: MultiFrame) {
-    const doc: HTMLIFrameElement | null = document.querySelector(
-      "#jellyPartyRoot",
-    );
-    if (doc) {
-      doc.contentWindow?.postMessage(dataFrame, "*");
-    } else {
-      console.log(
-        "Jelly-Party: Cannot find #jellyPartyRoot to send message to..",
-      );
+  async replayMediaEvent(mediaMessage: MediaMessage) {
+    console.log(`attempting to replay ${JSON.stringify(mediaMessage)}`);
+    switch (mediaMessage.event) {
+      case "play": {
+        await this.jellyPartyController.provider.controller.play();
+        break;
+      }
+      case "pause": {
+        await this.jellyPartyController.provider.controller.pause();
+        break;
+      }
+      case "seek": {
+        await this.jellyPartyController.provider.controller.seek(
+          mediaMessage.tick ?? 0,
+        );
+        break;
+      }
+      case "toggle": {
+        await this.jellyPartyController.provider.controller.togglePlayPause();
+        break;
+      }
     }
+    return { success: true };
   }
 
-  attemptAutojoin = () => {
-    console.log("Jelly-Party: Attempting to autojoin.");
-    if (!sharedState.magicLinkUsed && sharedState.partyIdFromURL) {
-      console.log("Jelly-Party: Joining party once via magic link.");
-      sharedState.magicLinkUsed = true;
-      const msg: JoinPartyCommandFrame = {
-        type: "joinPartyCommand",
-        payload: {
-          partyId: sharedState.partyIdFromURL,
-        },
-        context: "JellyParty",
-      };
-      this.sendMessage(msg);
-    } else {
-      console.log("Jelly-Party: No party found or already used magic link.");
-    }
-  };
   getBaseLink = () => {
     const baseLink: URL = new URL(window.location.href);
     baseLink.searchParams.delete("jellyPartyId");

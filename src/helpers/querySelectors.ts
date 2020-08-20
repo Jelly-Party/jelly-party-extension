@@ -3,15 +3,11 @@ export function deepQuerySelectorAll(selector: string, baseDoc = document) {
   baseDoc
     .querySelectorAll(selector)
     .forEach((elem: Element) => elements.push(elem));
-  // Next, check nested iFrames
-  baseDoc
-    .querySelectorAll("iframe:not([id=jellyPartyRoot])")
-    .forEach(iframe => {
-      try {
-        const nextDoc: Document = (iframe as HTMLIFrameElement).contentWindow
-          ?.document as Document;
-        elements.push(...deepQuerySelectorAll(selector, nextDoc));
-      } catch {
+  document.querySelectorAll("iframe").forEach(iframe => {
+    // Let's check that the iframe is same origin. Otherwise, this is a lost cause anyways.
+    try {
+      if (!(new URL(iframe.src).host === window.location.host)) {
+        console.log("Jelly-Party: Skipping iFrame: No access.");
         return;
       }
     });
@@ -34,4 +30,24 @@ export function getReferenceToLargestVideo() {
   );
   const maxIndex = videoSizes.indexOf(Math.max(...videoSizes));
   return videos[maxIndex];
+}
+
+export async function timeoutQuerySelector(
+  selector: string,
+): Promise<HTMLIFrameElement | null> {
+  let counter = 0;
+  return new Promise((resolve, reject) => {
+    const interval = setInterval(() => {
+      const elem: HTMLIFrameElement | null = document.querySelector(selector);
+      if (elem) {
+        clearInterval(interval);
+        resolve(elem);
+      }
+      counter++;
+      if (counter >= 100) {
+        clearInterval(interval);
+        reject("Jelly-Party: timeoutQuerySelector timed out!");
+      }
+    }, 200);
+  });
 }

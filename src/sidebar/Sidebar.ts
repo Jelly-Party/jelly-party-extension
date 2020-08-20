@@ -12,13 +12,11 @@ export let sidebar: any = {};
 
 interface SharedState {
   sidebarVisible: boolean;
-  magicLinkUsed: boolean;
   partyIdFromURL: string;
 }
 
 export const sharedState: SharedState = {
   sidebarVisible: false,
-  magicLinkUsed: false,
   partyIdFromURL:
     new URLSearchParams(window.location.search).get("jellyPartyId") ?? "",
 };

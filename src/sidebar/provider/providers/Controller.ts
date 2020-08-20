@@ -1,26 +1,19 @@
 import { sleep } from "@/helpers/sleep";
 import { DeferredPromise } from "@/helpers/deferredPromise";
-import { MediaCommandFrame } from "@/messaging/AbstractMessenger";
 import { hostMessenger } from "@/messaging/HostMessenger";
-import { Sidebar, sidebar } from "@/sidebar/Sidebar";
 import { getReferenceToLargestVideo } from "@/helpers/querySelectors";
+import { VideoState } from "@/messaging/protocols/Protocol";
 
 // The VideoHandler handles playing, pausing & seeking videos
 // on different websites. For most websites the generic video.play(),
 // video.pause() & video.currentTime= will work, however some websites,
 // such as Netflix, require direct access to video controllers.
 
-export interface VideoState {
-  paused: boolean | undefined;
-  currentTime: number | undefined;
-}
-
 export abstract class Controller {
   findVideoInterval!: NodeJS.Timeout;
   video: HTMLVideoElement | null;
   deferred!: DeferredPromise;
   skipNextEvent: boolean;
-  sidebar: Sidebar;
   play!: () => Promise<boolean>;
   pause!: () => Promise<boolean>;
   seek!: (tick: number) => Promise<any>;
@@ -28,7 +21,6 @@ export abstract class Controller {
   pauseAndForward!: () => Promise<void>;
 
   constructor() {
-    this.sidebar = sidebar;
     this.skipNextEvent = false;
     this.video = null;
     this.initializeHost();
@@ -116,9 +108,7 @@ export abstract class Controller {
 
   wrapSeekHandler = (fun: (tick: number) => Promise<void>) => {
     return async (tick: number) => {
-      const timeDelta = Math.abs(
-        tick - (this.getVideoState().currentTime ?? tick),
-      );
+      const timeDelta = Math.abs(tick - (this.getVideoState().tick ?? tick));
       if (timeDelta > 0.5) {
         // Seeking is actually worth it. We're off by more than half a second.
         const deferred = this.initNewDeferred();
@@ -159,18 +149,11 @@ export abstract class Controller {
       return;
     }
     // We get here through a user action
-    const dataframe: MediaCommandFrame = {
+    hostMessenger.messenger.tell("forwardMediaEvent", {
+      event: "play",
+      tick: this.video?.currentTime ?? 0,
       type: "media",
-      payload: {
-        type: "videoUpdate",
-        data: {
-          variant: "play",
-          tick: this.video?.currentTime,
-        },
-      },
-      context: "JellyParty",
-    };
-    hostMessenger.sendMessage(dataframe);
+    });
   };
 
   pauseListener = () => {
@@ -186,18 +169,11 @@ export abstract class Controller {
       return;
     }
     // We get here through a user action
-    const dataframe: MediaCommandFrame = {
+    hostMessenger.messenger.tell("forwardMediaEvent", {
+      event: "pause",
+      tick: this.video?.currentTime ?? 0,
       type: "media",
-      payload: {
-        type: "videoUpdate",
-        data: {
-          variant: "pause",
-          tick: this.video?.currentTime,
-        },
-      },
-      context: "JellyParty",
-    };
-    hostMessenger.sendMessage(dataframe);
+    });
   };
 
   seekedListener = () => {
@@ -213,18 +189,11 @@ export abstract class Controller {
       return;
     }
     // We get here through a user action
-    const dataframe: MediaCommandFrame = {
+    hostMessenger.messenger.tell("forwardMediaEvent", {
+      event: "seek",
+      tick: this.video?.currentTime ?? 0,
       type: "media",
-      payload: {
-        type: "videoUpdate",
-        data: {
-          variant: "seek",
-          tick: this.video?.currentTime,
-        },
-      },
-      context: "JellyParty",
-    };
-    hostMessenger.sendMessage(dataframe);
+    });
   };
 
   navigationListener = () => {
@@ -261,6 +230,9 @@ export abstract class Controller {
   };
 
   getVideoState(): VideoState {
-    return { paused: this.video?.paused, currentTime: this.video?.currentTime };
+    return {
+      paused: this.video?.paused ?? true,
+      tick: this.video?.currentTime ?? 0,
+    };
   }
 }

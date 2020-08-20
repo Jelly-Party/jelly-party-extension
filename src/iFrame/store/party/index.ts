@@ -14,7 +14,7 @@ const initalPartyState: PartyState = {
   websiteIsTested: false,
   magicLink: "",
   selfUUID: "",
-  videoState: { paused: true, currentTime: 0 },
+  videoState: { paused: true, tick: 0 },
   showChat: true,
   chatMessages: [
     // {
@@ -75,8 +75,8 @@ export const party: Module<PartyState, RootState> = {
       // we must not remove peers, but possibly mutate peers.
       const allUUIDs = new Set(
         context.state.peers
-          .map((peer) => peer.uuid)
-          .concat(newPartyState.peers.map((peer) => peer.uuid))
+          .map(peer => peer.uuid)
+          .concat(newPartyState.peers.map(peer => peer.uuid)),
       );
       // Create a copy of the current cache, use current state if it doesn't yet exist
       let cachedPeers = context.state.cachedPeers
@@ -84,8 +84,8 @@ export const party: Module<PartyState, RootState> = {
         : context.state.peers.slice();
       // Iterate over all UUIDs from current state + new state
       for (const uuid of allUUIDs) {
-        const oldPeer = context.state.peers.find((peer) => peer.uuid === uuid);
-        const newPeer = newPartyState.peers.find((peer) => peer.uuid === uuid);
+        const oldPeer = context.state.peers.find(peer => peer.uuid === uuid);
+        const newPeer = newPartyState.peers.find(peer => peer.uuid === uuid);
         if (!oldPeer && newPeer) {
           // We have added a peer, which we must add to the cache
           cachedPeers.push(newPeer);
@@ -94,7 +94,7 @@ export const party: Module<PartyState, RootState> = {
         } else if (oldPeer && newPeer) {
           // Peer's state might have been updated
           // Let's first remove the old peer from the cache
-          cachedPeers = cachedPeers.filter((peer) => !(peer.uuid === uuid));
+          cachedPeers = cachedPeers.filter(peer => !(peer.uuid === uuid));
           // Then add the new peer back to cachedPeers
           cachedPeers.push(newPeer);
         } else {

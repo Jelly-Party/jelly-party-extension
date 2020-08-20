@@ -1,5 +1,5 @@
 import { AvatarState } from "../options/types";
-import { VideoState } from "@/sidebar/provider/providers/Controller";
+import { VideoState } from "@/messaging/protocols/Protocol";
 
 export interface ChatMessage {
   type: "chatMessage";
@@ -29,7 +29,7 @@ export interface PartyState {
   showChat: boolean;
   chatMessages: Array<ChatMessage>;
   maxChatMessagesDisplay: number;
-  videoState: { paused: boolean; currentTime: number };
+  videoState: { paused: boolean; tick: number };
 }
 
 // The video state is not stored in the PartyState, since it updates all the time,
