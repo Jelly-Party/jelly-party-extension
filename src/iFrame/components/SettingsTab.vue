@@ -116,7 +116,6 @@ export default {
   },
   methods: {
     showConfirmation: function() {
-      console.log("Jelly-Party: Saving options to chrome local storage.");
       if (this.clientName.length < 2) {
         alert("Please choose a name that's longer than 2 characters")
       } else {

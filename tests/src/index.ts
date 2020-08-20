@@ -2,6 +2,7 @@
 import puppeteer = require("puppeteer");
 //@ts-ignore
 import prompts = require("prompts");
+//@ts-ignore
 import { config } from "../config";
 
 const pathToExtension = "dist";
