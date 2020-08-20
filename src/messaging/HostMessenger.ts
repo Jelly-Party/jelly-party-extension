@@ -1,16 +1,20 @@
 import { sharedState } from "@/sidebar/Sidebar";
 import { JellyPartyController } from "@/sidebar/main";
 import { ProtoframePubsub } from "protoframe";
-import { Protocol, MediaMessage } from "./protocols/Protocol";
+// import { Protocol, MediaMessage } from "./protocols/Protocol";
+import {
+  MediaMessage,
+  ProtocolInterface,
+  Protocol,
+} from "./protocols/Protocol";
 import { timeoutQuerySelector } from "@/helpers/querySelectors";
 
 // Playing, pausing and seeking means actually playing, pausing and seeking the video in this context
 // We have direct access to the video, but no access to the JellyParty object.
-const typedMessenger = ProtoframePubsub.iframe(Protocol);
 
 export class HostMessenger {
   public jellyPartyController!: JellyPartyController;
-  public messenger!: typeof typedMessenger;
+  public messenger!: ProtoframePubsub<ProtocolInterface>;
 
   async initializeMessenger() {
     const iframe = await timeoutQuerySelector("#jellyPartyRoot");

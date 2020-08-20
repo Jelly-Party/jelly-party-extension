@@ -1,5 +1,6 @@
 import { ProtoframeDescriptor } from "protoframe";
 import { MediaEvent } from "./MediaEvent";
+import { Protoframe } from "protoframe/dist/types";
 
 export interface VideoState {
   paused: boolean;
@@ -12,7 +13,7 @@ export interface MediaMessage {
   tick: number;
 }
 
-export const Protocol: ProtoframeDescriptor<{
+export interface ProtocolInterface extends Protoframe {
   joinParty: {
     body: { partyId: string };
   };
@@ -47,4 +48,8 @@ export const Protocol: ProtoframeDescriptor<{
   sendChatMessage: {
     body: { message: string };
   };
-}> = { type: "Jelly-Party" };
+}
+
+export const Protocol: ProtoframeDescriptor<ProtocolInterface> = {
+  type: "Jelly-Party",
+};

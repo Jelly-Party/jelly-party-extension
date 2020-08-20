@@ -26,7 +26,7 @@
     "protoframe": "^0.2.1",
     "puppeteer": "^5.2.1",
     "v-emoji-picker": "^2.3.0",
-    "vue": "^2.6.11",
+    "vue": "^2.6.12",
     "vue-class-component": "^7.2.5",
     "vue-clipboard2": "^0.3.1",
     "vue-dompurify-html": "^2.3.0",
@@ -59,7 +59,7 @@
     "sass-loader": "^8.0.2",
     "typescript": "^3.9.7",
     "vue-svg-loader": "^0.16.0",
-    "vue-template-compiler": "^2.6.11",
+    "vue-template-compiler": "^2.6.12",
     "webextension-polyfill-ts": "^0.17.0"
   }
 }

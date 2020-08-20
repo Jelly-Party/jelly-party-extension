@@ -2,15 +2,18 @@ import { ProtoframePubsub } from "protoframe";
 import JellyParty from "@/iFrame/JellyParty";
 import { state as optionsState } from "@/iFrame/store/options/index";
 import toHHMMSS from "@/helpers/toHHMMSS";
-import { Protocol, MediaMessage } from "./protocols/Protocol";
+import {
+  Protocol,
+  MediaMessage,
+  ProtocolInterface,
+} from "./protocols/Protocol";
 
 // Playing, pausing and seeking in this context means notifying peers.
 // We do not have access to the video inside the IFrame.
-const typedMessenger = ProtoframePubsub.iframe(Protocol);
 
 export class IFrameMessenger {
   private party: JellyParty;
-  public messenger: typeof typedMessenger;
+  public messenger: ProtoframePubsub<ProtocolInterface>;
 
   constructor(party: JellyParty) {
     this.party = party;
