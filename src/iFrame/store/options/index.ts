@@ -43,18 +43,19 @@ export const options: Module<OptionsState, RootState> = {
   },
   actions: {
     populateOptionsStateFromBrowserLocalStorage(context) {
-      browser.storage.local.get(["options"]).then(function(res: any) {
+      browser.storage.local.get(["options"]).then(res => {
+        const options: OptionsState = res.options;
         console.log("Jelly-Party: Got options.");
-        console.log(res.options);
-        if (res.options) {
+        console.log(options);
+        if (options) {
           console.log("Jelly-Party: Loading options from chrome storage.");
           context.commit(
             "populateOptionsStateFromBrowserLocalStorage",
-            res.options
+            options,
           );
         } else {
           console.log(
-            "Jelly-Party: No options found. Must save options first to load options."
+            "Jelly-Party: No options found. Must save options first to load options.",
           );
         }
       });
@@ -64,7 +65,7 @@ export const options: Module<OptionsState, RootState> = {
     },
     updateAvatarState(
       context,
-      { stateKey, newState }: { stateKey: keyof AvatarState; newState: string }
+      { stateKey, newState }: { stateKey: keyof AvatarState; newState: string },
     ) {
       const newAvatarState: AvatarState = { ...state.avatarState };
       newAvatarState[stateKey] = newState;
@@ -83,6 +84,8 @@ export const options: Module<OptionsState, RootState> = {
       Object.assign(state, options);
     },
     saveOptionsStateToBrowserLocalStorage(state) {
+      console.log("Jelly-Party: Saving options");
+      console.log({ options: state });
       browser.storage.local.set({ options: state });
     },
     updateAvatarState(state, newAvatarState) {

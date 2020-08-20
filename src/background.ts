@@ -2,6 +2,7 @@ import { browser } from "webextension-polyfill-ts";
 import { userNames } from "@/helpers/userNames";
 import { sample as _sample } from "lodash-es";
 import uuidv4 from "@/helpers/uuidv4";
+import { OptionsState } from "./iFrame/store/options/types";
 
 browser.runtime.onInstalled.addListener(function() {
   const options = { guid: uuidv4(), clientName: _sample(userNames) };
@@ -11,7 +12,8 @@ browser.runtime.onInstalled.addListener(function() {
   });
 });
 
-browser.storage.local.get("options").then((options: any) => {
+browser.storage.local.get("options").then(res => {
+  const options: OptionsState = res.options;
   if (!options.guid) {
     console.log("Jelly-Party. GUID lost, resetting GUID.");
     const newOptions = { ...options, ...{ guid: uuidv4() } };

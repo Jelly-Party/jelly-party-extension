@@ -1,4 +1,8 @@
+//@ts-ignore
 import puppeteer = require("puppeteer");
+//@ts-ignore
+import prompts = require("prompts");
+//@ts-ignore
 import { config } from "../config";
 
 const pathToExtension = "dist";
@@ -29,12 +33,47 @@ const providerConfigs: Dictionary<ProviderConfig> = {
     magicLink:
       "https://join.jelly-party.com/?redirectURL=https%253A%252F%252Fwww.youtube.com%252Fwatch%253Fv%253DdQw4w9WgXcQ&jellyPartyId=comprehensive-experiences-collaborate-ruthlessly",
   },
+  disneyPlus: {
+    magicLink:
+      "https://join.jelly-party.com/?redirectURL=https%253A%252F%252Fwww.disneyplus.com%252Fde-de%252Fvideo%252F862ae7df-229e-4c0d-aa1c-a7c006bea001&jellyPartyId=symbolic-arrangements-chop-critically",
+    setCookiesAtURL: "https://www.disneyplus.com",
+    cookies: config.cookies.disneyPlus,
+  },
+  primevideo: {
+    magicLink:
+      "https://join.jelly-party.com/?redirectURL=https%253A%252F%252Fwww.amazon.de%252FAmazon-Video%252Fb%252F%253Fnode%253D3010075031%2526ref%253Ddvm_MLP_ROWEU_DE_1&jellyPartyId=incredible-satisfactions-explode-maybe",
+    setCookiesAtURL: "https://www.amazon.de",
+    cookies: config.cookies.amazon,
+  },
 };
 
 (async () => {
+  // First, let the user choose providers
+  const selectedProviders: number[] = (
+    await prompts({
+      type: "text",
+      name: "value",
+      message: `
+      Please select the providers you would like to test.
+      1) Netflix
+      2) Vimeo
+      3) Youtube
+      4) Disney+
+      5) Amazon Prime Video
+      `,
+    })
+  )["value"]
+    .split(",")
+    .map((val: string) => parseInt(val));
+  let counter = 0;
   for (const [providerName, providerConfig] of Object.entries(
     providerConfigs,
   )) {
+    counter++;
+    if (!selectedProviders.includes(counter)) {
+      // Skip provider if not selected
+      continue;
+    }
     const browserClosedPromises: Promise<any>[] = [];
     console.log(`Moving to ${providerName}`);
     for (let i = 0; i < 2; i++) {

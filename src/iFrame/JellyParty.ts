@@ -1,8 +1,6 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { difference as _difference } from "lodash-es";
 import log from "loglevel";
 import generateRoomWithoutSeparator from "@/helpers/randomName.js";
-// @ts-ignore
 import toHHMMSS from "../helpers/toHHMMSS.js";
 import { Peer as PeerType, ChatMessage } from "@/iFrame/store/party/types";
 import store from "@/iFrame/store/store";
@@ -13,12 +11,8 @@ import { state as optionsState } from "@/iFrame/store/options/index";
 import { state as partyState } from "@/iFrame/store/party/index";
 import { stableWebsites } from "@/helpers/stableWebsites";
 import { IFrameMessenger } from "@/messaging/iFrameMessenger";
-import {
-  MediaCommandFrame,
-  SimpleRequestFrame,
-} from "@/messaging/AbstractMessenger";
 import PromiseQueue from "@/helpers/promiseQueue";
-import { VideoState } from "@/sidebar/provider/providers/Controller";
+import { VideoState, MediaMessage } from "@/messaging/protocols/Protocol";
 
 export default class JellyParty {
   // Root State
@@ -28,14 +22,12 @@ export default class JellyParty {
   // Party State
   readonly partyState: PartyStateType;
   // Local state
-  locallySyncPartyStateInterval: number | undefined;
+  locallySyncPartyStateInterval!: NodeJS.Timeout;
   ws!: WebSocket & { uuid?: string };
   notyf: any;
   stableWebsite!: boolean;
   iFrameMessenger: IFrameMessenger;
   videoState!: VideoState;
-  resolveVideoState!: (arg0: VideoState) => VideoState;
-  resolveMagicLink!: (arg0: string) => string;
 
   constructor() {
     this.rootState = store.state;
@@ -46,7 +38,6 @@ export default class JellyParty {
         this.stableWebsite = true;
       }
     }
-    this.locallySyncPartyStateInterval = undefined;
     if (["staging", "development"].includes(this.rootState.appMode)) {
       log.enableAll();
     } else {
@@ -61,39 +52,45 @@ export default class JellyParty {
     );
     this.iFrameMessenger = new IFrameMessenger(this);
     this.displayNotification("Jelly Party loaded!", true);
-    // Let's request autojoin
-    this.iFrameMessenger.sendMessage({
-      type: "joinPartyRequest",
-      context: "JellyParty",
-    });
     this.logToChat("Press play/pause once to start the sync.");
+    this.attemptAutoJoin();
   }
+
+  async attemptAutoJoin() {
+    const { partyId } = await this.iFrameMessenger.messenger.ask(
+      "requestAutoJoin",
+      {},
+    );
+    console.log(`Jelly-Party: attemptAutoJoin: partyId resolved to ${partyId}`);
+    if (partyId) {
+      this.joinParty(partyId);
+    } else {
+      console.log("Jelly-Party: No partyId found from URL. Skipping AutoJoin.");
+    }
+  }
+
   resetPartyState() {
     store.dispatch("party/resetPartyState");
   }
 
   async updateMagicLink() {
-    // Deferred used in similar way to VideoState request
-    let magicLink: any = new Promise((resolve, reject) => {
-      this.resolveMagicLink = resolve as (arg0: string) => string;
-    });
-    const request: SimpleRequestFrame = {
-      type: "baseLinkRequest",
-      context: "JellyParty",
-    };
-    this.iFrameMessenger.sendMessage(request);
-    magicLink = await magicLink;
-    store.dispatch("party/setMagicLink", magicLink);
+    const { baseLink } = await this.iFrameMessenger.messenger.ask(
+      "getBaseLink",
+      {},
+    );
+    const magicLink = new URL("https://join.jelly-party.com/");
+    const redirectURL = encodeURIComponent(baseLink);
+    magicLink.searchParams.append("redirectURL", redirectURL);
+    magicLink.searchParams.append("jellyPartyId", this.partyState.partyId);
+    this.partyState.magicLink = magicLink.toString();
+    store.dispatch("party/setMagicLink", magicLink.toString());
   }
 
   locallySyncPartyState = async () => {
     try {
       // We craft a command to let the server know about our new client state
       const videoState: VideoState = (await this.getVideoState()) as VideoState;
-      partyState.videoState = {
-        paused: videoState.paused ?? true,
-        currentTime: videoState.currentTime ?? 0,
-      };
+      partyState.videoState = videoState;
     } catch (error) {
       log.debug("Jelly-Party: Error updating client state..");
       log.error(error);
@@ -130,15 +127,9 @@ export default class JellyParty {
 
   displayNotification(notificationText: string, forceDisplay = false) {
     if (forceDisplay || optionsState.statusNotificationsNotyf) {
-      const notyfDataFrame = {
-        type: "notyf" as "notyf",
-        payload: {
-          type: "notification" as "notification",
-          message: notificationText,
-        },
-        context: "JellyParty" as "JellyParty",
-      };
-      this.iFrameMessenger.sendMessage(notyfDataFrame);
+      this.iFrameMessenger.messenger.tell("showNotyf", {
+        message: notificationText,
+      });
     }
   }
 
@@ -287,11 +278,7 @@ export default class JellyParty {
         case "chatMessage": {
           const chatMessage: ChatMessage = msg;
           store.commit("party/addChatMessage", chatMessage);
-          const request: SimpleRequestFrame = {
-            type: "chatNotification",
-            context: "JellyParty",
-          };
-          this.iFrameMessenger.sendMessage(request);
+          this.iFrameMessenger.messenger.tell("showUnreadNotification", {});
           break;
         }
         case "setUUID": {
@@ -422,92 +409,55 @@ export default class JellyParty {
 
   async playVideo(tick: number) {
     await this.seek(tick);
-    const msg: MediaCommandFrame = {
+    const msg: MediaMessage = {
       type: "media",
-      payload: {
-        type: "videoUpdate",
-        data: {
-          variant: "play",
-          tick: tick,
-        },
-      },
-      context: "JellyParty",
+      event: "play",
+      tick: tick,
     };
     PromiseQueue.enqueue(() => {
-      return this.iFrameMessenger.sendMessage(msg);
+      return this.iFrameMessenger.messenger.ask("replayMediaEvent", msg);
     });
   }
 
   async pauseVideo(tick: number) {
     await this.seek(tick);
-    const msg: MediaCommandFrame = {
+    const msg: MediaMessage = {
       type: "media",
-      payload: {
-        type: "videoUpdate",
-        data: {
-          variant: "pause",
-          tick: tick,
-        },
-      },
-      context: "JellyParty",
+      event: "pause",
+      tick: tick,
     };
     PromiseQueue.enqueue(() => {
-      return this.iFrameMessenger.sendMessage(msg);
+      return this.iFrameMessenger.messenger.ask("replayMediaEvent", msg);
     });
   }
 
   async seek(tick: number) {
-    const msg: MediaCommandFrame = {
+    const msg: MediaMessage = {
       type: "media",
-      payload: {
-        type: "videoUpdate",
-        data: {
-          variant: "seek",
-          tick: tick,
-        },
-      },
-      context: "JellyParty",
+      event: "seek",
+      tick: tick,
     };
     PromiseQueue.enqueue(() => {
-      return this.iFrameMessenger.sendMessage(msg);
+      return this.iFrameMessenger.messenger.ask("replayMediaEvent", msg);
     });
   }
 
   async togglePlayPause() {
-    const msg: MediaCommandFrame = {
+    const msg: MediaMessage = {
       type: "media",
-      payload: {
-        type: "videoUpdate",
-        data: {
-          variant: "togglePlayPause",
-        },
-      },
-      context: "JellyParty",
+      event: "toggle",
+      tick: 0,
     };
     PromiseQueue.enqueue(() => {
-      return this.iFrameMessenger.sendMessage(msg);
+      return this.iFrameMessenger.messenger.ask("replayMediaEvent", msg);
     });
   }
 
   toggleFullScreen() {
-    const msg: SimpleRequestFrame = {
-      type: "toggleFullScreen",
-      context: "JellyParty",
-    };
-    this.iFrameMessenger.sendMessage(msg);
+    this.iFrameMessenger.messenger.tell("toggleFullscreen", {});
   }
 
   async getVideoState() {
-    const dataframe: SimpleRequestFrame = {
-      type: "videoStateRequest",
-      context: "JellyParty",
-    };
-    this.iFrameMessenger.sendMessage(dataframe);
-    // We must await the asynchronous response. We do this by exposing the resolve method
-    // to the JellyParty object, so that the Messenger (which has access to JellyParty)
-    // can call resolve, once it has received the response
-    return new Promise((resolve, reject) => {
-      this.resolveVideoState = resolve as (arg0: VideoState) => VideoState;
-    });
+    return this.iFrameMessenger.messenger.ask("getVideoState", {});
   }
 }

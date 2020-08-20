@@ -6,7 +6,7 @@ import { sharedState } from "../Sidebar";
 
 export class Fab {
   public fabElement: HTMLDivElement;
-  private fabTimer!: number;
+  private fabTimer!: NodeJS.Timeout;
 
   constructor() {
     this.fabElement = document.createElement("div");
@@ -53,7 +53,7 @@ export class Fab {
     }
   };
 
-  public showChatNotificationIfMinimized = () => {
+  public showUnreadNotificationIfMinimized = () => {
     if (this.fabElement && !sharedState.sidebarVisible) {
       this.fabElement.innerHTML = jellyFishWithNotification;
       this.showFab();
