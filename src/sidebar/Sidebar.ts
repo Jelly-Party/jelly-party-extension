@@ -80,6 +80,7 @@ export class Sidebar {
         this.wrapper.wrapperElement.classList.add("sideBarMinimized");
         this.provider.customizer.adjustView();
         this.fab.showFab();
+        this.fab.resetFabNotification();
       } else {
         // Switch to showing sidebar
         sharedState.sidebarVisible = true;

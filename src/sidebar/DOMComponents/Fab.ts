@@ -7,6 +7,7 @@ import { sharedState } from "../Sidebar";
 export class Fab {
   public fabElement: HTMLDivElement;
   private fabTimer!: NodeJS.Timeout;
+  public showingNotification: boolean;
 
   constructor() {
     this.fabElement = document.createElement("div");
@@ -19,6 +20,7 @@ export class Fab {
     this.fabElement.style.visibility = "hidden";
     this.fabElement.style.opacity = "0";
     this.fabElement.style.transition = "visibility 0.2s 0s, opacity 0.2s 0s";
+    this.showingNotification = false;
     document.addEventListener("mousemove", this.onMouseMove);
   }
 
@@ -53,9 +55,16 @@ export class Fab {
     }
   };
 
+  public resetFabNotification() {
+    if (this.fabElement && this.showingNotification) {
+      this.fabElement.innerHTML = jellyFishWithoutNotification;
+    }
+  }
+
   public showUnreadNotificationIfMinimized = () => {
     if (this.fabElement && !sharedState.sidebarVisible) {
       this.fabElement.innerHTML = jellyFishWithNotification;
+      this.showingNotification = true;
       this.showFab();
     }
   };
