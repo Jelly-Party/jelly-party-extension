@@ -34,7 +34,7 @@
         title="Jelly"
       >
         <img
-          src="@/assets/circular-logo.png"
+          src="@/assets/images/circular-logo.png"
           style="width: 3.5em; height:3.5em;"
         />
       </div>

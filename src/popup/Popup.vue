@@ -3,7 +3,7 @@
     <h1>
       Jelly-Party
       <img
-        src="@/assets/logo-blue.png"
+        src="@/assets/images/logo-blue.png"
         width="32px"
         height="32px"
         class="d-inline-block"
@@ -18,7 +18,7 @@
 </template>
 
 <script>
-export default {}
+export default {};
 </script>
 
 <style lang="scss">

@@ -3,7 +3,7 @@
     <div class="d-flex justify-content-center align-items-center">
       <h3 id="jelly-party-heading-text" class="mr-2">Jelly-Party</h3>
       <img
-        src="@/assets/logo-blue.png"
+        src="@/assets/images/logo-blue.png"
         width="32px"
         height="32px"
         class="d-inline-block"

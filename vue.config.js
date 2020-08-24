@@ -33,7 +33,7 @@ module.exports = {
     entry: {
       background: "./src/background.ts",
       hostFrame: "./src/sidebar/main.ts",
-      RootStyles: "./src/styles/RootStyles.scss",
+      RootStyles: "./src/assets/styles/RootStyles.scss",
     },
     devtool: ["development", "staging"].includes(process.env.NODE_ENV)
       ? "source-map"
@@ -64,7 +64,7 @@ module.exports = {
   css: {
     loaderOptions: {
       sass: {
-        prependData: `@import "~@/styles/_variables.scss";`,
+        prependData: `@import "~@/assets/styles/_variables.scss";`,
       },
     },
     extract: false,
