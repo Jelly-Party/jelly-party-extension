@@ -285,6 +285,12 @@ export default class JellyParty {
           store.commit("party/setSelfUUID", msg.data.uuid);
           break;
         }
+        case "navigate": {
+          this.iFrameMessenger.messenger.tell("replayNavigation", {
+            url: msg.data.url,
+          });
+          break;
+        }
         default: {
           log.debug(
             `Jelly-Party: Received unknown message: ${JSON.stringify(msg)}`,

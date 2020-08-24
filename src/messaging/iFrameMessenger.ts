@@ -29,6 +29,19 @@ export class IFrameMessenger {
     this.messenger.handleTell("forwardMediaEvent", msg => {
       this.forwardMediaEvent(msg);
     });
+    this.messenger.handleTell("forwardNavigation", msg => {
+      const clientCommand = {
+        type: "navigate",
+        data: {
+          url: msg.url,
+        },
+      };
+      const serverCommand = {
+        type: "forward",
+        data: { commandToForward: clientCommand },
+      };
+      this.party.ws.send(JSON.stringify(serverCommand));
+    });
   }
 
   joinParty(partyId: string) {

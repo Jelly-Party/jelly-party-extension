@@ -19,6 +19,8 @@ export abstract class Controller {
   seek!: (tick: number) => Promise<any>;
   playAndForward!: () => Promise<void>;
   pauseAndForward!: () => Promise<void>;
+  // Navigation specific elements
+  navigationListener!: () => void;
 
   constructor() {
     this.skipNextEvent = false;
@@ -35,9 +37,23 @@ export abstract class Controller {
     );
   }
 
-  navigateToVideo(url: URL): void {
+  navigateToVideo(url: string): void {
     // Override this method for custom navigation
     console.log("Jelly-Party: No navigation in place for this website");
+  }
+
+  addNavigationListener(): void {
+    // Override this method for custom navigation
+    console.log(
+      "Jelly-Party: No addNavigationListener method in place for this website",
+    );
+  }
+
+  removeNavigationListener(): void {
+    // Override this method for custom navigation
+    console.log(
+      "Jelly-Party: No removeNavigationListener method in place for this website",
+    );
   }
 
   getPlayHook(): () => Promise<void> {
@@ -89,9 +105,9 @@ export abstract class Controller {
   togglePlayPause() {
     console.log("Jelly-Party: Toggling play pause.");
     if (this.video?.paused) {
-      this.playAndForward();
+      return this.playAndForward();
     } else {
-      this.pauseAndForward();
+      return this.pauseAndForward();
     }
   }
 
@@ -195,13 +211,6 @@ export abstract class Controller {
       type: "media",
     });
   };
-
-  navigationListener = () => {
-    console.log(
-      "Jelly-Party: No navigation listener in place for this website.",
-    );
-  };
-
   setupNavigationListener = () => {
     ["popstate", "replacestate", "pushstate"].forEach(eventName => {
       document.addEventListener(eventName, this.navigationListener);

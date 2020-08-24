@@ -31,6 +31,9 @@ export class HostMessenger {
       this.messenger.handleTell("showUnreadNotification", () => {
         this.jellyPartyController.sidebar.fab.showUnreadNotificationIfMinimized();
       });
+      this.messenger.handleTell("replayNavigation", ({ url }) => {
+        this.jellyPartyController.provider.controller.navigateToVideo(url);
+      });
       this.messenger.handleTell("toggleFullscreen", () => {
         if (document.fullscreenElement) {
           document.exitFullscreen();
@@ -59,7 +62,6 @@ export class HostMessenger {
   }
 
   async replayMediaEvent(mediaMessage: MediaMessage) {
-    console.log(`attempting to replay ${JSON.stringify(mediaMessage)}`);
     switch (mediaMessage.event) {
       case "play": {
         await this.jellyPartyController.provider.controller.play();

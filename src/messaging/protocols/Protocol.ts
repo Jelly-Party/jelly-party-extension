@@ -48,6 +48,12 @@ export interface ProtocolInterface extends Protoframe {
   sendChatMessage: {
     body: { message: string };
   };
+  forwardNavigation: {
+    body: { url: string };
+  };
+  replayNavigation: {
+    body: { url: string };
+  };
 }
 
 export const Protocol: ProtoframeDescriptor<ProtocolInterface> = {
