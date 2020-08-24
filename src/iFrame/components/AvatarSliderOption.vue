@@ -26,7 +26,7 @@
 </template>
 
 <script>
-import allOptions from "@/helpers/avatarOptions.js";
+import allOptions from "@/helpers/avatar/avatarOptions.js";
 
 export default {
   props: {

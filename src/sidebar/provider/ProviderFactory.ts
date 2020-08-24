@@ -1,6 +1,6 @@
 import { Default } from "./providers/default/Default";
 import { YouTube } from "./providers/youtube/YouTube";
-import { primeHosts as potentialPrimeHosts } from "@/helpers/TLDs";
+import { primeHosts as potentialPrimeHosts } from "@/helpers/domains/TLDs";
 import { Provider } from "./Provider";
 import { Vimeo } from "./providers/vimeo/Vimeo";
 import { Netflix } from "./providers/netflix/Netflix";

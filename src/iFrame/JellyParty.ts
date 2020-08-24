@@ -9,7 +9,7 @@ import { OptionsState as OptionsStateType } from "@/iFrame/store/options/types";
 import { PartyState as PartyStateType } from "@/iFrame/store/party/types";
 import { state as optionsState } from "@/iFrame/store/options/index";
 import { state as partyState } from "@/iFrame/store/party/index";
-import { stableWebsites } from "@/helpers/stableWebsites";
+import { stableWebsites } from "@/helpers/domains/stableWebsites";
 import { IFrameMessenger } from "@/messaging/iFrameMessenger";
 import PromiseQueue from "@/helpers/promiseQueue";
 import { VideoState, MediaMessage } from "@/messaging/protocols/Protocol";

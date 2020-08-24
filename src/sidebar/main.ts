@@ -3,7 +3,7 @@ import { Sidebar } from "./Sidebar";
 import { ProviderFactory } from "./provider/ProviderFactory";
 import { Provider } from "./provider/Provider";
 import { hostMessenger } from "@/messaging/HostMessenger";
-import { primeHosts as potentialPrimeHosts } from "@/helpers/TLDs";
+import { primeHosts as potentialPrimeHosts } from "@/helpers/domains/TLDs";
 import { timeoutQuerySelector } from "@/helpers/querySelectors";
 
 export class JellyPartyController {
