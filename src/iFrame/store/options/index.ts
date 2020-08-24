@@ -86,7 +86,9 @@ export const options: Module<OptionsState, RootState> = {
     saveOptionsStateToBrowserLocalStorage(state) {
       console.log("Jelly-Party: Saving options");
       console.log({ options: state });
-      browser.storage.local.set({ options: state });
+      browser.runtime.sendMessage(
+        JSON.stringify({ type: "setOptions", options: state }),
+      );
     },
     updateAvatarState(state, newAvatarState) {
       Object.assign(state.avatarState, newAvatarState);

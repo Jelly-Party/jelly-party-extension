@@ -9,6 +9,8 @@ import { VideoState } from "@/messaging/protocols/Protocol";
 // video.pause() & video.currentTime= will work, however some websites,
 // such as Netflix, require direct access to video controllers.
 
+const videoCommandTimeout = 3000;
+
 export abstract class Controller {
   findVideoInterval!: NodeJS.Timeout;
   video: HTMLVideoElement | null;
@@ -24,7 +26,6 @@ export abstract class Controller {
     this.skipNextEvent = false;
     this.video = null;
     this.initializeHost();
-    this.setupNavigationListener();
     this.setupVideoHooks();
   }
 
@@ -35,7 +36,7 @@ export abstract class Controller {
     );
   }
 
-  navigateToVideo(url: URL): void {
+  navigateToVideo(url: string): void {
     // Override this method for custom navigation
     console.log("Jelly-Party: No navigation in place for this website");
   }
@@ -100,7 +101,7 @@ export abstract class Controller {
       const deferred = this.initNewDeferred();
       this.skipNextEvent = true;
       fun();
-      return Promise.race([deferred, sleep(1000)]).then(
+      return Promise.race([deferred, sleep(videoCommandTimeout)]).then(
         () => (this.skipNextEvent = false),
       );
     };
@@ -114,7 +115,7 @@ export abstract class Controller {
         const deferred = this.initNewDeferred();
         this.skipNextEvent = true;
         fun(tick);
-        return Promise.race([deferred, sleep(1000)]).then(
+        return Promise.race([deferred, sleep(videoCommandTimeout)]).then(
           () => (this.skipNextEvent = false),
         );
       }
@@ -193,18 +194,6 @@ export abstract class Controller {
       event: "seek",
       tick: this.video?.currentTime ?? 0,
       type: "media",
-    });
-  };
-
-  navigationListener = () => {
-    console.log(
-      "Jelly-Party: No navigation listener in place for this website.",
-    );
-  };
-
-  setupNavigationListener = () => {
-    ["popstate", "replacestate", "pushstate"].forEach(eventName => {
-      document.addEventListener(eventName, this.navigationListener);
     });
   };
 

@@ -5,6 +5,7 @@ import uuidv4 from "@/helpers/uuidv4";
 import { OptionsState } from "./iFrame/store/options/types";
 
 browser.runtime.onInstalled.addListener(function() {
+  console.log("browser.runtime.onInstalled called");
   const options = { guid: uuidv4(), clientName: _sample(userNames) };
   browser.storage.local.set({ options: options }).then(function() {
     console.log("Jelly-Party has been initialized.");
@@ -12,14 +13,16 @@ browser.runtime.onInstalled.addListener(function() {
   });
 });
 
-browser.storage.local.get("options").then(res => {
-  const options: OptionsState = res.options;
-  if (!options.guid) {
-    console.log("Jelly-Party. GUID lost, resetting GUID.");
-    const newOptions = { ...options, ...{ guid: uuidv4() } };
-    browser.storage.local.set({ options: newOptions });
-  }
-});
+function resetGUIDIfLost() {
+  browser.storage.local.get("options").then(res => {
+    const options: OptionsState = res.options;
+    if (!options.guid) {
+      console.log("Jelly-Party. GUID lost, resetting GUID.");
+      const newOptions = { ...options, ...{ guid: uuidv4() } };
+      browser.storage.local.set({ options: newOptions });
+    }
+  });
+}
 
 function redirectToParty(
   redirectURL: string,
@@ -71,12 +74,21 @@ export interface RedirectFrame {
 }
 
 browser.runtime.onMessage.addListener((req: string) => {
-  const request: RedirectFrame = JSON.parse(req);
+  const request: any = JSON.parse(req);
   switch (request.type) {
     case "redirectToParty": {
       return new Promise((resolve, reject) => {
-        redirectToParty(request.payload.redirectURL, resolve, reject);
+        redirectToParty(
+          (request as RedirectFrame).payload.redirectURL,
+          resolve,
+          reject,
+        );
       });
+    }
+    case "setOptions": {
+      browser.storage.local.set({ options: request.options });
+      resetGUIDIfLost();
+      break;
     }
     default: {
       console.log(`Jelly-Party: Received unknown message: ${request}`);
