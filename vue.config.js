@@ -5,19 +5,19 @@ module.exports = {
   lintOnSave: true,
   pages: {
     index: {
-      entry: "src/popup/main.ts",
+      entry: "src/apps/popup/Popup.ts",
       template: "public/index.html",
       filename: "popup.html",
       title: "Jelly-Party App",
     },
     IFrame: {
-      entry: "src/iFrame/IFrame.ts",
+      entry: "src/apps/sidebar/Vue-IFrame/Vue-IFrame.ts",
       template: "public/index.html",
       filename: "iframe.html",
       title: "Jelly-Party IFrame",
     },
     Join: {
-      entry: "src/join.jelly-party.com/index.ts",
+      entry: "src/apps/join/Join.ts",
       template: "public/index.html",
       filename: "join.html",
       title: "Jelly-Party Join",
@@ -31,9 +31,9 @@ module.exports = {
   filenameHashing: false,
   configureWebpack: {
     entry: {
-      background: "./src/background.ts",
-      hostFrame: "./src/sidebar/main.ts",
-      RootStyles: "./src/styles/RootStyles.scss",
+      background: "./src/background/Background.ts",
+      sidebar: "./src/apps/sidebar/Sidebar.ts",
+      rootStyles: "./src/assets/styles/RootStyles.scss",
     },
     devtool: ["development", "staging"].includes(process.env.NODE_ENV)
       ? "source-map"
@@ -64,7 +64,7 @@ module.exports = {
   css: {
     loaderOptions: {
       sass: {
-        prependData: `@import "~@/styles/_variables.scss";`,
+        prependData: `@import "~@/assets/styles/_variables.scss";`,
       },
     },
     extract: false,
