@@ -14,11 +14,13 @@ export class Amazon extends Provider {
 
   constructor() {
     super();
-    this.iFrameTargetSelector = ".cascadesContainer";
+    this.iFrameTargetSelector = ".webPlayerSDKContainer";
     this.awaitCSSSelector = "body";
     this.host = window.location.host;
     this.controller = new AmazonController();
     this.customizer = new AmazonCustomizer();
-    this.iFrameTarget = document.querySelector(this.iFrameTargetSelector);
+    this.iFrameTarget =
+      document.querySelector(this.iFrameTargetSelector) ??
+      document.querySelector(".cascadesContainer");
   }
 }
