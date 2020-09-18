@@ -1,7 +1,9 @@
 <template>
   <div id="jelly-party-header">
     <div class="d-flex justify-content-center align-items-center">
-      <h3 id="jelly-party-heading-text" class="mr-2">Jelly-Party</h3>
+      <h3 id="jelly-party-heading-text" class="mr-2">
+        {{ appName }}
+      </h3>
       <img
         src="@/assets/images/logo-blue.png"
         width="32px"
@@ -46,6 +48,9 @@ export default {
       } else {
         return "Disconnected";
       }
+    },
+    appName() {
+      return process.env.VUE_APP_TITLE;
     },
     ...mapState([
       "sideBarMinimized",
