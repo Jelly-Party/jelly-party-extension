@@ -6,7 +6,7 @@ This repo contains all code for the browser extension [Jelly-Party](https://chro
 
 ```
 npm install
-npm run stage
+npm run 'stage devtools'
 ```
 
 This will compile the project and serve it under `dist`, which you can load unpacked into Chrome or Firefox. Furthermore, this spins up `vue-remote-devtools` for debugging purposes.
