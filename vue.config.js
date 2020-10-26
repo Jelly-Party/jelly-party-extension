@@ -10,30 +10,37 @@ module.exports = {
       filename: "popup.html",
       title: "Jelly-Party App",
     },
-    IFrame: {
-      entry: "src/apps/sidebar/Vue-IFrame/Vue-IFrame.ts",
+    iframe: {
+      entry: "src/apps/iframe/IFrame.ts",
       template: "public/index.html",
       filename: "iframe.html",
       title: "Jelly-Party IFrame",
     },
-    Join: {
-      entry: "src/apps/join/Join.ts",
-      template: "public/index.html",
-      filename: "join.html",
-      title: "Jelly-Party Join",
-    },
-  },
-  pluginOptions: {
-    webpackBundleAnalyzer: {
-      openAnalyzer: false,
-    },
+    // Join: {
+    //   entry: "src/apps/join/Join.ts",
+    //   template: "public/index.html",
+    //   filename: "join.html",
+    //   title: "Jelly-Party Join",
+    // },
   },
   filenameHashing: false,
   configureWebpack: {
     entry: {
       background: "./src/background/Background.ts",
-      sidebar: "./src/apps/sidebar/Sidebar.ts",
-      rootStyles: "./src/assets/styles/RootStyles.scss",
+      //   sidebar: "./src/apps/sidebar/Sidebar.ts",
+      //   rootStyles: "./src/assets/styles/RootStyles.scss",
+      //   amazonController:
+      //     "./src/services/provider/providers/amazon/AmazonController.ts",
+      //   defaultController:
+      //     "./src/services/provider/providers/default/DefaultController.ts",
+      //   disneyPlusController:
+      //     "./src/services/provider/providers/disneyplus/DisneyPlusController.ts",
+      //   netflixController:
+      //     "./src/services/provider/providers/netflix/NetflixController.ts",
+      //   vimeoController:
+      //     "./src/services/provider/providers/vimeo/VimeoController.ts",
+      //   youtubeController:
+      //     "./src/services/provider/providers/youtube/YoutubeController.ts",
     },
     devtool: ["development", "staging"].includes(process.env.NODE_ENV)
       ? "source-map"
@@ -44,7 +51,7 @@ module.exports = {
     //   libraryTarget: "var"
     // }
   },
-  chainWebpack: config => {
+  chainWebpack: (config) => {
     config.optimization.splitChunks(false);
     const svgRule = config.module.rule("svg");
     svgRule.uses.clear();
@@ -58,15 +65,6 @@ module.exports = {
       .rule("images")
       .use("url-loader")
       .loader("url-loader")
-      .tap(options => Object.assign(options, { limit: 100240 }));
-  },
-  // TODO: Look into webpack's side effects: https://github.com/vuejs/vue-cli/issues/1287
-  css: {
-    loaderOptions: {
-      sass: {
-        prependData: `@import "~@/assets/styles/_variables.scss";`,
-      },
-    },
-    extract: false,
+      .tap((options) => Object.assign(options, { limit: 100240 }));
   },
 };
