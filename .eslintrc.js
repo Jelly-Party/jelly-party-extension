@@ -6,10 +6,10 @@ module.exports = {
     browser: true,
   },
   extends: [
-    "plugin:vue/essential",
+    "plugin:vue/recommended",
     "eslint:recommended",
     "@vue/typescript/recommended",
-    // "@vue/prettier",
+    "@vue/prettier",
     "@vue/prettier/@typescript-eslint",
   ],
   parserOptions: {
@@ -25,5 +25,20 @@ module.exports = {
       { vars: "all", args: "none", ignoreRestSiblings: false },
     ],
     "@typescript-eslint/no-explicit-any": 0,
+  },
+  plugins: ["import"],
+  settings: {
+    "import/resolver": {
+      alias: {
+        map: [
+          ["@", "./src"], //default @ -> ./src alias in Vue, it exists even if vue.config.js is not present
+          /*
+           *... add your own webpack aliases if you have them in vue.config.js/other webpack config file
+           * if you forget to add them, eslint-plugin-import will not throw linting error in .vue imports that contain the webpack alias you forgot to add
+           */
+        ],
+        extensions: [".vue", ".json", ".js"],
+      },
+    },
   },
 };
