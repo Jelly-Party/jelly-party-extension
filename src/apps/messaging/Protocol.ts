@@ -47,3 +47,28 @@ export type JellyPartyProtocol = {
 export const JellyPartyDescriptor: ProtoframeDescriptor<JellyPartyProtocol> = {
   type: "jellyPartyProtocol",
 };
+
+export type VideoControllerProtocol = {
+  tellVideo: {
+    body: { videoSize: number };
+  };
+  getVideoState: {
+    body: {};
+    response: { videoState: VideoState };
+  };
+};
+
+export const VideoDescriptor: ProtoframeDescriptor<VideoControllerProtocol> = {
+  type: "videoControllerProtocol",
+};
+
+export type HostControllerProtocol = {
+  getURL: {
+    body: {};
+    response: { url: string };
+  };
+};
+
+export const HostDescriptor: ProtoframeDescriptor<HostControllerProtocol> = {
+  type: "videoControllerProtocol",
+};
