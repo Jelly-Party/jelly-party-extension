@@ -44,6 +44,24 @@ export type VideoControllerProtocol = {
   togglePlayPause: {
     body: {};
   };
+  enqueuePlay: {
+    body: { tick: number };
+  };
+  enqueuePause: {
+    body: { tick: number };
+  };
+  enqueueSeek: {
+    body: { tick: number };
+  };
+  requestPeersToPlay: {
+    body: { tick: number };
+  };
+  requestPeersToPause: {
+    body: { tick: number };
+  };
+  requestPeersToSeek: {
+    body: { tick: number };
+  };
 };
 
 export const VideoDescriptor: ProtoframeDescriptor<VideoControllerProtocol> = {
@@ -105,10 +123,10 @@ export interface SendJoin {
   };
 }
 
-export interface SendForward {
+export interface SendForward<T extends forwardInstruction> {
   type: "forward";
   data: {
-    commandToForward: forwardInstruction;
+    commandToForward: T;
   };
 }
 type forwardInstruction = SendVideoUpdate | SendChatMessage;
@@ -164,3 +182,8 @@ export interface ReceiveVideoUpdate {
     };
   };
 }
+
+export type ClientInstructions =
+  | ReceiveSetUUID
+  | ReceivePartyState
+  | ReceiveVideoUpdate;
