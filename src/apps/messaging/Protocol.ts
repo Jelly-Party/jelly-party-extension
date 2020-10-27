@@ -3,25 +3,17 @@ import { AppState } from "../iframe/store/store";
 import { VideoState } from "../iframe/store/types";
 
 export type JellyPartyProtocol = {
-  getVideoState: {
-    body: {};
-    response: { videoState: VideoState };
-  };
-  getURL: {
-    body: {};
-    response: { url: URL };
-  };
   setAppState: {
     body: { appState: AppState };
   };
   setVideoState: {
     body: { videoState: VideoState };
   };
-  resetPartyState: {
-    body: {};
+  joinParty: {
+    body: { partyId: string };
   };
-  seek: {
-    body: { tick: number };
+  leaveParty: {
+    body: {};
   };
   toggleFullscreen: {
     body: {};
@@ -32,15 +24,8 @@ export type JellyPartyProtocol = {
   displayNotification: {
     body: { text: string };
   };
-  connectToParty: {
-    body: { partyId: string };
-  };
   sendChatMessage: {
     body: { text: string };
-  };
-  getBaseLink: {
-    body: {};
-    response: { baseLink: string };
   };
 };
 

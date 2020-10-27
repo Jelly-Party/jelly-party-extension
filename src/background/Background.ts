@@ -11,9 +11,7 @@ import { DeferredPromise } from "@/helpers/deferredPromise";
 type awaitablePubsubConnection = DeferredPromise<
   ProtoframePubsub<JellyPartyProtocol>
 >;
-type awaitableWebsocket = Promise<WebSocket>;
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-let ws: awaitableWebsocket;
+let ws: WebSocket;
 let iframePubsub: awaitablePubsubConnection = new DeferredPromise();
 let hostFramePubsub: awaitablePubsubConnection = new DeferredPromise();
 let videoControllerPubsub: awaitablePubsubConnection = new DeferredPromise();
@@ -53,6 +51,15 @@ async function resetConnections() {
 
 function setupIframeHandlers(pubsub: ProtoframePubsub<JellyPartyProtocol>) {
   //
+  pubsub.handleTell("joinParty", async ({ partyId }) => {
+    if (ws) {
+      console.error(
+        "Jelly-Party: Already connected to a party.. Cannot connect twice!",
+      );
+    } else {
+      ws = new WebSocket("");
+    }
+  });
 }
 
 function setupVideoControllerHandlers(

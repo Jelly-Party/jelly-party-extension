@@ -5,7 +5,6 @@ import "bootstrap/dist/css/bootstrap.css";
 import "bootstrap-vue/dist/bootstrap-vue.css";
 import log from "loglevel";
 import { AppState, InitialState } from "./store/store";
-import { stableWebsites } from "@/helpers/domains/stableWebsites";
 import { browser, Runtime } from "webextension-polyfill-ts";
 import {
   JellyPartyDescriptor,
@@ -50,23 +49,15 @@ export class IFrame {
     this.messagingPort = browser.runtime.connect(undefined, { name: "iframe" });
     this.pubsub = ProtoframePubsub.build(
       JellyPartyDescriptor,
-      this.messagingPort
+      this.messagingPort,
     );
-    this.pubsub.handleAsk("getURL", async () => {
-      return { url: new URL("helloworld") };
-    });
-    this.pubsub.handleTell("setAppState", async (msg) => {
+    this.pubsub.handleTell("setAppState", async msg => {
       this.appState = msg.appState;
     });
-    this.pubsub.handleTell("setVideoState", async (msg) => {
+    this.pubsub.handleTell("setVideoState", async msg => {
       this.appState.PartyState.videoState = msg.videoState;
     });
     this.appState = InitialState;
-    for (const stableWebsite of stableWebsites) {
-      if (window.location.href.includes(stableWebsite)) {
-        this.stableWebsite = true;
-      }
-    }
     if (["staging", "development"].includes(this.appState.RootState.appMode)) {
       log.enableAll();
     } else {
@@ -77,53 +68,14 @@ export class IFrame {
         ["staging", "development"].includes(this.appState.RootState.appMode)
           ? "enabled"
           : "disabled"
-      }.`
+      }.`,
     );
     this.displayNotification("Jelly Party loaded!", true);
-    this.attemptAutoJoin();
-  }
-
-  async getURL() {
-    return await this.pubsub.ask("getURL", {});
-  }
-
-  async attemptAutoJoin() {
-    const jellyPartyId = new URLSearchParams(
-      (await this.getURL()).url.toString()
-    ).get("jellyPartyId");
-    if (jellyPartyId) {
-      this.joinParty(jellyPartyId);
-    } else {
-      console.log("Jelly-Party: No partyId found from URL. Skipping AutoJoin.");
-    }
   }
 
   async resetPartyState() {
-    this.pubsub.tell("resetPartyState", {});
+    this.pubsub.tell("leaveParty", {});
   }
-
-  async updateMagicLink() {
-    const { baseLink } = await this.pubsub.ask("getBaseLink", {});
-    const magicLink = new URL("https://join.jelly-party.com/");
-    const redirectURL = encodeURIComponent(baseLink);
-    magicLink.searchParams.append("redirectURL", redirectURL);
-    magicLink.searchParams.append(
-      "jellyPartyId",
-      this.appState.PartyState.partyId
-    );
-    this.appState.PartyState.magicLink = magicLink.toString();
-  }
-
-  locallySyncPartyState = async () => {
-    try {
-      // We craft a command to let the server know about our new client state
-      const { videoState } = await this.getVideoState();
-      this.appState.PartyState.videoState = videoState;
-    } catch (error) {
-      log.debug("Jelly-Party: Error updating client state..");
-      log.error(error);
-    }
-  };
 
   startParty() {
     this.connectToPartyHelper();
@@ -140,7 +92,7 @@ export class IFrame {
   }
 
   connectToPartyHelper(partyId = "") {
-    this.pubsub.tell("connectToParty", { partyId: partyId });
+    this.pubsub.tell("joinParty", { partyId: partyId });
   }
 
   sendChatMessage(text: string) {
@@ -158,14 +110,10 @@ export class IFrame {
   toggleFullScreen() {
     this.pubsub.tell("toggleFullscreen", {});
   }
-
-  async getVideoState() {
-    return await this.pubsub.ask("getVideoState", {});
-  }
 }
 
 const app = new Vue({
-  render: (h) => h(Sidebar),
+  render: h => h(Sidebar),
 }).$mount("#app");
 const iframe = new IFrame();
 app.$iframe = iframe;
