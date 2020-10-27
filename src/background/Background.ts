@@ -14,7 +14,7 @@ import {
 import { ProtoframePubsub } from "@/helpers/protoframe-webext";
 import { browser, Runtime } from "webextension-polyfill-ts";
 import { DeferredPromise } from "@/helpers/deferredPromise";
-import { AppState, InitialState } from "@/apps/iframe/store/store";
+import { AppStateInterface, InitialState } from "@/apps/iframe/store/store";
 import uuidv4 from "@/helpers/uuidv4";
 import { sample as _sample } from "lodash-es";
 import { userNames } from "@/helpers/userNames";
@@ -31,8 +31,8 @@ browser.runtime.onInstalled.addListener(function() {
   });
 });
 
-async function getInitialState(): Promise<AppState> {
-  const res = new DeferredPromise<AppState>();
+async function getInitialState(): Promise<AppStateInterface> {
+  const res = new DeferredPromise<AppStateInterface>();
   browser.storage.local.get("options").then(async res => {
     const storedOptions: OptionsState = res.options;
     if (!storedOptions.guid) {

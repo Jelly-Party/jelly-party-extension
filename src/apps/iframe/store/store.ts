@@ -1,12 +1,12 @@
 import { RootState, PartyState, OptionsState } from "./types";
 
-export interface AppState {
+export interface AppStateInterface {
   RootState: RootState;
   PartyState: PartyState;
   OptionsState: OptionsState;
 }
 
-export const InitialState: AppState = {
+export const InitialState: AppStateInterface = {
   RootState: {
     sideBarMinimized: false,
     connectedToServer: false,

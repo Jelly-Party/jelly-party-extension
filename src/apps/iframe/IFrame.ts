@@ -4,7 +4,7 @@ import { BootstrapVue, IconsPlugin } from "bootstrap-vue";
 import "bootstrap/dist/css/bootstrap.css";
 import "bootstrap-vue/dist/bootstrap-vue.css";
 import log from "loglevel";
-import { AppState, InitialState } from "./store/store";
+import { AppStateInterface, InitialState } from "./store/store";
 import { browser, Runtime } from "webextension-polyfill-ts";
 import {
   JellyPartyDescriptor,
@@ -39,8 +39,9 @@ Vue.directive("click-outside", {
 Vue.use(BootstrapVue);
 Vue.use(IconsPlugin);
 
+export let appState: AppStateInterface;
+
 export class IFrame {
-  appState: AppState;
   messagingPort: Runtime.Port;
   stableWebsite!: boolean;
   pubsub: ProtoframePubsub<JellyPartyProtocol>;
@@ -52,20 +53,20 @@ export class IFrame {
       this.messagingPort,
     );
     this.pubsub.handleTell("setAppState", async msg => {
-      this.appState = msg.appState;
+      appState = msg.appState;
     });
     this.pubsub.handleTell("setVideoState", async msg => {
-      this.appState.PartyState.videoState = msg.videoState;
+      appState.PartyState.videoState = msg.videoState;
     });
-    this.appState = InitialState;
-    if (["staging", "development"].includes(this.appState.RootState.appMode)) {
+    appState = InitialState;
+    if (["staging", "development"].includes(appState.RootState.appMode)) {
       log.enableAll();
     } else {
       log.setDefaultLevel("info");
     }
     log.info(
       `Jelly-Party: Debug logging is ${
-        ["staging", "development"].includes(this.appState.RootState.appMode)
+        ["staging", "development"].includes(appState.RootState.appMode)
           ? "enabled"
           : "disabled"
       }.`,
@@ -86,7 +87,7 @@ export class IFrame {
   }
 
   displayNotification(notificationText: string, forceDisplay = false) {
-    if (forceDisplay || this.appState.OptionsState.statusNotificationsNotyf) {
+    if (forceDisplay || appState.OptionsState.statusNotificationsNotyf) {
       this.pubsub.tell("displayNotification", { text: notificationText });
     }
   }
