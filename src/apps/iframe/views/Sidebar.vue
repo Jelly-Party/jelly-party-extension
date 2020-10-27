@@ -1,9 +1,13 @@
 <template>
-  <div id="wrapper" :class="{ darkMode: darkMode }">
+  <div id="wrapper" :class="{ darkMode: optionsState.darkMode }">
     <SidebarHeader />
-    <Tabs v-if="!(connectingToServer || connectedToServer)" />
+    <Tabs
+      v-if="
+        !(optionsState.connectingToServer || optionsState.connectedToServer)
+      "
+    />
     <div
-      v-if="connectingToServer"
+      v-if="optionsState.connectingToServer"
       style="display:flex; align-items:center; justify-content:center;"
     >
       <div>
@@ -25,8 +29,8 @@
 <script>
 import SidebarHeader from "../components/SidebarHeader.vue";
 import Tabs from "./Tabs.vue";
-import PartyView from "@/apps/sidebar/Vue-IFrame/components/PartyView";
-import { mapState } from "vuex";
+import PartyView from "../components/PartyView";
+import { appState } from "../IFrame";
 
 export default {
   name: "SideBar",
@@ -36,8 +40,9 @@ export default {
     Tabs,
   },
   computed: {
-    ...mapState("options", ["darkMode"]),
-    ...mapState(["connectingToServer", "connectedToServer"]),
+    optionsState() {
+      return appState.optionsState;
+    },
   },
 };
 </script>
@@ -58,10 +63,12 @@ export default {
   }
   &::-webkit-scrollbar-thumb {
     background-color: var(--thumbBG);
+    box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
     -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
   }
   &::-webkit-scrollbar-track {
     background: var(--scrollbarBG);
+    box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
     -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
     background-color: var(--scrollbarBG);
   }
