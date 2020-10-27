@@ -41,6 +41,9 @@ export type VideoControllerProtocol = {
     body: {};
     response: { videoState: VideoState };
   };
+  togglePlayPause: {
+    body: {};
+  };
 };
 
 export const VideoDescriptor: ProtoframeDescriptor<VideoControllerProtocol> = {
@@ -51,6 +54,12 @@ export type HostControllerProtocol = {
   getURL: {
     body: {};
     response: { url: string };
+  };
+  toggleFullscreen: {
+    body: {};
+  };
+  displayNotification: {
+    body: { text: string };
   };
 };
 

@@ -3,6 +3,7 @@ import {
   HostDescriptor,
   JellyPartyDescriptor,
   JellyPartyProtocol,
+  SendChatMessage,
   SendJoin,
   VideoControllerProtocol,
   VideoDescriptor,
@@ -80,16 +81,32 @@ async function setupIframeHandlers(
     ws.close();
   });
   pubsub.handleTell("toggleFullscreen", async () => {
-    //
+    // Forward message to host frame
+    hostFramePubsub.tell("toggleFullscreen", {});
   });
   pubsub.handleTell("togglePlayPause", async () => {
-    //
+    // Forward message to video controller
+    videoControllerPubsub.tell("togglePlayPause", {});
   });
-  pubsub.handleTell("displayNotification", async () => {
-    //
+  pubsub.handleTell("displayNotification", async ({ text }) => {
+    // Forward message to host controller, where notyf resides
+    hostFramePubsub.tell("displayNotification", { text: text });
   });
-  pubsub.handleTell("sendChatMessage", async () => {
-    //
+  pubsub.handleTell("sendChatMessage", async ({ text }) => {
+    // Forward message to WebSocket
+    const msg: SendChatMessage = {
+      type: "forward",
+      data: {
+        commandToForward: {
+          type: "chatMessage",
+          data: {
+            text: text,
+            timestamp: Date.now(),
+          },
+        },
+      },
+    };
+    ws.send(JSON.stringify(msg));
   });
 }
 
