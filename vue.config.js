@@ -16,12 +16,38 @@ module.exports = {
       filename: "iframe.html",
       title: "Jelly-Party IFrame",
     },
-    // Join: {
-    //   entry: "src/apps/join/Join.ts",
-    //   template: "public/index.html",
-    //   filename: "join.html",
-    //   title: "Jelly-Party Join",
-    // },
+    Join: {
+      entry: "src/apps/join/Join.ts",
+      template: "public/index.html",
+      filename: "join.html",
+      title: "Jelly-Party Join",
+    },
+  },
+  pluginOptions: {
+    webpackBundleAnalyzer: {
+      openAnalyzer: false,
+    },
+    browserExtension: {
+      manifestTransformer: manifest => {
+        let connectSrc = "connect-src 'self'";
+        if (["staging", "development"].includes(process.env.NODE_ENV)) {
+          manifest.content_security_policy = manifest.content_security_policy.replace(
+            "script-src 'self';",
+            "script-src 'self' 'unsafe-eval';",
+          );
+          connectSrc =
+            connectSrc + " http://localhost:8098 ws://localhost:8098";
+        }
+        manifest.content_security_policy =
+          manifest.content_security_policy +
+          " " +
+          connectSrc +
+          " " +
+          process.env.VUE_APP_WS_ADDRESS +
+          ";";
+        return manifest;
+      },
+    },
   },
   filenameHashing: false,
   configureWebpack: {
@@ -51,7 +77,7 @@ module.exports = {
     //   libraryTarget: "var"
     // }
   },
-  chainWebpack: (config) => {
+  chainWebpack: config => {
     config.optimization.splitChunks(false);
     const svgRule = config.module.rule("svg");
     svgRule.uses.clear();
@@ -65,6 +91,6 @@ module.exports = {
       .rule("images")
       .use("url-loader")
       .loader("url-loader")
-      .tap((options) => Object.assign(options, { limit: 100240 }));
+      .tap(options => Object.assign(options, { limit: 100240 }));
   },
 };
