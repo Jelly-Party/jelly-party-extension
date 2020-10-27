@@ -11,7 +11,7 @@
       <div
         class="w-100 option-inline-text d-flex align-items-center justify-content-center overflow-hidden"
       >
-        <span class="font-weight-bold">{{ avatarState[this.optionsKey] }}</span>
+        <span class="font-weight-bold">{{ avatarState[optionsKey] }}</span>
       </div>
       <b-btn
         class="avatar-slider-button avatar-slider-button--right avatar-selection"
@@ -27,12 +27,31 @@
 
 <script>
 import allOptions from "@/helpers/avatar/avatarOptions.js";
+import { appState } from "../IFrame";
 
 export default {
   props: {
     optionsKey: {
       type: String,
       required: true,
+    },
+  },
+  computed: {
+    optionsValues: function() {
+      let key = this.optionsKey;
+      switch (this.optionsKey) {
+        case "facialHairColor":
+          key = "hairColor";
+          break;
+        case "clotheColor":
+          key = "hatAndShirtColor";
+          break;
+      }
+      const values = allOptions[key];
+      return values;
+    },
+    avatarState() {
+      return appState.OptionsState.avatarState;
     },
   },
   methods: {
@@ -65,24 +84,6 @@ export default {
         stateKey: this.optionsKey,
         newState: newOption,
       });
-    },
-  },
-  computed: {
-    optionsValues: function() {
-      let key = this.optionsKey;
-      switch (this.optionsKey) {
-        case "facialHairColor":
-          key = "hairColor";
-          break;
-        case "clotheColor":
-          key = "hatAndShirtColor";
-          break;
-      }
-      const values = allOptions[key];
-      return values;
-    },
-    avatarState() {
-      return this.$store.state.options.avatarState;
     },
   },
 };

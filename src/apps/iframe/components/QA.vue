@@ -13,7 +13,7 @@
 
 <script>
 export default {
-  props: { id: String },
+  props: { id: { type: String, default: "No question defined.." } },
 };
 </script>
 

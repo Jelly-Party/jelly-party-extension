@@ -1,13 +1,13 @@
 <template>
   <b-container style="position: relative" class="pb-2 pt-2">
     <b-form-textarea
-      v-on:keyup.enter="sendChatMessage"
       id="textarea"
       v-model="text"
       placeholder="Enter something..."
       rows="4"
       max-rows="4"
       style="resize: none; padding: 0.375rem 3rem 0.375rem 0.75rem;"
+      @keyup.enter="sendChatMessage"
     ></b-form-textarea>
     <div id="sendMessageButton" @click="sendChatMessage">
       <svg
@@ -48,8 +48,8 @@
       </svg>
     </div>
     <VEmojiPicker
-      @select="selectEmoji"
       style="position: absolute; top: -27em; right: 0.7em; display: none;"
+      @select="selectEmoji"
     />
   </b-container>
 </template>
@@ -58,7 +58,7 @@
 import VEmojiPicker from "v-emoji-picker";
 import ClipboardJS from "clipboard";
 import { debounce as _debounce } from "lodash-es";
-import { party as partyStore } from "../store/party/index";
+import { appState } from "../IFrame";
 
 export default {
   components: {
@@ -68,6 +68,52 @@ export default {
     return {
       text: "",
       attached: true,
+    };
+  },
+  computed: {
+    messages: function() {
+      return appState.PartyState.chatMessages;
+    },
+  },
+  watch: {
+    messages: function() {
+      if (this.attached) {
+        this.scrollToBottom();
+      }
+    },
+  },
+  mounted: function() {
+    new ClipboardJS(".copy-button");
+    const el = document.querySelector("#chatMessagesContainer");
+    el.addEventListener(
+      "scroll",
+      _debounce(() => {
+        const isAtBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 1;
+        this.attached = isAtBottom;
+      }, 100),
+    );
+  },
+  created: function() {
+    // Create non-reactive references.
+    // this.skipNext is required to skip the callback for
+    // the next click on #toggleEmojiPicker, which
+    // otherwise opens & immediately closes the Picker
+    this.skipNext = true;
+    this.customEventListener = e => {
+      if (this.skipNext) {
+        this.skipNext = false;
+        return;
+      }
+      const path = e.path || e.composedPath();
+      const clickContainsEmojiPicker = path.some((elem, index) => {
+        if (elem?.id === "EmojiPicker") {
+          return true;
+        }
+        return false;
+      });
+      if (!clickContainsEmojiPicker) {
+        this.toggleEmojiPicker();
+      }
     };
   },
   methods: {
@@ -105,52 +151,6 @@ export default {
       const div = document.getElementById("chatMessagesContainer");
       div.scrollTop = div.scrollHeight;
     },
-  },
-  mounted: function() {
-    new ClipboardJS(".copy-button");
-    const el = document.querySelector("#chatMessagesContainer");
-    el.addEventListener(
-      "scroll",
-      _debounce(() => {
-        const isAtBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 1;
-        this.attached = isAtBottom;
-      }, 100),
-    );
-  },
-  computed: {
-    messages: function() {
-      return partyStore.state.chatMessages;
-    },
-  },
-  watch: {
-    messages: function() {
-      if (this.attached) {
-        this.scrollToBottom();
-      }
-    },
-  },
-  created: function() {
-    // Create non-reactive references.
-    // this.skipNext is required to skip the callback for
-    // the next click on #toggleEmojiPicker, which
-    // otherwise opens & immediately closes the Picker
-    this.skipNext = true;
-    this.customEventListener = e => {
-      if (this.skipNext) {
-        this.skipNext = false;
-        return;
-      }
-      const path = e.path || e.composedPath();
-      const clickContainsEmojiPicker = path.some((elem, index) => {
-        if (elem?.id === "EmojiPicker") {
-          return true;
-        }
-        return false;
-      });
-      if (!clickContainsEmojiPicker) {
-        this.toggleEmojiPicker();
-      }
-    };
   },
 };
 </script>

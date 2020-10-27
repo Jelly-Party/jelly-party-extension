@@ -14,16 +14,18 @@
     <div id="statusIcon">
       <span style="font-size: 0.7em">
         <b-icon-circle-fill
-          v-if="this.connectingToServer"
+          v-if="optionsState.connectingToServer"
+          v-b-tooltip.hover
           style="fill: yellow"
           animation="throb"
-          v-b-tooltip.hover
           :title="connectionString"
         ></b-icon-circle-fill>
         <b-icon-circle-fill
           v-else
-          :style="this.connectedToServer ? 'fill: green;' : 'fill: red;'"
           v-b-tooltip.hover
+          :style="
+            optionsState.connectedToServer ? 'fill: green;' : 'fill: red;'
+          "
           :title="connectionString"
         ></b-icon-circle-fill>
       </span>
@@ -32,18 +34,15 @@
 </template>
 
 <script>
-import { mapState } from "vuex";
+import { appState } from "../IFrame";
 
 export default {
   name: "SidebarHeader",
-  data: function() {
-    return {};
-  },
   computed: {
     connectionString() {
-      if (this.connectingToServer) {
+      if (appState.RootState.connectingToServer) {
         return "Connecting to server";
-      } else if (this.connectedToServer) {
+      } else if (appState.RootState.connectedToServer) {
         return "Connected to server";
       } else {
         return "Disconnected";
@@ -52,11 +51,9 @@ export default {
     appName() {
       return process.env.VUE_APP_TITLE;
     },
-    ...mapState([
-      "sideBarMinimized",
-      "connectedToServer",
-      "connectingToServer",
-    ]),
+    optionsState() {
+      return appState.optionsState;
+    },
   },
 };
 </script>

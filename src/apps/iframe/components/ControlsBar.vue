@@ -3,10 +3,10 @@
     <div id="jelly-party-controls-bar">
       <div
         v-b-modal.modal-center
-        class="jelly-party-navbar-button"
-        @click="togglePlayPause()"
         v-b-tooltip.hover
+        class="jelly-party-navbar-button"
         :title="paused ? 'Play video' : 'Pause video'"
+        @click="togglePlayPause()"
       >
         <svg
           v-if="paused"
@@ -48,10 +48,10 @@
 
       <div
         v-b-modal.modal-center
-        class="jelly-party-navbar-button"
-        @click="toggleFullScreen()"
         v-b-tooltip.hover
+        class="jelly-party-navbar-button"
         title="Toggle fullscreen"
+        @click="toggleFullScreen()"
       >
         <svg
           width="1em"
@@ -74,14 +74,14 @@
 
       <div
         v-b-modal.modal-center
-        class="jelly-party-navbar-button"
-        @click="toggleChatAndJitsi()"
         v-b-tooltip.hover
+        class="jelly-party-navbar-button"
         :title="
           showChat
             ? 'Switch to video chat (experimental)'
             : 'Swich to text chat'
         "
+        @click="toggleChatAndJitsi()"
       >
         <svg
           v-if="showChat"
@@ -123,8 +123,8 @@
 
       <div
         v-b-modal.people-inside-party-modal
-        class="jelly-party-navbar-button"
         v-b-tooltip.hover
+        class="jelly-party-navbar-button"
         title="Show people inside party"
       >
         <svg
@@ -148,8 +148,8 @@
 
       <div
         v-b-modal.leave-party-modal
-        class="jelly-party-navbar-button"
         v-b-tooltip.hover
+        class="jelly-party-navbar-button"
         title="Leave party"
       >
         <svg
@@ -184,20 +184,20 @@
         >
           <avataaars
             style="height:3.5em; width: 3.5em;"
-            :isCircle="true"
+            :is-circle="true"
             :title="getPeer(peer.uuid).clientName"
-            :accessoriesType="getPeer(peer.uuid).avatarState.accessoriesType"
-            :clotheType="getPeer(peer.uuid).avatarState.clotheType"
-            :clotheColor="getPeer(peer.uuid).avatarState.clotheColor"
-            :eyebrowType="getPeer(peer.uuid).avatarState.eyebrowType"
-            :eyeType="getPeer(peer.uuid).avatarState.eyeType"
-            :facialHairColor="getPeer(peer.uuid).avatarState.facialHairColor"
-            :facialHairType="getPeer(peer.uuid).avatarState.facialHairType"
-            :graphicType="'Hola'"
-            :hairColor="getPeer(peer.uuid).avatarState.hairColor"
-            :mouthType="getPeer(peer.uuid).avatarState.mouthType"
-            :skinColor="getPeer(peer.uuid).avatarState.skinColor"
-            :topType="getPeer(peer.uuid).avatarState.topType"
+            :accessories-type="getPeer(peer.uuid).avatarState.accessoriesType"
+            :clothe-type="getPeer(peer.uuid).avatarState.clotheType"
+            :clothe-color="getPeer(peer.uuid).avatarState.clotheColor"
+            :eyebrow-type="getPeer(peer.uuid).avatarState.eyebrowType"
+            :eye-type="getPeer(peer.uuid).avatarState.eyeType"
+            :facial-hair-color="getPeer(peer.uuid).avatarState.facialHairColor"
+            :facial-hair-type="getPeer(peer.uuid).avatarState.facialHairType"
+            :graphic-type="'Hola'"
+            :hair-color="getPeer(peer.uuid).avatarState.hairColor"
+            :mouth-type="getPeer(peer.uuid).avatarState.mouthType"
+            :skin-color="getPeer(peer.uuid).avatarState.skinColor"
+            :top-type="getPeer(peer.uuid).avatarState.topType"
           ></avataaars>
           <div class="jelly-party-name-wrapper">
             <span class="text-white"> {{ peer.clientName }} </span>
@@ -211,7 +211,7 @@
         ok-title="Leave party"
       >
         <p class="my-4">Are you sure you want to leave this party?</p>
-        <template v-slot:modal-footer="{ ok, cancel }">
+        <template #modal-footer="{ ok, cancel }">
           <b-button variant="secondary" @click="ok()">
             Cancel
           </b-button>
@@ -224,30 +224,34 @@
   </b-container>
 </template>
 
-<script>
-import { party as partyStore } from "@/apps/sidebar/Vue-IFrame/store/party/index";
-import { options as optionsStore } from "@/apps/sidebar/Vue-IFrame/store/options/index";
+<script lang="ts">
+import { appState } from "../IFrame";
 import * as JitsiMeetExternalAPI from "lib-jitsi-meet-dist/dist/external_api.min.js";
 import Avataaars from "vuejs-avataaars";
+import { computed } from "vue";
 
 export default {
   components: {
     Avataaars,
   },
-  computed: {
-    peers() {
-      return partyStore.state.peers;
-    },
-    paused() {
-      return partyStore.state.videoState.paused;
-    },
-    showChat() {
-      return partyStore.state.showChat;
-    },
+  setup() {
+    const peers = computed(() => {
+      return appState.PartyState.peers;
+    });
+    const paused = computed(() => {
+      return appState.PartyState.videoState.paused;
+    });
+    const showChat = computed(() => {
+      return appState.partyState.showChat;
+    });
+    return { peers, paused, showChat };
+  },
+  beforeDestroy() {
+    window.jitsiLoaded = false;
   },
   methods: {
     getPeer(uuid) {
-      const peer = partyStore.state.peers.find(peer => uuid === peer.uuid);
+      const peer = appState.PartyState.peers.find(peer => uuid === peer.uuid);
       return peer;
     },
     leaveParty(cancel) {
@@ -270,7 +274,7 @@ export default {
         const domain = "meet.jit.si";
         const videoContainerName = "Jelly-Party VideoChat";
         const options = {
-          roomName: `JellyParty/${partyStore.state.partyId}`,
+          roomName: `JellyParty/${appState.PartyState.partyId}`,
           width: "350px",
           height: "100%",
           parentNode: document.querySelector("#meet"),
@@ -324,13 +328,10 @@ export default {
         };
         // eslint-disable-next-line no-undef
         const api = new JitsiMeetExternalAPI(domain, options);
-        api.executeCommand("displayName", optionsStore.state.clientName);
+        api.executeCommand("displayName", appState.OptionsState.clientName);
       }
       this.$store.commit("party/toggleChatAndJitsi");
     },
-  },
-  beforeDestroy() {
-    window.jitsiLoaded = false;
   },
 };
 </script>

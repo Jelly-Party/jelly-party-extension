@@ -4,20 +4,20 @@
       Start a new party
       <span style="font-size: 0.7em">
         <b-icon
-          icon="question-circle-fill"
           v-b-tooltip.hover
+          icon="question-circle-fill"
           title="Perfect if you just want to get started with a new party ASAP."
         >
         </b-icon>
       </span>
     </h3>
-    <JellyPartyPrimaryButton v-on:click.native="startNewParty">
+    <JellyPartyPrimaryButton @click.native="startNewParty">
       Start a new party</JellyPartyPrimaryButton
     >
   </b-container>
 </template>
 
-<script>
+<script lang="ts">
 import JellyPartyPrimaryButton from "./JellyPartyPrimaryButton.vue";
 export default {
   components: {

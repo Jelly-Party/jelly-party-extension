@@ -29,7 +29,7 @@
         </svg>
       </div>
       <div class="p-1">
-        <b-icon icon="question-circle-fill" v-b-tooltip.hover :title="tooltip">
+        <b-icon v-b-tooltip.hover icon="question-circle-fill" :title="tooltip">
         </b-icon>
       </div>
     </div>

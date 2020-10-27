@@ -4,10 +4,10 @@
     <div v-show="showChat" id="chatMessagesContainer" style="overflow: auto;">
       <GreetingChatMessage />
       <ChatMessage
-        style="flex-grow: 1;"
         v-for="(chatMessage, index) in chatMessages"
         :key="index"
-        :chatMessage="chatMessage"
+        style="flex-grow: 1;"
+        :chat-message="chatMessage"
       />
     </div>
     <!-- Text input -->
@@ -20,8 +20,8 @@
 <script>
 import ChatMessage from "./ChatMessage.vue";
 import ChatInput from "./ChatInput.vue";
-import GreetingChatMessage from "@/apps/sidebar/Vue-IFrame/components/GreetingChatMessage.vue";
-import { mapFields } from "vuex-map-fields";
+import GreetingChatMessage from "./GreetingChatMessage.vue";
+import { appState } from "../IFrame";
 
 export default {
   components: {
@@ -33,7 +33,12 @@ export default {
     // When using nested data structures, the string
     // after the last dot (e.g. `firstName`) is used
     // for defining the name of the computed property.
-    ...mapFields("party", ["chatMessages", "showChat"]),
+    chatMessages() {
+      return appState.PartyState.chatMessages;
+    },
+    showChat() {
+      return appState.PartyState.showChat;
+    },
   },
 };
 </script>

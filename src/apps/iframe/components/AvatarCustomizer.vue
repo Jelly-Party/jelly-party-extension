@@ -5,19 +5,19 @@
     >
       <avataaars
         style="height:250px;"
-        :isCircle="true"
-        :accessoriesType="accessoriesType"
-        :clotheType="clotheType"
-        :clotheColor="clotheColor"
-        :eyebrowType="eyebrowType"
-        :eyeType="eyeType"
-        :facialHairColor="facialHairColor"
-        :facialHairType="facialHairType"
-        :graphicType="'Hola'"
-        :hairColor="hairColor"
-        :mouthType="mouthType"
-        :skinColor="skinColor"
-        :topType="topType"
+        :is-circle="true"
+        :accessories-type="avatarState.accessoriesType"
+        :clothe-type="avatarState.clotheType"
+        :clothe-color="avatarState.clotheColor"
+        :eyebrow-type="avatarState.eyebrowType"
+        :eye-type="avatarState.eyeType"
+        :facial-hair-color="avatarState.facialHairColor"
+        :facial-hair-type="avatarState.facialHairType"
+        :graphic-type="'Hola'"
+        :hair-color="avatarState.hairColor"
+        :mouth-type="avatarState.mouthType"
+        :skin-color="avatarState.skinColor"
+        :top-type="avatarState.topType"
       ></avataaars>
     </div>
     <b-input-group prepend="Name" class="pt-2">
@@ -27,35 +27,21 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import Avataaars from "vuejs-avataaars";
 import NestedSelection from "./NestedSelection.vue";
-import { mapFields } from "vuex-map-fields";
-
+import { appState } from "../IFrame";
+import { computed } from "vue";
 export default {
   components: {
     Avataaars,
     NestedSelection,
   },
-  computed: {
-    // When using nested data structures, the string
-    // after the last dot (e.g. `firstName`) is used
-    // for defining the name of the computed property.
-    ...mapFields("options", [
-      "clientName",
-      "avatarState.accessoriesType",
-      "avatarState.clotheType",
-      "avatarState.clotheColor",
-      "avatarState.eyebrowType",
-      "avatarState.eyeType",
-      "avatarState.facialHairColor",
-      "avatarState.facialHairType",
-      "avatarState.graphicType",
-      "avatarState.hairColor",
-      "avatarState.mouthType",
-      "avatarState.skinColor",
-      "avatarState.topType",
-    ]),
+  setup() {
+    const avatarState = computed(() => {
+      return appState.OptionsState.avatarState;
+    });
+    return { avatarState };
   },
 };
 </script>

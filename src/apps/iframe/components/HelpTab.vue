@@ -3,14 +3,14 @@
     <b-container>
       <h3 class="text-white text-center">Q &amp; A</h3>
       <QA id="start-party-question">
-        <template v-slot:question>How do I start a party?</template>
-        <template v-slot:answer
+        <template #question>How do I start a party?</template>
+        <template #answer
           >Simply head to the "Party" tab and press "Start a new party".
         </template>
       </QA>
       <QA id="enable-fullscreen-question">
-        <template v-slot:question>How do I enable fullscreen?</template>
-        <template v-slot:answer
+        <template #question>How do I enable fullscreen?</template>
+        <template #answer
           >Some websites have a very obtrusive full-screen handler. In this
           case, try toggling fullscreen using the fullscreen button located in
           the Controls-Bar under the Party tab (visible after you have joined a
@@ -18,16 +18,16 @@
         </template>
       </QA>
       <QA id="join-party-magic-link-question">
-        <template v-slot:question>How do I join using a magic link?</template>
-        <template v-slot:answer
+        <template #question>How do I join using a magic link?</template>
+        <template #answer
           >Simply open the magic link in a browser with Jelly-Party installed
           and you will automatically join the party. Note that Jelly-Party may
           ask you for additional permissions.
         </template>
       </QA>
       <QA id="join-party-manually-question">
-        <template v-slot:question>How do I manually join a party?</template>
-        <template v-slot:answer
+        <template #question>How do I manually join a party?</template>
+        <template #answer
           >Head to the video you want to watch and open Jelly-Party. Now type in
           the common Party-Id (you can either generate one by clicking on "Start
           a new party" or make one up yourself) and press "Join party manually
@@ -35,8 +35,8 @@
         </template>
       </QA>
       <QA id="when-join-party-manually-question">
-        <template v-slot:question>When should I join manually?</template>
-        <template v-slot:answer
+        <template #question>When should I join manually?</template>
+        <template #answer
           >Currently, there're two use-cases for joining a party manually:<br /><br />
           1. The website you're using Jelly-Party on doesn't support magic
           links:<br /><br />

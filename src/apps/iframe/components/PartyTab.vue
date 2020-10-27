@@ -1,8 +1,6 @@
 <template>
   <div class="h-100">
-    <div
-      v-if="!store.state.connectingToServer && !store.state.connectedToServer"
-    >
+    <div v-if="!connectingToServer && !connectedToServer">
       <b-container>
         <h3 class="text-white text-center">Getting started</h3>
         <p class="text-justify">
@@ -29,7 +27,7 @@
 </template>
 
 <script>
-import store from "@/apps/sidebar/Vue-IFrame/store/store";
+import { appState } from "../IFrame";
 import JoinPartyByIdComponent from "./JoinPartyByIdComponent.vue";
 import StarNewPartyComponent from "./StartNewPartyComponent.vue";
 
@@ -38,10 +36,13 @@ export default {
     StarNewPartyComponent,
     JoinPartyByIdComponent,
   },
-  data: function() {
-    return {
-      store,
-    };
+  computed: {
+    connectedToServer() {
+      return appState.RootState.connectedToServer;
+    },
+    connectingToServer() {
+      return appState.RootState.connectingToServer;
+    },
   },
 };
 </script>

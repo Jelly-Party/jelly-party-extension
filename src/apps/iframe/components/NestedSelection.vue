@@ -5,7 +5,6 @@
       class="d-flex align-items-center justify-content-between"
     >
       <svg
-        @click="selectCategory('next')"
         width="2em"
         height="2em"
         xmlns="http://www.w3.org/2000/svg"
@@ -16,6 +15,7 @@
         class="svg-inline--fa fa-chevron-circle-left fa-w-16 avatar-selection"
         role="img"
         viewBox="0 0 512 512"
+        @click="selectCategory('next')"
       >
         <path
           fill="currentColor"
@@ -24,7 +24,6 @@
       </svg>
       <h4 class="m-0">{{ readableCategory }}</h4>
       <svg
-        @click="selectCategory('previous')"
         width="2em"
         height="2em"
         xmlns="http://www.w3.org/2000/svg"
@@ -35,6 +34,7 @@
         class="svg-inline--fa fa-chevron-circle-right fa-w-16 avatar-selection"
         role="img"
         viewBox="0 0 512 512"
+        @click="selectCategory('previous')"
       >
         <path
           fill="currentColor"
@@ -43,13 +43,13 @@
       </svg>
     </div>
     <div class="py-3">
-      <AvatarSliderOption :optionsKey="currentCategory" />
+      <AvatarSliderOption :options-key="currentCategory" />
     </div>
   </b-container>
 </template>
 
-<script lang="js">
-import AvatarSliderOption from "./AvatarSliderOption.vue"
+<script lang="ts">
+import AvatarSliderOption from "./AvatarSliderOption.vue";
 
 const readableOptions = {
   accessoriesType: "Glasses",
@@ -66,44 +66,55 @@ const readableOptions = {
   topType: "Hair",
 };
 
-const categories = ["accessoriesType", "clotheType", "clotheColor", "eyebrowType", "eyeType", "facialHairColor", "facialHairType", "hairColor", "mouthType", "skinColor", "topType"]
+const categories = [
+  "accessoriesType",
+  "clotheType",
+  "clotheColor",
+  "eyebrowType",
+  "eyeType",
+  "facialHairColor",
+  "facialHairType",
+  "hairColor",
+  "mouthType",
+  "skinColor",
+  "topType",
+];
 
 export default {
-    components: {
-        AvatarSliderOption
+  components: {
+    AvatarSliderOption,
+  },
+  data: function() {
+    return {
+      currentCategory: "accessoriesType",
+    };
+  },
+  computed: {
+    allCategories() {
+      return Object.keys(this.props.optionsDictionary);
     },
-    data: function() {
-        return {
-            currentCategory: "accessoriesType",
-
+    readableCategory() {
+      return readableOptions[this.currentCategory];
+    },
+  },
+  methods: {
+    selectCategory(type) {
+      const currentIndex = categories.indexOf(this.currentCategory);
+      if (type === "next") {
+        if (currentIndex === categories.length - 1) {
+          this.currentCategory = categories[0];
+        } else {
+          this.currentCategory = categories[currentIndex + 1];
         }
-    },
-    computed: {
-        allCategories() {
-            return Object.keys(this.props.optionsDictionary)
-        },
-        readableCategory() {
-            return readableOptions[this.currentCategory];
-        },
-    },
-    methods: {
-        selectCategory(type) {
-            const currentIndex = categories.indexOf(this.currentCategory)
-            if (type === "next") {
-                if (currentIndex === categories.length - 1) {
-                    this.currentCategory = categories[0]
-                } else {
-                    this.currentCategory = categories[currentIndex+1]
-                }
-            } else if (type === "previous") {
-                if (currentIndex === 0) {
-                    this.currentCategory = categories[categories.length - 1]
-                } else {
-                    this.currentCategory = categories[currentIndex-1]
-                }
-            }
+      } else if (type === "previous") {
+        if (currentIndex === 0) {
+          this.currentCategory = categories[categories.length - 1];
+        } else {
+          this.currentCategory = categories[currentIndex - 1];
         }
-    }
+      }
+    },
+  },
 };
 </script>
 

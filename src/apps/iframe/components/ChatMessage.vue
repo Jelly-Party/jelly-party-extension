@@ -11,26 +11,26 @@
         <avataaars
           v-b-tooltip.hover
           style="height:4em; width: 4em;"
-          :isCircle="true"
+          :is-circle="true"
           :title="getPeer.clientName"
-          :accessoriesType="getPeer.avatarState.accessoriesType"
-          :clotheType="getPeer.avatarState.clotheType"
-          :clotheColor="getPeer.avatarState.clotheColor"
-          :eyebrowType="getPeer.avatarState.eyebrowType"
-          :eyeType="getPeer.avatarState.eyeType"
-          :facialHairColor="getPeer.avatarState.facialHairColor"
-          :facialHairType="getPeer.avatarState.facialHairType"
-          :graphicType="'Hola'"
-          :hairColor="getPeer.avatarState.hairColor"
-          :mouthType="getPeer.avatarState.mouthType"
-          :skinColor="getPeer.avatarState.skinColor"
-          :topType="getPeer.avatarState.topType"
+          :accessories-type="getPeer.avatarState.accessoriesType"
+          :clothe-type="getPeer.avatarState.clotheType"
+          :clothe-color="getPeer.avatarState.clotheColor"
+          :eyebrow-type="getPeer.avatarState.eyebrowType"
+          :eye-type="getPeer.avatarState.eyeType"
+          :facial-hair-color="getPeer.avatarState.facialHairColor"
+          :facial-hair-type="getPeer.avatarState.facialHairType"
+          :graphic-type="'Hola'"
+          :hair-color="getPeer.avatarState.hairColor"
+          :mouth-type="getPeer.avatarState.mouthType"
+          :skin-color="getPeer.avatarState.skinColor"
+          :top-type="getPeer.avatarState.topType"
         ></avataaars>
       </div>
       <div
         v-else
-        style="height:3.5em; width: 3.5em;"
         v-b-tooltip.hover
+        style="height:3.5em; width: 3.5em;"
         title="Jelly"
       >
         <img
@@ -52,8 +52,8 @@
 
 <script>
 import Avataaars from "vuejs-avataaars";
-import { party as partyStore } from "../store/party/index";
-import { jellyFishWithoutNotification as JellyPartySVG } from "@/apps/sidebar/DOMComponents/svgs";
+import { appState } from "../IFrame";
+import { jellyFishWithoutNotification as JellyPartySVG } from "@/helpers/svgs.ts";
 
 export default {
   components: {
@@ -68,7 +68,8 @@ export default {
   data: function() {
     return {
       systemMessage: this.chatMessage.peer.uuid === "jellyPartySupportBot",
-      messageFromSelf: this.chatMessage.peer.uuid === partyStore.state.selfUUID,
+      messageFromSelf:
+        this.chatMessage.peer.uuid === appState.PartyState.selfUUID,
       JellyPartySVG,
     };
   },
@@ -77,7 +78,7 @@ export default {
       if (this.systemMessage) {
         return { clientName: "Jelly" };
       } else {
-        const peer = partyStore.state.cachedPeers.find(
+        const peer = appState.PartyState.cachedPeers.find(
           peer => this.chatMessage.peer.uuid === peer.uuid,
         );
         return peer;

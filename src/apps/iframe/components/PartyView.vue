@@ -22,8 +22,7 @@
 import ChatMessenger from "./ChatMessenger.vue";
 import InfoBox from "./InfoBox.vue";
 import ControlsBar from "./ControlsBar.vue";
-import { party as partyStore } from "@/apps/sidebar/Vue-IFrame/store/party/index";
-import { mapState } from "vuex";
+import { appState } from "../IFrame";
 
 export default {
   components: {
@@ -32,12 +31,14 @@ export default {
     ChatMessenger,
   },
   computed: {
-    ...mapState(["connectedToServer"]),
+    connectedToServer() {
+      return appState.RootState.connectedToServer;
+    },
     magicLink() {
-      return partyStore.state.magicLink;
+      return appState.PartyState.magicLink;
     },
     partyId() {
-      return partyStore.state.partyId;
+      return appState.PartyState.partyId;
     },
   },
 };
