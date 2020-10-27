@@ -15,10 +15,13 @@
     "@types/lodash-es": "^4.17.3",
     "bootstrap": "^4.5.3",
     "bootstrap-vue": "^2.17.3",
+    "clipboard": "^2.0.6",
     "core-js": "^3.6.5",
     "lodash-es": "^4.17.15",
+    "v-emoji-picker": "^2.3.1",
     "vue": "^2.6.12",
     "vue-cli-plugin-browser-extension": "^0.25.0",
+    "vuejs-avataaars": "^4.0.1",
     "webextension-polyfill-ts": "^0.20.0"
   },
   "devDependencies": {
