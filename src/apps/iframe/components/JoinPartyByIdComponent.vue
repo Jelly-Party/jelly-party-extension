@@ -49,10 +49,10 @@ export default {
   },
   methods: {
     joinParty() {
-      this.$root.$party.joinParty(this.partyId);
+      this.$root.$iframe.joinParty(this.partyId);
     },
     rejoinParty() {
-      this.$root.$party.joinParty(this.lastPartyId);
+      this.$root.$iframe.joinParty(this.lastPartyId);
     },
   },
 };

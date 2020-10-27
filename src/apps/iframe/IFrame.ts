@@ -74,7 +74,7 @@ export class IFrame {
     this.displayNotification("Jelly Party loaded!", true);
   }
 
-  async resetPartyState() {
+  async leaveParty() {
     this.pubsub.tell("leaveParty", {});
   }
 
@@ -102,6 +102,10 @@ export class IFrame {
     } else {
       log.log(`Jelly-Party: Not sending empty chat message.`);
     }
+  }
+
+  setOptions() {
+    this.pubsub.tell("setOptions", { optionsState: appState.OptionsState });
   }
 
   async togglePlayPause() {

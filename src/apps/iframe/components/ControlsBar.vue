@@ -256,16 +256,16 @@ export default {
     },
     leaveParty(cancel) {
       console.log("Jelly-Party: Leaving party");
-      this.$root.$party.leaveParty();
+      this.$root.$iframe.leaveParty();
       cancel();
     },
     togglePlayPause() {
       console.log("Jelly-Party: Toggling PlayPause.");
-      this.$root.$party.togglePlayPause();
+      this.$root.$iframe.togglePlayPause();
     },
     toggleFullScreen() {
       console.log("Jelly-Party: Toggling fullscreen.");
-      this.$root.$party.toggleFullScreen();
+      this.$root.$iframe.toggleFullScreen();
     },
     toggleChatAndJitsi() {
       console.log("Jelly-Party: Toggling between chat & jitsi.");
@@ -330,7 +330,7 @@ export default {
         const api = new JitsiMeetExternalAPI(domain, options);
         api.executeCommand("displayName", appState.OptionsState.clientName);
       }
-      this.$store.commit("party/toggleChatAndJitsi");
+      appState.PartyState.showChat = !appState.PartyState.showChat;
     },
   },
 };

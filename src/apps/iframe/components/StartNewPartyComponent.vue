@@ -25,7 +25,7 @@ export default {
   },
   methods: {
     startNewParty() {
-      this.$root.$party.startParty();
+      this.$root.$iframe.startParty();
     },
   },
 };

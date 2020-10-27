@@ -25,9 +25,10 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import allOptions from "@/helpers/avatar/avatarOptions.js";
 import { appState } from "../IFrame";
+import { computed } from "vue";
 
 export default {
   props: {
@@ -36,8 +37,8 @@ export default {
       required: true,
     },
   },
-  computed: {
-    optionsValues: function() {
+  setup() {
+    const optionsValues = computed(() => {
       let key = this.optionsKey;
       switch (this.optionsKey) {
         case "facialHairColor":
@@ -49,10 +50,11 @@ export default {
       }
       const values = allOptions[key];
       return values;
-    },
-    avatarState() {
+    });
+    const avatarState = computed(() => {
       return appState.OptionsState.avatarState;
-    },
+    });
+    return { optionsValues, avatarState };
   },
   methods: {
     nextOption: function() {
@@ -65,10 +67,7 @@ export default {
       } else {
         newOption = this.optionsValues[0];
       }
-      this.$store.dispatch("options/updateAvatarState", {
-        stateKey: this.optionsKey,
-        newState: newOption,
-      });
+      this.appState.OptionsState.avatarState[this.optionsKey] = newOption;
     },
     previousOption: function() {
       const index = this.optionsValues.indexOf(
@@ -80,10 +79,7 @@ export default {
       } else {
         newOption = this.optionsValues[this.optionsValues.length - 1];
       }
-      this.$store.dispatch("options/updateAvatarState", {
-        stateKey: this.optionsKey,
-        newState: newOption,
-      });
+      this.appState.OptionsState.avatarState[this.optionsKey] = newOption;
     },
   },
 };

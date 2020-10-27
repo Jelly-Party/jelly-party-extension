@@ -39,9 +39,6 @@ export default {
     ...mapState("options", ["darkMode"]),
     ...mapState(["connectingToServer", "connectedToServer"]),
   },
-  mounted: function() {
-    this.$store.dispatch("options/populateOptionsStateFromBrowserLocalStorage");
-  },
 };
 </script>
 

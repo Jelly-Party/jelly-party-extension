@@ -108,16 +108,13 @@ export default {
       if (this.clientName.length < 2) {
         alert("Please choose a name that's longer than 2 characters");
       } else {
-        this.$store.dispatch("options/saveOptionsStateToBrowserLocalStorage");
-        // Share the new options with the party (videoState, name & avatar options are shared,
-        // though only avatar options and name are relevant)
         // eslint-disable-next-line vue/custom-event-name-casing
         this.$root.$emit("bv::toggle::collapse", "collapse-success");
         window.setTimeout(() => {
           // eslint-disable-next-line vue/custom-event-name-casing
           this.$root.$emit("bv::toggle::collapse", "collapse-success");
         }, 1000);
-        this.$root.$party.uploadPartyState();
+        this.$root.$iframe.setOptions();
       }
     },
   },

@@ -36,6 +36,9 @@ export type JellyPartyProtocol = {
   saveOptions: {
     body: { options: OptionsState };
   };
+  setOptions: {
+    body: { optionsState: OptionsState };
+  };
 };
 
 export const JellyPartyDescriptor: ProtoframeDescriptor<JellyPartyProtocol> = {

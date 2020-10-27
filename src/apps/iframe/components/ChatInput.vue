@@ -140,7 +140,7 @@ export default {
       // Only send text messages that contain, well, text
       // (1 is for the enter key)
       if (this.text.length > 1) {
-        this.$root.$party.sendChatMessage(this.text);
+        this.$root.$iframe.sendChatMessage(this.text);
         this.text = "";
       } else {
         // reset so that return keys don't add up..
