@@ -14,6 +14,58 @@ import {
 import { ProtoframePubsub } from "@/helpers/protoframe-webext";
 import { browser, Runtime } from "webextension-polyfill-ts";
 import { DeferredPromise } from "@/helpers/deferredPromise";
+import { AppState, InitialState } from "@/apps/iframe/store/store";
+import uuidv4 from "@/helpers/uuidv4";
+import { sample as _sample } from "lodash-es";
+import { userNames } from "@/helpers/userNames";
+import { OptionsState } from "@/apps/iframe/store/types";
+
+browser.runtime.onInstalled.addListener(function() {
+  const options: OptionsState = {
+    ...InitialState.OptionsState,
+    ...{ guid: uuidv4(), clientName: _sample(userNames) ?? "guest" },
+  };
+  browser.storage.local.set({ options }).then(function() {
+    console.log("Jelly-Party has been initialized. Initial options set:");
+    console.log(options);
+  });
+});
+
+async function getInitialState(): Promise<AppState> {
+  const res = new DeferredPromise<AppState>();
+  browser.storage.local.get("options").then(async res => {
+    const storedOptions: OptionsState = res.options;
+    if (!storedOptions.guid) {
+      console.log("Jelly-Party. GUID lost, resetting GUID.");
+      const newOptions: OptionsState = {
+        ...storedOptions,
+        ...{ guid: uuidv4() },
+      };
+      await browser.storage.local.set({ options: newOptions });
+      res.resolve({
+        ...InitialState.PartyState,
+        ...InitialState.RootState,
+        ...{
+          OptionsState: { ...InitialState.OptionsState, ...newOptions },
+        },
+      });
+    }
+    res.resolve({
+      ...InitialState.PartyState,
+      ...InitialState.RootState,
+      ...{
+        OptionsState: { ...InitialState.OptionsState, ...storedOptions },
+      },
+    });
+  });
+  return res;
+}
+
+const appState = await getInitialState();
+
+async function saveOptions() {
+  browser.storage.local.set({ options: appState.OptionsState });
+}
 
 let ws: WebSocket;
 let iframePubsub: ProtoframePubsub<JellyPartyProtocol>;
@@ -22,6 +74,7 @@ let videoControllerPubsub: ProtoframePubsub<VideoControllerProtocol>;
 let allPorts: Runtime.Port[] = [];
 let currentVideoSize = 0;
 let connectedToTab = false;
+let intervalUpdate: number;
 
 let IFrameConnected = new DeferredPromise();
 let HostFrameConnected = new DeferredPromise();
@@ -54,17 +107,66 @@ async function resetConnections() {
   VideoFrameConnected = new DeferredPromise();
 }
 
+async function updateState() {
+  appState.PartyState.videoState = (
+    await videoControllerPubsub.ask("getVideoState", {})
+  ).videoState;
+}
+
+async function pushAppState() {
+  await updateState();
+  iframePubsub.tell("setAppState", { appState });
+}
+
+async function pushVideoState() {
+  await updateState();
+  iframePubsub.tell("setVideoState", {
+    videoState: appState.PartyState.videoState,
+  });
+}
+
 async function setupWebsocketListeners(ws: WebSocket) {
   ws.onmessage = (ev: MessageEvent<ClientInstructions>) => {
     switch (ev.data.type) {
       case "partyStateUpdate": {
+        appState.PartyState = {
+          ...appState.PartyState,
+          ...ev.data.data.partyState,
+        };
+        pushAppState();
         break;
       }
       case "setUUID": {
+        appState.PartyState.selfUUID = ev.data.data.uuid;
+        pushAppState();
         break;
       }
       case "videoUpdate": {
+        switch (ev.data.data.variant) {
+          case "play": {
+            videoControllerPubsub.tell("playVideo", {
+              tick: ev.data.data.tick,
+            });
+            break;
+          }
+          case "pause": {
+            videoControllerPubsub.tell("pauseVideo", {
+              tick: ev.data.data.tick,
+            });
+            break;
+          }
+          case "seek": {
+            videoControllerPubsub.tell("seekVideo", {
+              tick: ev.data.data.tick,
+            });
+            break;
+          }
+        }
         break;
+      }
+      default: {
+        console.error("Jelly-Party: Websocket received erroneous message.");
+        console.log(ev.data);
       }
     }
   };
@@ -83,13 +185,14 @@ async function setupIframeHandlers(
         type: "join",
         data: {
           partyId: partyId,
-          guid: "123",
+          guid: appState.OptionsState.guid,
           clientState: {
-            clientName: "",
-            currentlyWatching: "",
-            uuid: "",
+            clientName: appState.OptionsState.clientName,
+            currentlyWatching: (await hostFramePubsub.ask("getURL", {})).url,
+            uuid: appState.PartyState.selfUUID,
             videoState: (await videoControllerPubsub.ask("getVideoState", {}))
               .videoState,
+            avatarState: appState.OptionsState.avatarState,
           },
         },
       };
@@ -128,12 +231,21 @@ async function setupIframeHandlers(
     };
     ws.send(JSON.stringify(msg));
   });
+  pubsub.handleTell("saveOptions", async ({ options }) => {
+    appState.OptionsState = { ...appState.OptionsState, ...options };
+    saveOptions();
+  });
 }
 
 async function setupVideoControllerHandlers(
   pubsub: ProtoframePubsub<VideoControllerProtocol>,
 ) {
   await connectionsEstablished();
+  // Constantly push the video state to the IFrame
+  clearInterval(intervalUpdate);
+  intervalUpdate = setInterval(() => {
+    pushVideoState();
+  }, 200);
   pubsub.handleTell("requestPeersToPlay", async ({ tick }) => {
     const msg: SendForward<SendVideoUpdate> = {
       type: "forward",

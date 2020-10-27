@@ -41,7 +41,7 @@ export const InitialState: AppState = {
     onlyIHaveControls: false,
     statusNotificationsInChat: true,
     statusNotificationsNotyf: true,
-    previousParties: [{ partyId: "abc", members: ["me"], dateInfo: {} }],
+    previousParties: [],
     guid: "",
     lastPartyId: "",
     showNotificationsForSelf: false,

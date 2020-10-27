@@ -1,6 +1,12 @@
 import { ProtoframeDescriptor } from "@/helpers/protoframe-webext";
 import { AppState } from "../apps/iframe/store/store";
-import { VideoState } from "../apps/iframe/store/types";
+import {
+  ChatMessage,
+  OptionsState,
+  PartyState,
+  Peer,
+  VideoState,
+} from "../apps/iframe/store/types";
 
 export type JellyPartyProtocol = {
   setAppState: {
@@ -26,6 +32,9 @@ export type JellyPartyProtocol = {
   };
   sendChatMessage: {
     body: { text: string };
+  };
+  saveOptions: {
+    body: { options: OptionsState };
   };
 };
 
@@ -62,6 +71,15 @@ export type VideoControllerProtocol = {
   requestPeersToSeek: {
     body: { tick: number };
   };
+  playVideo: {
+    body: { tick: number };
+  };
+  pauseVideo: {
+    body: { tick: number };
+  };
+  seekVideo: {
+    body: { tick: number };
+  };
 };
 
 export const VideoDescriptor: ProtoframeDescriptor<VideoControllerProtocol> = {
@@ -87,39 +105,13 @@ export const HostDescriptor: ProtoframeDescriptor<HostControllerProtocol> = {
 
 // SERVER PROTOCOL
 
-// Helpers
-
-export interface ClientState {
-  uuid?: string;
-  clientName: string;
-  currentlyWatching: string;
-  videoState: VideoState;
-}
-
-export interface PartyState {
-  isActive: true;
-  partyId: string;
-  peers: ClientState[];
-}
-
-export interface ChatMessage {
-  type: "chatMessage";
-  data: {
-    text: string;
-    timestamp: number;
-  };
-}
-
-type mediaCommands = "play" | "pause" | "seek";
-
 // Received by server
-
 export interface SendJoin {
   type: "join";
   data: {
     guid: string;
     partyId: string;
-    clientState: ClientState;
+    clientState: Peer;
   };
 }
 
@@ -131,6 +123,7 @@ export interface SendForward<T extends forwardInstruction> {
 }
 type forwardInstruction = SendVideoUpdate | SendChatMessage;
 
+type mediaCommands = "play" | "pause" | "seek";
 export interface SendVideoUpdate {
   type: "videoUpdate";
   data: {
@@ -157,7 +150,6 @@ export interface SendUpdateClientState {
 }
 
 // Received by client
-
 export interface ReceiveSetUUID {
   type: "setUUID";
   data: {
