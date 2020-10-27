@@ -1,10 +1,13 @@
 import {
+  ClientInstructions,
   HostControllerProtocol,
   HostDescriptor,
   JellyPartyDescriptor,
   JellyPartyProtocol,
   SendChatMessage,
+  SendForward,
   SendJoin,
+  SendVideoUpdate,
   VideoControllerProtocol,
   VideoDescriptor,
 } from "@/messaging/Protocol";
@@ -51,6 +54,22 @@ async function resetConnections() {
   VideoFrameConnected = new DeferredPromise();
 }
 
+async function setupWebsocketListeners(ws: WebSocket) {
+  ws.onmessage = (ev: MessageEvent<ClientInstructions>) => {
+    switch (ev.data.type) {
+      case "partyStateUpdate": {
+        break;
+      }
+      case "setUUID": {
+        break;
+      }
+      case "videoUpdate": {
+        break;
+      }
+    }
+  };
+}
+
 async function setupIframeHandlers(
   pubsub: ProtoframePubsub<JellyPartyProtocol>,
 ) {
@@ -76,6 +95,7 @@ async function setupIframeHandlers(
       };
       ws.send(JSON.stringify(joinMsg));
     }
+    setupWebsocketListeners(ws);
   });
   pubsub.handleTell("leaveParty", async () => {
     ws.close();
@@ -114,6 +134,51 @@ async function setupVideoControllerHandlers(
   pubsub: ProtoframePubsub<VideoControllerProtocol>,
 ) {
   await connectionsEstablished();
+  pubsub.handleTell("requestPeersToPlay", async ({ tick }) => {
+    const msg: SendForward<SendVideoUpdate> = {
+      type: "forward",
+      data: {
+        commandToForward: {
+          type: "videoUpdate",
+          data: {
+            variant: "play",
+            tick: tick,
+          },
+        },
+      },
+    };
+    ws.send(JSON.stringify(msg));
+  });
+  pubsub.handleTell("requestPeersToPause", async ({ tick }) => {
+    const msg: SendForward<SendVideoUpdate> = {
+      type: "forward",
+      data: {
+        commandToForward: {
+          type: "videoUpdate",
+          data: {
+            variant: "pause",
+            tick: tick,
+          },
+        },
+      },
+    };
+    ws.send(JSON.stringify(msg));
+  });
+  pubsub.handleTell("requestPeersToSeek", async ({ tick }) => {
+    const msg: SendForward<SendVideoUpdate> = {
+      type: "forward",
+      data: {
+        commandToForward: {
+          type: "videoUpdate",
+          data: {
+            variant: "seek",
+            tick: tick,
+          },
+        },
+      },
+    };
+    ws.send(JSON.stringify(msg));
+  });
 }
 
 async function setupHostControllerHandlers(
