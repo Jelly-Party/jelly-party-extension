@@ -3,10 +3,11 @@ import {
   JellyPartyProtocol,
   VideoControllerProtocol,
   VideoDescriptor,
-} from "@/apps/messaging/Protocol";
+} from "@/messaging/Protocol";
 import { ProtoframePubsub } from "@/helpers/protoframe-webext";
 import { browser, Runtime } from "webextension-polyfill-ts";
 import { DeferredPromise } from "@/helpers/deferredPromise";
+import { ClientState } from "@/messaging/Protocol";
 
 type awaitablePubsubConnection = DeferredPromise<
   ProtoframePubsub<JellyPartyProtocol>
@@ -48,16 +49,22 @@ async function resetConnections() {
   connectedToTab = false;
   currentVideoSize = 0;
 }
-
+export interface SendJoin {
+  type: "join";
+  data: {
+    guid: string;
+    partyId: string;
+    clientState: ClientState;
+  };
+}
 function setupIframeHandlers(pubsub: ProtoframePubsub<JellyPartyProtocol>) {
-  //
   pubsub.handleTell("joinParty", async ({ partyId }) => {
     if (ws) {
       console.error(
         "Jelly-Party: Already connected to a party.. Cannot connect twice!",
       );
     } else {
-      ws = new WebSocket("");
+      ws = new WebSocket(process.env.VUE_APP_WS_ADDRESS);
     }
   });
 }

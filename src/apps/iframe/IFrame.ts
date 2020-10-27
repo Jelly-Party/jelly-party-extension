@@ -9,7 +9,7 @@ import { browser, Runtime } from "webextension-polyfill-ts";
 import {
   JellyPartyDescriptor,
   JellyPartyProtocol,
-} from "../messaging/Protocol";
+} from "../../messaging/Protocol";
 import { ProtoframePubsub } from "@/helpers/protoframe-webext";
 
 declare module "vue/types/vue" {
