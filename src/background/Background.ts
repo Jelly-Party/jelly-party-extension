@@ -305,17 +305,14 @@ import { OptionsState } from "@/apps/iframe/store/types";
     allPorts.push(port);
     switch (port.name) {
       case "iframe": {
-        if (connectedToTab) {
-          // We must connect to a new tab, therefore let's kill all previous connections
-          await resetConnections();
-        }
+        console.log("Jelly-Party: Received IFrame connection.");
         IFrameConnected.resolve();
         iframePubsub = ProtoframePubsub.build(JellyPartyDescriptor, port);
         setupIframeHandlers(iframePubsub);
-        connectedToTab = true;
         break;
       }
       case "videoController": {
+        console.log("Jelly-Party: Received VideoController connection.");
         const pubsub = ProtoframePubsub.build(VideoDescriptor, port);
         pubsub.handleTell("tellVideo", async ({ videoSize }) => {
           if (videoSize > currentVideoSize) {
@@ -345,9 +342,15 @@ import { OptionsState } from "@/apps/iframe/store/types";
         break;
       }
       case "hostController": {
-        HostFrameConnected.resolve();
-        hostFramePubsub = ProtoframePubsub.build(HostDescriptor, port);
-        setupHostControllerHandlers(hostFramePubsub);
+        console.log("Jelly-Party: Received HostController connection.");
+        connectedToTab = true;
+        if (connectedToTab) {
+          // We must connect to a new tab, therefore let's kill all previous connections
+          await resetConnections();
+          HostFrameConnected.resolve();
+          hostFramePubsub = ProtoframePubsub.build(HostDescriptor, port);
+          setupHostControllerHandlers(hostFramePubsub);
+        }
         break;
       }
       default: {

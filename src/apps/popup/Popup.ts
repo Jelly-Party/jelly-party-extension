@@ -5,6 +5,10 @@ import { browser } from "webextension-polyfill-ts";
 // Execute the content script. Nothing will happen, if we
 // execute it again.
 browser.tabs.executeScript(undefined, {
-  file: "js/iframe.js",
+  file: "js/hostController.js",
+});
+browser.tabs.executeScript(undefined, {
+  file: "js/videoController.js",
+  allFrames: true,
 });
 createApp(Popup).mount("#app");

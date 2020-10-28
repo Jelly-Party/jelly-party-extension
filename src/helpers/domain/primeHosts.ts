@@ -259,7 +259,11 @@ export const tlds = [
   ".zm",
   ".zw",
 ];
+tlds.push(".com");
 
-export const primeHosts = tlds.map(tld => {
+const primeHosts: string[] = tlds.map(tld => {
   return `www.amazon${tld}`;
 });
+primeHosts.push("www.primevideo.com");
+
+export { primeHosts };
