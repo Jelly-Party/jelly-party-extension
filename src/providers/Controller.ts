@@ -127,6 +127,11 @@ export abstract class Controller {
     } else {
       console.log("Jelly-Party: Already connected to background script.");
     }
+    this.messagingPort.onDisconnect.addListener(() => {
+      // We're not wanted. Background script closed connection, ideally because
+      // there's a videoController with a preferable (=larger) video.
+      this.removeListeners();
+    });
   };
 
   togglePlayPause() {
@@ -148,7 +153,7 @@ export abstract class Controller {
         prom.then(() => (this.skipNextEvent = false));
         return prom;
       } else {
-        // Immediately resolve deferred
+        // Immediately resolve deferred, video already playing
         this.skipNextEvent = false;
         return deferred.resolve();
       }
@@ -165,7 +170,7 @@ export abstract class Controller {
         prom.then(() => (this.skipNextEvent = false));
         return prom;
       } else {
-        // Immediately resolve deferred
+        // Immediately resolve deferred, video already paused
         this.skipNextEvent = false;
         return deferred.resolve();
       }
@@ -184,7 +189,7 @@ export abstract class Controller {
           () => (this.skipNextEvent = false),
         );
       } else {
-        // Immediately resolve deferred
+        // Immediately resolve deferred, not seeking
         this.skipNextEvent = false;
         return new DeferredPromise().resolve();
       }
@@ -219,10 +224,8 @@ export abstract class Controller {
       return;
     }
     // We get here through a user action
-    hostMessenger.messenger.tell("forwardMediaEvent", {
-      event: "play",
+    this.pubsub.tell("requestPeersToPlay", {
       tick: this.video?.currentTime ?? 0,
-      type: "media",
     });
   };
 
@@ -239,10 +242,8 @@ export abstract class Controller {
       return;
     }
     // We get here through a user action
-    hostMessenger.messenger.tell("forwardMediaEvent", {
-      event: "pause",
+    this.pubsub.tell("requestPeersToPause", {
       tick: this.video?.currentTime ?? 0,
-      type: "media",
     });
   };
 
@@ -259,10 +260,8 @@ export abstract class Controller {
       return;
     }
     // We get here through a user action
-    hostMessenger.messenger.tell("forwardMediaEvent", {
-      event: "seek",
+    this.pubsub.tell("requestPeersToSeek", {
       tick: this.video?.currentTime ?? 0,
-      type: "media",
     });
   };
 
