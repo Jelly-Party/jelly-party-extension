@@ -37,10 +37,10 @@ export default {
       required: true,
     },
   },
-  setup() {
+  setup(props) {
     const optionsValues = computed(() => {
-      let key = this.optionsKey;
-      switch (this.optionsKey) {
+      let key = props.optionsKey;
+      switch (props.optionsKey) {
         case "facialHairColor":
           key = "hairColor";
           break;
@@ -54,33 +54,32 @@ export default {
     const avatarState = computed(() => {
       return appState.OptionsState.avatarState;
     });
-    return { optionsValues, avatarState };
-  },
-  methods: {
-    nextOption: function() {
-      const index = this.optionsValues.indexOf(
-        this.avatarState[this.optionsKey],
+    function nextOption() {
+      const index = optionsValues.value.indexOf(
+        avatarState.value[props.optionsKey],
       );
       let newOption = "";
-      if (index >= 0 && index < this.optionsValues.length - 1) {
-        newOption = this.optionsValues[index + 1];
+      if (index >= 0 && index < optionsValues.value.length - 1) {
+        newOption = optionsValues.value[index + 1];
       } else {
-        newOption = this.optionsValues[0];
+        newOption = optionsValues.value[0];
       }
-      this.appState.OptionsState.avatarState[this.optionsKey] = newOption;
-    },
-    previousOption: function() {
-      const index = this.optionsValues.indexOf(
-        this.avatarState[this.optionsKey],
+      appState.OptionsState.avatarState[props.optionsKey] = newOption;
+    }
+
+    function previousOption() {
+      const index = optionsValues.value.indexOf(
+        avatarState.value[props.optionsKey],
       );
       let newOption = "";
-      if (index >= 1 && index < this.optionsValues.length) {
-        newOption = this.optionsValues[index - 1];
+      if (index >= 1 && index < optionsValues.value.length) {
+        newOption = optionsValues.value[index - 1];
       } else {
-        newOption = this.optionsValues[this.optionsValues.length - 1];
+        newOption = optionsValues.value[optionsValues.value.length - 1];
       }
-      this.appState.OptionsState.avatarState[this.optionsKey] = newOption;
-    },
+      appState.OptionsState.avatarState[props.optionsKey] = newOption;
+    }
+    return { optionsValues, avatarState, nextOption, previousOption };
   },
 };
 </script>

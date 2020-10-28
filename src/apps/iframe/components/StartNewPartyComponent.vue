@@ -11,13 +11,13 @@
         </b-icon>
       </span>
     </h3>
-    <JellyPartyPrimaryButton @click.native="startNewParty">
+    <JellyPartyPrimaryButton @click="startNewParty">
       Start a new party</JellyPartyPrimaryButton
     >
   </b-container>
 </template>
 
-<script lang="ts">
+<script>
 import JellyPartyPrimaryButton from "./JellyPartyPrimaryButton.vue";
 export default {
   components: {

@@ -24,22 +24,19 @@ module.exports = {
     },
   },
   pluginOptions: {
-    webpackBundleAnalyzer: {
-      openAnalyzer: false,
-    },
     browserExtension: {
       manifestTransformer: manifest => {
         let connectSrc = "connect-src 'self'";
         if (["staging", "development"].includes(process.env.NODE_ENV)) {
-          manifest.content_security_policy = manifest.content_security_policy.replace(
+          manifest.contentSecurityPolicy = manifest.contentSecurityPolicy.replace(
             "script-src 'self';",
             "script-src 'self' 'unsafe-eval';",
           );
           connectSrc =
             connectSrc + " http://localhost:8098 ws://localhost:8098";
         }
-        manifest.content_security_policy =
-          manifest.content_security_policy +
+        manifest.contentSecurityPolicy =
+          manifest.contentSecurityPolicy +
           " " +
           connectSrc +
           " " +
@@ -53,29 +50,10 @@ module.exports = {
   configureWebpack: {
     entry: {
       background: "./src/background/Background.ts",
-      //   sidebar: "./src/apps/sidebar/Sidebar.ts",
-      //   rootStyles: "./src/assets/styles/RootStyles.scss",
-      //   amazonController:
-      //     "./src/services/provider/providers/amazon/AmazonController.ts",
-      //   defaultController:
-      //     "./src/services/provider/providers/default/DefaultController.ts",
-      //   disneyPlusController:
-      //     "./src/services/provider/providers/disneyplus/DisneyPlusController.ts",
-      //   netflixController:
-      //     "./src/services/provider/providers/netflix/NetflixController.ts",
-      //   vimeoController:
-      //     "./src/services/provider/providers/vimeo/VimeoController.ts",
-      //   youtubeController:
-      //     "./src/services/provider/providers/youtube/YoutubeController.ts",
     },
     devtool: ["development", "staging"].includes(process.env.NODE_ENV)
       ? "source-map"
       : "",
-    // TODO: see https://github.com/webpack/webpack/issues/1625
-    // output: {
-    //   library: "beta",
-    //   libraryTarget: "var"
-    // }
   },
   chainWebpack: config => {
     config.optimization.splitChunks(false);
@@ -92,5 +70,13 @@ module.exports = {
       .use("url-loader")
       .loader("url-loader")
       .tap(options => Object.assign(options, { limit: 100240 }));
+  },
+  css: {
+    loaderOptions: {
+      sass: {
+        prependData: `@import "~@/assets/styles/_variables.scss";`,
+      },
+    },
+    extract: false,
   },
 };

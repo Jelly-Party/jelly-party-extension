@@ -48,7 +48,7 @@
   </b-container>
 </template>
 
-<script lang="ts">
+<script>
 import AvatarSliderOption from "./AvatarSliderOption.vue";
 
 const readableOptions = {

@@ -1,8 +1,6 @@
-import Vue from "vue";
+import { createApp } from "vue";
 import Sidebar from "./views/Sidebar.vue";
-import { BootstrapVue, IconsPlugin } from "bootstrap-vue";
 import "bootstrap/dist/css/bootstrap.css";
-import "bootstrap-vue/dist/bootstrap-vue.css";
 import log from "loglevel";
 import { AppStateInterface, InitialState } from "./store/store";
 import { browser, Runtime } from "webextension-polyfill-ts";
@@ -12,16 +10,8 @@ import {
 } from "../../messaging/Protocol";
 import { ProtoframePubsub } from "@/helpers/protoframe-webext";
 
-declare module "vue/types/vue" {
-  interface Vue {
-    $iframe: IFrame;
-  }
-}
-
-Vue.directive("click-outside", {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  bind: function(el: any, binding, vnode: any) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+const ClickOutsideDirective = {
+  beforeMount(el: any, binding: any, vnode: any) {
     el.clickOutsideEvent = function(event: any) {
       if (!(el == event.target || el.contains(event.target))) {
         vnode.context[binding.expression](event);
@@ -29,15 +19,10 @@ Vue.directive("click-outside", {
     };
     document.body.addEventListener("click", el.clickOutsideEvent);
   },
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  unbind: function(el: any) {
+  unmounted(el: any) {
     document.body.removeEventListener("click", el.clickOutsideEvent);
   },
-});
-
-// Install BootstrapVue & BootstrapVue icon components
-Vue.use(BootstrapVue);
-Vue.use(IconsPlugin);
+};
 
 export let appState: AppStateInterface;
 
@@ -116,9 +101,9 @@ export class IFrame {
     this.pubsub.tell("toggleFullscreen", {});
   }
 }
+const app = createApp(Sidebar)
+  .directive("ClickOutsideDirective", ClickOutsideDirective)
+  .mount("#app");
 
-const app = new Vue({
-  render: h => h(Sidebar),
-}).$mount("#app");
 const iframe = new IFrame();
 app.$iframe = iframe;

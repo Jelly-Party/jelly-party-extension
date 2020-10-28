@@ -82,13 +82,13 @@
         </p>
       </b-card>
     </b-collapse>
-    <JellyPartyPrimaryButton class="mt-3 pb-5" @click.native="showConfirmation">
+    <JellyPartyPrimaryButton class="mt-3 pb-5" @click="showConfirmation">
       Save changes</JellyPartyPrimaryButton
     >
   </b-container>
 </template>
 
-<script lang="ts">
+<script>
 import JellyPartyPrimaryButton from "./JellyPartyPrimaryButton.vue";
 import AvatarCustomizer from "./AvatarCustomizer.vue";
 import { appState } from "../IFrame";

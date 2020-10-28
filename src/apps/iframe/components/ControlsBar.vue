@@ -224,7 +224,7 @@
   </b-container>
 </template>
 
-<script lang="ts">
+<script>
 import { appState } from "../IFrame";
 import * as JitsiMeetExternalAPI from "lib-jitsi-meet-dist/dist/external_api.min.js";
 import Avataaars from "vuejs-avataaars";
@@ -246,7 +246,7 @@ export default {
     });
     return { peers, paused, showChat };
   },
-  beforeDestroy() {
+  beforeUnmount() {
     window.jitsiLoaded = false;
   },
   methods: {

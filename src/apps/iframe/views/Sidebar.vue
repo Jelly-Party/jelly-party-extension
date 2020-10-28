@@ -26,11 +26,12 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import SidebarHeader from "../components/SidebarHeader.vue";
 import Tabs from "./Tabs.vue";
-import PartyView from "../components/PartyView";
+import PartyView from "../components/PartyView.vue";
 import { appState } from "../IFrame";
+import { computed } from "vue";
 
 export default {
   name: "SideBar",
@@ -39,10 +40,11 @@ export default {
     PartyView,
     Tabs,
   },
-  computed: {
-    optionsState() {
-      return appState.optionsState;
-    },
+  setup() {
+    const optionsState = computed(() => {
+      return appState.OptionsState;
+    });
+    return { optionsState };
   },
 };
 </script>
