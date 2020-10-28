@@ -1,12 +1,28 @@
 import { sleep } from "@/helpers/sleep";
 import { DeferredPromise } from "@/helpers/deferredPromise";
-import { getReferenceToLargestVideo } from "@/helpers/querySelectors";
+import {
+  getReferenceToLargestVideo,
+  timeoutQuerySelectorAll,
+} from "@/helpers/querySelectors";
 import { VideoState } from "@/apps/iframe/store/types";
+import { PromiseQueue } from "@/helpers/promiseQueue";
+import { browser, Runtime } from "webextension-polyfill-ts";
+import { ProtoframePubsub } from "@/helpers/protoframe-webext";
+import { VideoControllerProtocol, VideoDescriptor } from "@/messaging/Protocol";
 
 // The VideoHandler handles playing, pausing & seeking videos
 // on different websites. For most websites the generic video.play(),
-// video.pause() & video.currentTime= will work, however some websites,
-// such as Netflix, require direct access to video controllers.
+// video.pause() & video.currentTime= will suffice, however some websites,
+// such as Netflix, require custom video controllers.
+
+// The VideoController Enqueues Media Promises (Play, Pause, Seek), that it
+// will play back one after another. If it fails to replay a media command
+// within videoCommandTimeout, it jumps to the next enqueed command.
+
+// While playing back media commands, we must ensure that we disable media
+// event listeners. We do this by using a deferrred promise, that resolves
+// once the media command has executed successfully and thereby reactivates
+// media event listeners.
 
 const videoCommandTimeout = 3000;
 
@@ -15,6 +31,8 @@ export abstract class Controller {
   video: HTMLVideoElement | null;
   deferred!: DeferredPromise<any>;
   skipNextEvent: boolean;
+  messagingPort!: Runtime.Port;
+  pubsub!: ProtoframePubsub<VideoControllerProtocol>;
   play!: () => Promise<boolean>;
   pause!: () => Promise<boolean>;
   seek!: (tick: number) => Promise<any>;
@@ -33,11 +51,6 @@ export abstract class Controller {
     console.log(
       "Jelly-Party: No video controller customization in place for this host",
     );
-  }
-
-  navigateToVideo(url: string): void {
-    // Override this method for custom navigation
-    console.log("Jelly-Party: No navigation in place for this website");
   }
 
   getPlayHook(): () => Promise<void> {
@@ -64,25 +77,55 @@ export abstract class Controller {
   }
 
   setupVideoHooks() {
-    this.play = this.wrapPlayPauseHandler(this.getPlayHook());
-    this.pause = this.wrapPlayPauseHandler(this.getPauseHook());
+    this.play = this.wrapPlayHandler(this.getPlayHook());
+    this.pause = this.wrapPauseHandler(this.getPauseHook());
     this.seek = this.wrapSeekHandler(this.getSeekHook());
     this.playAndForward = this.getPlayHook();
     this.pauseAndForward = this.getPauseHook();
-    this.findVideoInterval = setInterval(this.findVideoAndAttach, 1000);
+    this.findVideoAndAttach();
   }
 
-  findVideoAndAttach = () => {
-    if (!this.video) {
-      console.log("Jelly-Party: Scanning for video to attach to.");
-      this.video = getReferenceToLargestVideo();
-      if (this.video) {
-        clearInterval(this.findVideoInterval);
-        console.log("Jelly-Party: Found video. Attaching to video..");
-        this.addListeners();
-      }
+  findVideoAndAttach = async () => {
+    console.log("Jelly-Party: Scanning for video to attach to.");
+    const videos = (await timeoutQuerySelectorAll("video")) as NodeListOf<
+      HTMLVideoElement
+    >;
+    this.video = getReferenceToLargestVideo(videos);
+    clearInterval(this.findVideoInterval);
+    console.log("Jelly-Party: Found video. Attaching to video..");
+    this.connectToBackgroundScript();
+    this.addListeners();
+  };
+
+  connectToBackgroundScript = () => {
+    // Connect to the background script
+    if (!this.messagingPort) {
+      this.messagingPort = browser.runtime.connect(undefined, {
+        name: "videoController",
+      });
+      this.pubsub = ProtoframePubsub.build(VideoDescriptor, this.messagingPort);
+      this.pubsub.handleAsk("getVideoState", async () => {
+        return { videoState: this.getVideoState() };
+      });
+      this.pubsub.handleTell("togglePlayPause", async () => {
+        this.togglePlayPause();
+      });
+      this.pubsub.handleTell("enqueuePlay", async ({ tick }) => {
+        PromiseQueue.enqueue(() => this.seek(tick));
+        PromiseQueue.enqueue(() => this.play());
+      });
+      this.pubsub.handleTell("enqueuePause", async ({ tick }) => {
+        PromiseQueue.enqueue(() => this.seek(tick));
+        PromiseQueue.enqueue(() => this.pause());
+      });
+      this.pubsub.handleTell("enqueueSeek", async ({ tick }) => {
+        PromiseQueue.enqueue(() => this.seek(tick));
+      });
+
+      // Let's tell the background script what videoSize we've encountered
+      this.pubsub.tell("tellVideo", { videoSize: this.getVideoSize() });
     } else {
-      console.log("Jelly-Party: Checking if video source has changed..");
+      console.log("Jelly-Party: Already connected to background script.");
     }
   };
 
@@ -95,14 +138,37 @@ export abstract class Controller {
     }
   }
 
-  wrapPlayPauseHandler = (fun: () => Promise<void>) => {
+  wrapPlayHandler = (fun: () => Promise<void>) => {
     return async () => {
       const deferred = this.initNewDeferred();
-      this.skipNextEvent = true;
-      fun();
-      return Promise.race([deferred, sleep(videoCommandTimeout)]).then(
-        () => (this.skipNextEvent = false),
-      );
+      if (this.video && this.video.paused) {
+        this.skipNextEvent = true;
+        fun();
+        const prom = Promise.race([deferred, sleep(videoCommandTimeout)]);
+        prom.then(() => (this.skipNextEvent = false));
+        return prom;
+      } else {
+        // Immediately resolve deferred
+        this.skipNextEvent = false;
+        return deferred.resolve();
+      }
+    };
+  };
+
+  wrapPauseHandler = (fun: () => Promise<void>) => {
+    return async () => {
+      const deferred = this.initNewDeferred();
+      if (this.video && !this.video.paused) {
+        this.skipNextEvent = true;
+        fun();
+        const prom = Promise.race([deferred, sleep(videoCommandTimeout)]);
+        prom.then(() => (this.skipNextEvent = false));
+        return prom;
+      } else {
+        // Immediately resolve deferred
+        this.skipNextEvent = false;
+        return deferred.resolve();
+      }
     };
   };
 
@@ -117,6 +183,10 @@ export abstract class Controller {
         return Promise.race([deferred, sleep(videoCommandTimeout)]).then(
           () => (this.skipNextEvent = false),
         );
+      } else {
+        // Immediately resolve deferred
+        this.skipNextEvent = false;
+        return new DeferredPromise().resolve();
       }
     };
   };
@@ -214,7 +284,7 @@ export abstract class Controller {
   emptiedListener = () => {
     this.removeListeners();
     this.video = null;
-    this.findVideoInterval = setInterval(this.findVideoAndAttach, 1000);
+    this.findVideoAndAttach();
   };
 
   getVideoState(): VideoState {
@@ -222,5 +292,13 @@ export abstract class Controller {
       paused: this.video?.paused ?? true,
       tick: this.video?.currentTime ?? 0,
     };
+  }
+
+  getVideoSize(): number {
+    if (this.video) {
+      return this.video.offsetWidth * this.video.offsetHeight;
+    } else {
+      return 0;
+    }
   }
 }

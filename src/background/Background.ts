@@ -146,19 +146,19 @@ import { OptionsState } from "@/apps/iframe/store/types";
         case "videoUpdate": {
           switch (ev.data.data.variant) {
             case "play": {
-              videoControllerPubsub.tell("playVideo", {
+              videoControllerPubsub.tell("enqueuePlay", {
                 tick: ev.data.data.tick,
               });
               break;
             }
             case "pause": {
-              videoControllerPubsub.tell("pauseVideo", {
+              videoControllerPubsub.tell("enqueuePause", {
                 tick: ev.data.data.tick,
               });
               break;
             }
             case "seek": {
-              videoControllerPubsub.tell("seekVideo", {
+              videoControllerPubsub.tell("enqueueSeek", {
                 tick: ev.data.data.tick,
               });
               break;
