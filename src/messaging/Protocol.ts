@@ -74,15 +74,6 @@ export type VideoControllerProtocol = {
   requestPeersToSeek: {
     body: { tick: number };
   };
-  playVideo: {
-    body: { tick: number };
-  };
-  pauseVideo: {
-    body: { tick: number };
-  };
-  seekVideo: {
-    body: { tick: number };
-  };
 };
 
 export const VideoDescriptor: ProtoframeDescriptor<VideoControllerProtocol> = {
