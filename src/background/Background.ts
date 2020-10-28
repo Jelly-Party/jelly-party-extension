@@ -354,3 +354,70 @@ browser.runtime.onConnect.addListener(async (port: Runtime.Port) => {
     }
   }
 });
+
+function redirectToParty(
+  redirectURL: string,
+  resolve: (arg0?: any) => void,
+  reject: (arg0?: any) => void,
+) {
+  // We attempt to inject the content script several times. If we've been
+  // successful, further injections will yield no effect.
+  // The root of the problem lies in the fact that browser.tabs.update's
+  // callback function sometimes seems to execute before the tab's DOM content
+  // has been loaded. This leads to the content script sometimes disappearing
+  // into a void inbetween join.jelly-party.com and redirectURL.
+  browser.tabs
+    .update(undefined, { url: redirectURL })
+    .then(async tab => {
+      const activeTabId = tab.id;
+      const delays = [3000, 5000, 10000];
+      delays.forEach(delay => {
+        setTimeout(() => {
+          console.log("Jelly-Party: Attempting script injection.");
+          browser.tabs
+            .executeScript(activeTabId, {
+              file: "js/sidebar.js",
+            })
+            .then(() => {
+              resolve("Jelly-Party: Redirection to party successful.");
+            })
+            .catch(err => {
+              if (delay === delays.splice(-1)[0]) {
+                reject("Jelly-Party: Redirection to party failed.");
+              } else {
+                console.log(
+                  `Could not redirect to party. Will attempt redirection again in ${delay}.`,
+                );
+                console.log(err);
+              }
+            });
+        }, delay);
+      });
+    })
+    .catch(e => console.log(e));
+}
+
+export interface RedirectFrame {
+  type: "redirectToParty";
+  data: {
+    redirectURL: string;
+  };
+}
+
+browser.runtime.onMessage.addListener((req: string) => {
+  const request: RedirectFrame = JSON.parse(req);
+  switch (request.type) {
+    case "redirectToParty": {
+      return new Promise((resolve, reject) => {
+        redirectToParty(
+          (request as RedirectFrame).data.redirectURL,
+          resolve,
+          reject,
+        );
+      });
+    }
+    default: {
+      console.log(`Jelly-Party: Received unknown message: ${request}`);
+    }
+  }
+});
