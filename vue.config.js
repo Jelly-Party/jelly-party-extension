@@ -29,7 +29,9 @@ module.exports = {
     },
     manifest: {
       cspAppender: (manifest) => {
-        let csp = []
+        let csp = [
+          {key: 'connect-src', value: process.env.VUE_APP_WS_ADDRESS}
+        ];
         if (["staging", "development"].includes(process.env.NODE_ENV)) {
           csp = csp.concat([
             {key: 'script-src', value: "'unsafe-eval'"},

@@ -200,14 +200,7 @@ export class JellyParty {
     store.dispatch("options/setLastPartyId", finalPartyId);
     // Set the magic link
     this.updateMagicLink();
-    let wsAddress = "";
-    switch (this.rootState.appMode) {
-      case "staging":
-        wsAddress = "wss://staging.jelly-party.com:8080";
-        break;
-      default:
-        wsAddress = "wss://ws.jelly-party.com:8080";
-    }
+    const wsAddress = process.env.VUE_APP_WS_ADDRESS ?? "wss://ws.jelly-party.com:8080";
     log.debug(`Jelly-Party: Connecting to ${wsAddress}`);
     this.ws = new WebSocket(wsAddress);
     store.dispatch("setConnectingToServer", true);
