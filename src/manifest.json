@@ -29,6 +29,6 @@
     "128": "images/logo/128x128.png"
   },
   "manifest_version": 2,
-  "content_security_policy": "script-src 'self' 'unsafe-eval'; connect-src 'self' http://localhost:8098 ws://localhost:8098 wss://staging.jelly-party.com:8080 wss://ws.jelly-party.com:8080; object-src 'self'",
+  "content_security_policy": "script-src 'self'; connect-src 'self'; object-src 'self'",
   "web_accessible_resources": ["js/rootStyles.js", "iframe.html", "join.html"]
 }

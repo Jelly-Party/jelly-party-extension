@@ -27,6 +27,21 @@ module.exports = {
     webpackBundleAnalyzer: {
       openAnalyzer: false,
     },
+    manifest: {
+      cspAppender: (manifest) => {
+        let csp = [
+          {key: 'connect-src', value: process.env.VUE_APP_WS_ADDRESS}
+        ];
+        if (["staging", "development"].includes(process.env.NODE_ENV)) {
+          csp = csp.concat([
+            {key: 'script-src', value: "'unsafe-eval'"},
+            {key: 'connect-src', value: "http://localhost:8098"},
+            {key: 'connect-src', value: "ws://localhost:8098"}
+          ]);
+        }
+        return csp;
+      }
+    }
   },
   filenameHashing: false,
   configureWebpack: {

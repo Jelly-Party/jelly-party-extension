@@ -15,7 +15,10 @@ Note that you'll connect to the staging server (`staging.jelly-party.com`) inste
 
 ## Contribute using your own server [advanced]
 
-Please head to the [Jelly-Party-Server](https://github.com/seandlg/jelly-party-server) repository and spin up a server instance. You must set up your custom domain and you'll need to tweak both Jelly-Party-Extension and Jelly-Party-Server.
+Please head to the [Jelly-Party-Server](https://github.com/seandlg/jelly-party-server) repository and spin up a server instance. You must set up your custom domain. You'll need to tweak Jelly-Party-Server.
+
+To use your server by the browser extension define environment variable `VUE_APP_WS_ADDRESS`. You could save it in a new file `.env.local` or `.env.[mode].local`. For more information see [Vue CLI Modes and Environment Variables](https://cli.vuejs.org/guide/mode-and-env.html).
+
 
 ### Compile and minify for production
 
