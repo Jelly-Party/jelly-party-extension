@@ -17,7 +17,7 @@
       placeholder="Enter Party Id or make something up.."
     />
 
-    <JellyPartyPrimaryButton @click.native="joinParty">
+    <JellyPartyPrimaryButton @click="joinParty">
       Join Party by Id
     </JellyPartyPrimaryButton>
     <div v-if="lastPartyId" class="text-center">
