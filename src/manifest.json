@@ -19,7 +19,7 @@
   "content_scripts": [
     {
       "matches": ["https://join.jelly-party.com/*"],
-      "js": ["js/sidebar.js"]
+      "js": ["js/autoJoin.js"]
     }
   ],
   "icons": {
@@ -30,5 +30,11 @@
   },
   "manifest_version": 2,
   "content_security_policy": "script-src 'self'; connect-src 'self'; object-src 'self'",
-  "web_accessible_resources": ["js/rootStyles.js", "iframe.html", "join.html"]
+  "web_accessible_resources": [
+    "js/rootStyles.js",
+    "js/hostController.js",
+    "js/videoController.js",
+    "iframe.html",
+    "join.html"
+  ]
 }
