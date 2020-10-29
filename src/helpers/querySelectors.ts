@@ -30,3 +30,7 @@ export async function timeoutQuerySelectorAll(
     }, 200);
   });
 }
+
+export function customQuerySelector(selector: string): HTMLElement {
+  return document.querySelector(selector) ?? document.createElement("div");
+}

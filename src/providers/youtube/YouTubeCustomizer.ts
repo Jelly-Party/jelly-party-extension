@@ -10,7 +10,7 @@ export class YouTubeCustomizer extends Customizer {
 
   constructor() {
     super();
-    this.containerTarget = document.querySelector(this.containerTargetSelector);
+    this.containerTarget = this.querySelector(this.containerTargetSelector);
     if (this.containerTarget) {
       this.containerTarget.style.overflow = "hidden";
     } else {

@@ -6,7 +6,7 @@ export class NetflixCustomizer extends Customizer {
 
   constructor() {
     super();
-    this.styleTarget = document.querySelector(this.styleTargetSelector);
+    this.styleTarget = this.querySelector(this.styleTargetSelector);
   }
 
   adjustForFullscreenAndNoSidebar() {

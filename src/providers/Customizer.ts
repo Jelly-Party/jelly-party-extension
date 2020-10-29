@@ -1,8 +1,11 @@
 import { debounce as _debounce } from "lodash-es";
 import { hostState } from "@/apps/host/hostState";
+import { customQuerySelector } from "@/helpers/querySelectors";
 
 export abstract class Customizer {
+  querySelector: typeof customQuerySelector;
   constructor() {
+    this.querySelector = customQuerySelector;
     const debouncedAdjustView = _debounce(() => {
       this.adjustView();
     }).bind(this);

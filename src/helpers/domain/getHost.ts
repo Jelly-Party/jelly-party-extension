@@ -16,7 +16,7 @@ function flattenHost(host: string) {
   }
 }
 
-export default function getHost(host: string): Hosts {
+export function getHost(host: string): Hosts {
   host = flattenHost(host);
   switch (host) {
     case "www.amazon.com": {

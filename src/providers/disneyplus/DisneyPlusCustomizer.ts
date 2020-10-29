@@ -7,7 +7,7 @@ export class DisneyPlusCustomizer extends Customizer {
 
   constructor() {
     super();
-    this.wrapperTarget = document.querySelector(this.wrapperIdentifier);
+    this.wrapperTarget = this.querySelector(this.wrapperIdentifier);
   }
 
   adjustForFullscreenAndNoSidebar() {

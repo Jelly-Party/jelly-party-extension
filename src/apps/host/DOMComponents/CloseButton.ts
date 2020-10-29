@@ -1,4 +1,4 @@
-import { closeButton } from "./svgs";
+import { closeButton } from "@/helpers/svgs";
 
 export class CloseButton {
   public closeButtonElement!: HTMLDivElement;

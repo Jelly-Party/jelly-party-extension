@@ -1,4 +1,4 @@
-import getHost, { Hosts } from "@/helpers/domain/getHost";
+import { Hosts, getHost } from "@/helpers/domain/getHost";
 import { AmazonController } from "@/providers/amazon/AmazonController";
 import { Controller } from "@/providers/Controller";
 import { DefaultController } from "@/providers/default/DefaultController";

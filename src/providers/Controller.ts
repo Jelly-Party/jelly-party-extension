@@ -1,6 +1,7 @@
 import { sleep } from "@/helpers/sleep";
 import { DeferredPromise } from "@/helpers/deferredPromise";
 import {
+  customQuerySelector,
   getReferenceToLargestVideo,
   timeoutQuerySelectorAll,
 } from "@/helpers/querySelectors";
@@ -38,8 +39,10 @@ export abstract class Controller {
   seek!: (tick: number) => Promise<any>;
   playAndForward!: () => Promise<void>;
   pauseAndForward!: () => Promise<void>;
+  querySelector: typeof customQuerySelector;
 
   constructor() {
+    this.querySelector = customQuerySelector;
     this.skipNextEvent = false;
     this.video = null;
     this.initializeHost();

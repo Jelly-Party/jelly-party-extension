@@ -1,4 +1,4 @@
-import getHost, { Hosts } from "@/helpers/domain/getHost";
+import { Hosts, getHost } from "@/helpers/domain/getHost";
 import { ProtoframePubsub } from "@/helpers/protoframe-webext";
 import { HostControllerProtocol, HostDescriptor } from "@/messaging/Protocol";
 import { AmazonCustomizer } from "@/providers/amazon/AmazonCustomizer";

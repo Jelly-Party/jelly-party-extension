@@ -16,7 +16,7 @@ module.exports = {
       filename: "iframe.html",
       title: "Jelly-Party IFrame",
     },
-    Join: {
+    join: {
       entry: "src/apps/join/Join.ts",
       template: "public/index.html",
       filename: "join.html",
@@ -44,6 +44,8 @@ module.exports = {
   configureWebpack: {
     entry: {
       background: "./src/background/Background.ts",
+      hostController: "./src/apps/host/hostController.ts",
+      videoController: "./src/apps/video/videoController.ts",
     },
     devtool: ["development", "staging"].includes(process.env.NODE_ENV)
       ? "source-map"
