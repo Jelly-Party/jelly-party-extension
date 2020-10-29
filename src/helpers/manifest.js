@@ -1,7 +1,8 @@
-import CopyPlugin from "copy-webpack-plugin";
-import CPS from "csp-generator";
+/* eslint @typescript-eslint/no-var-requires: "off" */
+const CopyPlugin = require("copy-webpack-plugin");
+const CPS = require("csp-generator");
 
-function cspAppender(entries: any[], manifest: { [x: string]: any }) {
+function cspAppender(entries, manifest) {
   const csp = new CPS(
     manifest["content_security_policy"]
       ? manifest["content_security_policy"]
@@ -14,19 +15,17 @@ function cspAppender(entries: any[], manifest: { [x: string]: any }) {
   return manifest;
 }
 
-function cspAppenderWrapper(func: (arg0: any) => any, manifest: any) {
+function cspAppenderWrapper(func, manifest) {
   return cspAppender(func(manifest), manifest);
 }
 
-function applyTransformer(transformer: (arg0: any) => any, content: string) {
+function applyTransformer(transformer, content) {
   let manifest = JSON.parse(content);
   manifest = transformer(manifest);
   return JSON.stringify(manifest, null, 2);
 }
 
-function transformer(options: {
-  pluginOptions: { manifest: { cspAppender: any } };
-}) {
+function transformer(options) {
   if (
     options.pluginOptions &&
     options.pluginOptions.manifest &&
@@ -39,10 +38,7 @@ function transformer(options: {
   }
 }
 
-module.exports = (
-  api: { chainWebpack: (arg0: (webpackConfig: any) => void) => void },
-  options: any,
-) => {
+module.exports = (api, options) => {
   const patterns = [
     {
       from: "src/manifest.json",
