@@ -17,7 +17,7 @@ module.exports = {
       title: "Jelly-Party IFrame",
     },
     join: {
-      entry: "src/apps/join/Join.ts",
+      entry: "src/apps/join/App.ts",
       template: "public/index.html",
       filename: "join.html",
       title: "Jelly-Party Join",
@@ -46,6 +46,8 @@ module.exports = {
       background: "./src/background/Background.ts",
       hostController: "./src/apps/host/hostController.ts",
       videoController: "./src/apps/video/videoController.ts",
+      autoJoin: "./src/apps/join/AutoJoin.ts",
+      rootStyles: "./src/assets/styles/RootStyles.scss",
     },
     devtool: ["development", "staging"].includes(process.env.NODE_ENV)
       ? "source-map"
