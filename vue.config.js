@@ -23,29 +23,6 @@ module.exports = {
       title: "Jelly-Party Join",
     },
   },
-  pluginOptions: {
-    browserExtension: {
-      manifestTransformer: manifest => {
-        let connectSrc = "connect-src 'self'";
-        if (["staging", "development"].includes(process.env.NODE_ENV)) {
-          manifest.contentSecurityPolicy = manifest.contentSecurityPolicy.replace(
-            "script-src 'self';",
-            "script-src 'self' 'unsafe-eval';",
-          );
-          connectSrc =
-            connectSrc + " http://localhost:8098 ws://localhost:8098";
-        }
-        manifest.contentSecurityPolicy =
-          manifest.contentSecurityPolicy +
-          " " +
-          connectSrc +
-          " " +
-          process.env.VUE_APP_WS_ADDRESS +
-          ";";
-        return manifest;
-      },
-    },
-  },
   filenameHashing: false,
   configureWebpack: {
     entry: {

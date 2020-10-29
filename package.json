@@ -21,7 +21,6 @@
     "notyf": "^3.9.0",
     "v-emoji-picker": "^2.3.1",
     "vue": "^3.0.0-beta.1",
-    "vue-cli-plugin-browser-extension": "^0.25.0",
     "vuejs-avataaars": "^4.0.1",
     "webextension-polyfill-ts": "^0.20.0"
   },
