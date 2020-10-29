@@ -3,6 +3,7 @@ import { Customizer } from "../Customizer";
 export class VimeoCustomizer extends Customizer {
   public styleTargetSelector = "#main";
   public styleTarget: HTMLElement | null;
+  public iFrameTargetSelector = "#main";
 
   constructor() {
     super();

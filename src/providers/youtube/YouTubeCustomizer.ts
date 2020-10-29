@@ -7,6 +7,7 @@ export class YouTubeCustomizer extends Customizer {
   public videoSelector = "video";
   public controlsSelector = ".ytp-chrome-bottom";
   public historySelector = ".ytp-chapter-hover-container";
+  public iFrameTargetSelector = "ytd-app";
 
   constructor() {
     super();

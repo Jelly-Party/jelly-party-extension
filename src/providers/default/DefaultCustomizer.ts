@@ -1,7 +1,9 @@
 import { Customizer } from "../Customizer";
 
 export class DefaultCustomizer extends Customizer {
+  public awaitCSSSelector = "body";
   public styleTargetSelector = "body";
+  public iFrameTargetSelector = "body";
 
   constructor() {
     super();

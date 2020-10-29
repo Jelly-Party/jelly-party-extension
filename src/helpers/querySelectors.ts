@@ -1,4 +1,8 @@
 export function querySelector(selector: string) {
+  /** 
+  Will always return a HTML Element. Will return a new div if `selector` yields nothing.
+  *
+  */
   return (
     (document.querySelector(selector) as HTMLElement) ??
     (document.createElement("div") as HTMLElement)

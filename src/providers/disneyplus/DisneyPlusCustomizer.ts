@@ -4,6 +4,7 @@ export class DisneyPlusCustomizer extends Customizer {
   public styleTargetSelector = "#hudson-wrapper";
   private wrapperIdentifier = "#app_body_content";
   public wrapperTarget: HTMLElement | null;
+  public iFrameTargetSelector = "#app_body_content";
 
   constructor() {
     super();

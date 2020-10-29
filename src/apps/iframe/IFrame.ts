@@ -2,7 +2,7 @@ import { createApp } from "vue";
 import Sidebar from "./views/Sidebar.vue";
 import "bootstrap/dist/css/bootstrap.css";
 import log from "loglevel";
-import { AppStateInterface, InitialState } from "./store/store";
+import { AppState, InitialState } from "./store/store";
 import { browser, Runtime } from "webextension-polyfill-ts";
 import {
   JellyPartyDescriptor,
@@ -24,7 +24,7 @@ const ClickOutsideDirective = {
   },
 };
 
-export let appState: AppStateInterface;
+export let appState: AppState = InitialState;
 
 export class IFrame {
   messagingPort: Runtime.Port;

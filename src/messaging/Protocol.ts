@@ -1,5 +1,5 @@
 import { ProtoframeDescriptor } from "@/helpers/protoframe-webext";
-import { AppStateInterface } from "../apps/iframe/store/store";
+import { AppState } from "../apps/iframe/store/store";
 import {
   ChatMessage,
   OptionsState,
@@ -10,7 +10,7 @@ import {
 
 export type JellyPartyProtocol = {
   setAppState: {
-    body: { appState: AppStateInterface };
+    body: { appState: AppState };
   };
   setVideoState: {
     body: { videoState: VideoState };

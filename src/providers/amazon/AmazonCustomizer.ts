@@ -5,6 +5,7 @@ export class AmazonCustomizer extends Customizer {
   public pausedOverlayIdentifier = ".pausedOverlay";
   public controlsOverlayIdentifier = ".controlsOverlay";
   public videoIdentifier = "video";
+  public iFrameTargetSelector = ".webPlayerSDKContainer";
 
   constructor() {
     super();

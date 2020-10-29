@@ -12,19 +12,23 @@ import { browser, Runtime } from "webextension-polyfill-ts";
 import { Wrapper } from "./DOMComponents/Wrapper";
 import { Notyf } from "notyf";
 import "notyf/notyf.min.css";
+import { timeoutQuerySelectorAll } from "@/helpers/querySelectors";
 
 class HostController {
   host: Hosts;
-  styleCustomizer: Customizer;
-  messagingPort: Runtime.Port;
-  pubsub: ProtoframePubsub<HostControllerProtocol>;
-  notyf: Notyf;
+  styleCustomizer!: Customizer;
+  messagingPort!: Runtime.Port;
+  pubsub!: ProtoframePubsub<HostControllerProtocol>;
+  notyf!: Notyf;
+  wrapper!: Wrapper;
 
   constructor() {
     // Get host
     this.host = getHost(window.location.host);
-    // Create actual DOM components
-    new Wrapper();
+    this.setup();
+  }
+
+  async setup() {
     // Create style customizer
     switch (this.host) {
       case "amazon": {
@@ -52,6 +56,12 @@ class HostController {
         break;
       }
     }
+    // Do not inject the IFrame before we've encountered `awaitCSSSelector`
+    console.log("Awaiting timeoutQuerySelectorAll");
+    await timeoutQuerySelectorAll(this.styleCustomizer.awaitCSSSelector);
+    console.log("Awaited timeoutQuerySelectorAll");
+    // Create actual DOM components
+    this.wrapper = new Wrapper(this.styleCustomizer.iFrameTargetSelector);
     // Set up notyf
     this.notyf = new Notyf({
       duration: 1000,

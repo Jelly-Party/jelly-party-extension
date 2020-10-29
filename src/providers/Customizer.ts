@@ -3,6 +3,11 @@ import { hostState } from "@/apps/host/hostState";
 import { customQuerySelector } from "@/helpers/querySelectors";
 
 export abstract class Customizer {
+  /**
+   * @param awaitCSSSelector - Customizer will await presence of CSS selector before injecting HTML elements:
+   */
+  public awaitCSSSelector = "body";
+  public abstract iFrameTargetSelector: string;
   querySelector: typeof customQuerySelector;
   constructor() {
     this.querySelector = customQuerySelector;
