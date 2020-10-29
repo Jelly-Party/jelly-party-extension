@@ -45,8 +45,7 @@
     "sass-loader": "^8.0.2",
     "typescript": "^3.9.7",
     "vue-svg-loader": "^0.16.0",
-    "vue-template-compiler": "^2.6.12",
-    "webextension-polyfill-ts": "^0.17.0"
+    "vue-template-compiler": "^2.6.12"
   },
   "vuePlugins": {
     "service": [
