@@ -50,7 +50,7 @@
 import { browser } from "webextension-polyfill-ts";
 
 export default {
-  name: "Join-App",
+  name: "JoinApp",
   data: function() {
     return {
       simplifiedURL: "this website",
