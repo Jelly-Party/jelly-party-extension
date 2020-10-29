@@ -405,5 +405,5 @@ export const mouthTypes = {
   Smile: Smile,
   Tongue: Tongue,
   Twinkle: Twinkle,
-  Vomit: Vomit
+  Vomit: Vomit,
 };

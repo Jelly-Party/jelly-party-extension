@@ -2093,5 +2093,5 @@ export const topTypes = {
   ShortHairShortWaved: ShortHairShortWaved,
   ShortHairSides: ShortHairSides,
   ShortHairTheCaesar: ShortHairTheCaesar,
-  ShortHairTheCaesarSidePart: ShortHairTheCaesarSidePart
+  ShortHairTheCaesarSidePart: ShortHairTheCaesarSidePart,
 };

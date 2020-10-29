@@ -278,5 +278,5 @@ export const eyeTypes = {
   Squint: Squint,
   Surprised: Surprised,
   Wink: Wink,
-  WinkWacky: WinkWacky
+  WinkWacky: WinkWacky,
 };

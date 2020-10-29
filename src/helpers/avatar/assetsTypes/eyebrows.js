@@ -230,5 +230,5 @@ export const eyebrowTypes = {
   SadConcernedNatural: SadConcernedNatural,
   UnibrowNatural: UnibrowNatural,
   UpDown: UpDown,
-  UpDownNatural: UpDownNatural
+  UpDownNatural: UpDownNatural,
 };

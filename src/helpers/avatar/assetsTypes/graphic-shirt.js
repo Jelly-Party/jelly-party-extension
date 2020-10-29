@@ -446,5 +446,5 @@ export const GraphicShirtTypes = {
   Diamond: Diamond,
   Pizza: Pizza,
   Resist: Resist,
-  Bear: Bear
+  Bear: Bear,
 };

@@ -262,5 +262,5 @@ export const accessoriesTypes = {
   Prescription02: Prescription02,
   Round: Round,
   Sunglasses: Sunglasses,
-  Wayfarers: Wayfarers
+  Wayfarers: Wayfarers,
 };
