@@ -97,7 +97,7 @@ function mkPayloadType<
 >(
   protocol: ProtoframeDescriptor<P>,
   action: ProtoframeAction,
-  type: T
+  type: T,
 ): string {
   return `${protocol.type}#${action}#${type}`;
 }
@@ -109,7 +109,7 @@ function mkPayloadBody<
   protocol: ProtoframeDescriptor<P>,
   action: ProtoframeAction,
   type: T,
-  body: ProtoframeMessageBody<P, T>
+  body: ProtoframeMessageBody<P, T>,
 ): ProtoframePayloadBody<P, T> {
   return {
     body,
@@ -123,7 +123,7 @@ function mkPayloadResponse<
 >(
   protocol: ProtoframeDescriptor<P>,
   type: T,
-  response: ProtoframeMessageResponse<P, T>
+  response: ProtoframeMessageResponse<P, T>,
 ): ProtoframePayloadResponse<P, T> {
   return {
     response,
@@ -138,7 +138,7 @@ function isPayloadBodyOfType<
   protocol: ProtoframeDescriptor<P>,
   action: ProtoframeAction,
   type: T,
-  payload: { type?: string; body?: unknown } | undefined
+  payload: { type?: string; body?: unknown } | undefined,
 ): payload is ProtoframePayloadBody<P, T> {
   if (hasValue(payload)) {
     const payloadType = payload.type;
@@ -160,7 +160,7 @@ function isPayloadResponseOfType<
 >(
   protocol: ProtoframeDescriptor<P>,
   type: T,
-  payload: { type?: string; response?: unknown } | undefined
+  payload: { type?: string; response?: unknown } | undefined,
 ): payload is R {
   if (hasValue(payload)) {
     const payloadType = payload.type;
@@ -176,7 +176,7 @@ function isPayloadResponseOfType<
 }
 
 function destroyAll(
-  listeners: [Runtime.Port, (ev: MessageEvent) => void][]
+  listeners: [Runtime.Port, (ev: MessageEvent) => void][],
 ): void {
   listeners.forEach(([w, l]) => w.onMessage.removeListener(l));
   listeners.length = 0;
@@ -189,10 +189,10 @@ function awaitResponse<
 >(
   messagePort: Runtime.Port,
   protocol: ProtoframeDescriptor<P>,
-  type: T
+  type: T,
 ): Promise<R> {
-  return new Promise((accept) => {
-    const handle: (ev: MessageEvent) => void = (ev) => {
+  return new Promise(accept => {
+    const handle: (ev: MessageEvent) => void = ev => {
       const payload = ev.data;
       if (isPayloadResponseOfType(protocol, type, payload)) {
         messagePort.onMessage.removeListener(handle);
@@ -211,7 +211,7 @@ function handleTell0<
   messagePort: Runtime.Port,
   protocol: ProtoframeDescriptor<P>,
   type: T,
-  handler: (body: ProtoframeMessageBody<P, T>) => void
+  handler: (body: ProtoframeMessageBody<P, T>) => void,
 ): [Runtime.Port, (ev: MessageEvent) => void] {
   const listener = (ev: MessageEvent): void => {
     const payload = ev.data;
@@ -231,7 +231,7 @@ function handleAsk0<
   messagePort: Runtime.Port,
   protocol: ProtoframeDescriptor<P>,
   type: T,
-  handler: (body: ProtoframeMessageBody<P, T>) => Promise<R>
+  handler: (body: ProtoframeMessageBody<P, T>) => Promise<R>,
 ): [Runtime.Port, (ev: MessageEvent) => void] {
   const listener = async (ev: MessageEvent): Promise<void> => {
     const payload = ev.data;
@@ -252,10 +252,10 @@ function tell0<
   messagePort: Runtime.Port,
   protocol: ProtoframeDescriptor<P>,
   type: T,
-  body: ProtoframeMessageBody<P, T>
+  body: ProtoframeMessageBody<P, T>,
 ): _R {
   return messagePort.postMessage(
-    mkPayloadBody(protocol, "tell", type, body)
+    mkPayloadBody(protocol, "tell", type, body),
   ) as _R;
 }
 
@@ -269,13 +269,13 @@ async function ask0<
   protocol: ProtoframeDescriptor<P>,
   type: T,
   body: B,
-  timeout: number
+  timeout: number,
 ): Promise<R> {
   // eslint-disable-next-line no-async-promise-executor
   const run = new Promise<R>(async (accept, reject) => {
     const timeoutHandler = setTimeout(
       () => reject(new Error(`Failed to get response within ${timeout}ms`)),
-      timeout
+      timeout,
     );
     const response = await awaitResponse(messagePort, protocol, type);
     clearTimeout(timeoutHandler);
@@ -303,7 +303,7 @@ interface AbstractProtoframeSubscriber<P extends Protoframe> extends Connector {
     _R extends ProtoframeMessageResponse<P, T> & undefined
   >(
     type: T,
-    handler: (body: ProtoframeMessageBody<P, T>) => void
+    handler: (body: ProtoframeMessageBody<P, T>) => void,
   ): void;
 }
 
@@ -321,7 +321,7 @@ interface AbstractProtoframePublisher<P extends Protoframe> extends Connector {
     _R extends ProtoframeMessageResponse<P, T> & undefined
   >(
     type: T,
-    body: ProtoframeMessageBody<P, T>
+    body: ProtoframeMessageBody<P, T>,
   ): void;
 }
 
@@ -348,7 +348,7 @@ interface AbstractProtoframePubsub<P extends Protoframe>
   >(
     type: T,
     body: B,
-    timeout?: number
+    timeout?: number,
   ): Promise<R>;
 
   /**
@@ -363,7 +363,7 @@ interface AbstractProtoframePubsub<P extends Protoframe>
     R extends ProtoframeMessageResponse<P, T> & {}
   >(
     type: T,
-    handler: (body: ProtoframeMessageBody<P, T>) => Promise<R>
+    handler: (body: ProtoframeMessageBody<P, T>) => Promise<R>,
   ): void;
 }
 
@@ -371,7 +371,7 @@ export class ProtoframeSubscriber<P extends Protoframe>
   implements AbstractProtoframeSubscriber<P> {
   constructor(
     private readonly protocol: ProtoframeDescriptor<P>,
-    private readonly messagePort: Runtime.Port
+    private readonly messagePort: Runtime.Port,
   ) {}
 
   private listeners: [Runtime.Port, (ev: MessageEvent) => void][] = [];
@@ -381,7 +381,7 @@ export class ProtoframeSubscriber<P extends Protoframe>
     _R extends ProtoframeMessageResponse<P, T> & undefined
   >(type: T, handler: (body: ProtoframeMessageBody<P, T>) => void): void {
     this.listeners.push(
-      handleTell0(this.messagePort, this.protocol, type, handler)
+      handleTell0(this.messagePort, this.protocol, type, handler),
     );
   }
 
@@ -402,7 +402,7 @@ export class ProtoframePublisher<P extends Protoframe>
    */
   public static build<P extends Protoframe>(
     protocol: ProtoframeDescriptor<P>,
-    messagePort: Runtime.Port
+    messagePort: Runtime.Port,
   ): ProtoframePublisher<P> {
     return new ProtoframePublisher(protocol, messagePort);
   }
@@ -421,12 +421,12 @@ export class ProtoframePublisher<P extends Protoframe>
 
   constructor(
     private readonly protocol: ProtoframeDescriptor<P>,
-    private readonly messagePort: Runtime.Port
+    private readonly messagePort: Runtime.Port,
   ) {}
 
   tell<T extends ProtoframeMessageType<P>, _R extends undefined>(
     type: T,
-    body: P[T]["body"]
+    body: P[T]["body"],
   ): void {
     tell0(this.messagePort, this.protocol, type, body);
   }
@@ -452,7 +452,7 @@ export class ProtoframePubsub<P extends Protoframe>
   public static async connect<P extends Protoframe>(
     pubsub: ProtoframePubsub<P>,
     retries = 50,
-    timeout = 500
+    timeout = 500,
   ): Promise<ProtoframePubsub<P>> {
     for (let i = 0; i <= retries; i++) {
       try {
@@ -464,7 +464,7 @@ export class ProtoframePubsub<P extends Protoframe>
     }
     throw new Error(
       `Could not connect on protocol ${pubsub.protocol.type} after ${retries *
-        timeout}ms`
+        timeout}ms`,
     );
   }
 
@@ -480,7 +480,7 @@ export class ProtoframePubsub<P extends Protoframe>
    */
   public static build<P extends Protoframe>(
     protocol: ProtoframeDescriptor<P>,
-    messagePort: Runtime.Port
+    messagePort: Runtime.Port,
   ): ProtoframePubsub<P> {
     return new ProtoframePubsub(protocol, messagePort);
   }
@@ -504,11 +504,11 @@ export class ProtoframePubsub<P extends Protoframe>
 
   constructor(
     private readonly protocol: ProtoframeDescriptor<P>,
-    private readonly messagePort: Runtime.Port
+    private readonly messagePort: Runtime.Port,
   ) {
     // Answer internally to ping requests
     handleAsk0(messagePort, this.systemProtocol, "ping", () =>
-      Promise.resolve({})
+      Promise.resolve({}),
     );
   }
 
@@ -531,13 +531,13 @@ export class ProtoframePubsub<P extends Protoframe>
     _R extends ProtoframeMessageResponse<P, T> & undefined
   >(type: T, handler: (body: ProtoframeMessageBody<P, T>) => void): void {
     this.listeners.push(
-      handleTell0(this.messagePort, this.protocol, type, handler)
+      handleTell0(this.messagePort, this.protocol, type, handler),
     );
   }
 
   public tell<T extends ProtoframeMessageType<P>, _R extends undefined>(
     type: T,
-    body: P[T]["body"]
+    body: P[T]["body"],
   ): void {
     tell0(this.messagePort, this.protocol, type, body);
   }
@@ -547,7 +547,7 @@ export class ProtoframePubsub<P extends Protoframe>
     R extends P[T]["response"] & {}
   >(type: T, handler: (body: P[T]["body"]) => Promise<R>): void {
     this.listeners.push(
-      handleAsk0(this.messagePort, this.protocol, type, handler)
+      handleAsk0(this.messagePort, this.protocol, type, handler),
     );
   }
 
