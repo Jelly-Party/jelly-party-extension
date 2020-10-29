@@ -180,9 +180,13 @@ import { OptionsState } from "@/apps/iframe/store/types";
     await connectionsEstablished();
     pubsub.handleTell("joinParty", async ({ partyId }) => {
       if (ws.readyState !== 3) {
-        console.error("Jelly-Party: Socket not closed! Cannot reconnect!");
+        console.error(
+          "Jelly-Party: Socket not closed! Not opening new connection!",
+        );
       } else {
-        ws = new WebSocket(process.env.VUE_APP_WS_ADDRESS);
+        ws = new WebSocket(
+          process.env.VUE_APP_WS_ADDRESS ?? "wss://ws.jelly-party.com:8080",
+        );
         const joinMsg: SendJoin = {
           type: "join",
           data: {
