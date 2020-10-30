@@ -65,8 +65,8 @@ export abstract class Controller {
   }
 
   setupVideoHooks() {
-    this.play = this.wrapPlayPauseHandler(this.getPlayHook());
-    this.pause = this.wrapPlayPauseHandler(this.getPauseHook());
+    this.play = this.wrapPlayHandler(this.getPlayHook());
+    this.pause = this.wrapPauseHandler(this.getPauseHook());
     this.seek = this.wrapSeekHandler(this.getSeekHook());
     this.playAndForward = this.getPlayHook();
     this.pauseAndForward = this.getPauseHook();
@@ -96,14 +96,37 @@ export abstract class Controller {
     }
   }
 
-  wrapPlayPauseHandler = (fun: () => Promise<void>) => {
+  wrapPlayHandler = (fun: () => Promise<void>) => {
     return async () => {
       const deferred = this.initNewDeferred();
-      this.skipNextEvent = true;
-      fun();
-      return Promise.race([deferred, sleep(videoCommandTimeout)]).then(
-        () => (this.skipNextEvent = false),
-      );
+      if (this.video && this.video.paused) {
+        this.skipNextEvent = true;
+        fun();
+        const prom = Promise.race([deferred, sleep(videoCommandTimeout)]);
+        prom.then(() => (this.skipNextEvent = false));
+        return prom;
+      } else {
+        // Immediately resolve deferred, video already playing
+        this.skipNextEvent = false;
+        return deferred.resolve();
+      }
+    };
+  };
+
+  wrapPauseHandler = (fun: () => Promise<void>) => {
+    return async () => {
+      const deferred = this.initNewDeferred();
+      if (this.video && !this.video.paused) {
+        this.skipNextEvent = true;
+        fun();
+        const prom = Promise.race([deferred, sleep(videoCommandTimeout)]);
+        prom.then(() => (this.skipNextEvent = false));
+        return prom;
+      } else {
+        // Immediately resolve deferred, video already paused
+        this.skipNextEvent = false;
+        return deferred.resolve();
+      }
     };
   };
 
@@ -112,12 +135,29 @@ export abstract class Controller {
       const timeDelta = Math.abs(tick - (this.getVideoState().tick ?? tick));
       if (timeDelta > 0.5) {
         // Seeking is actually worth it. We're off by more than half a second.
+        // First we must ensure that we're paused
+        let videoWasPaused = true;
+        if (!this.video?.paused) {
+          videoWasPaused = false;
+          await this.pause();
+        }
+        // Next we run the seek command. This will now only trigger the seek event!!!
         const deferred = this.initNewDeferred();
         this.skipNextEvent = true;
         fun(tick);
         return Promise.race([deferred, sleep(videoCommandTimeout)]).then(
-          () => (this.skipNextEvent = false),
+          async () => {
+            // If we weren't previously paused, let's resume playback
+            if (!videoWasPaused && this.video?.paused) {
+              await this.play();
+            }
+            this.skipNextEvent = false;
+          },
         );
+      } else {
+        // Immediately resolve deferred, not seeking
+        this.skipNextEvent = false;
+        return new DeferredPromise().resolve();
       }
     };
   };
