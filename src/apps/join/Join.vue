@@ -61,12 +61,12 @@ export default {
   },
   mounted: function() {
     const jellyPartyId = decodeURIComponent(
-      new URLSearchParams(window.location.search).get("jellyPartyId") ?? ""
+      new URLSearchParams(window.location.search).get("jellyPartyId") ?? "",
     );
     const redirectURL = new URL(
       decodeURIComponent(
-        new URLSearchParams(window.location.search).get("redirectURL") ?? ""
-      )
+        new URLSearchParams(window.location.search).get("redirectURL") ?? "",
+      ),
     );
     redirectURL.searchParams.append("jellyPartyId", jellyPartyId);
     this.redirectURL = redirectURL.toString();
@@ -76,7 +76,7 @@ export default {
       .contains({
         origins: [this.permissionScheme],
       })
-      .then((hasPermission) => {
+      .then(hasPermission => {
         if (hasPermission) {
           this.redirectToParty(this.redirectURL);
         } else {
@@ -90,7 +90,7 @@ export default {
         .request({
           origins: [this.permissionScheme],
         })
-        .then((granted) => {
+        .then(granted => {
           if (granted) {
             this.redirectToParty(this.redirectURL);
             console.log("Jelly-Party: Permissions granted successfully");
@@ -98,7 +98,7 @@ export default {
             console.log("Jelly-Party: Permissions not granted.");
           }
         })
-        .catch((err) => {
+        .catch(err => {
           console.log(err);
         });
     },
