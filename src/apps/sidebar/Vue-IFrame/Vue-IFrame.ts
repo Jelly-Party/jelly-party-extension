@@ -20,7 +20,6 @@ import { state as optionsState } from "@/apps/sidebar/Vue-IFrame/store/options/i
 import { state as partyState } from "@/apps/sidebar/Vue-IFrame/store/party/index";
 import { stableWebsites } from "@/helpers/domains/stableWebsites";
 import { IFrameMessenger } from "@/services/messaging/iFrameMessenger";
-import PromiseQueue from "@/helpers/promiseQueue";
 import {
   VideoState,
   MediaMessage,
@@ -457,9 +456,7 @@ export class JellyParty {
       event: "play",
       tick: tick,
     };
-    PromiseQueue.enqueue(() => {
-      return this.iFrameMessenger.messenger.ask("replayMediaEvent", msg);
-    });
+    this.iFrameMessenger.messenger.ask("replayMediaEvent", msg);
   }
 
   async pauseVideo(tick: number) {
@@ -469,9 +466,7 @@ export class JellyParty {
       event: "pause",
       tick: tick,
     };
-    PromiseQueue.enqueue(() => {
-      return this.iFrameMessenger.messenger.ask("replayMediaEvent", msg);
-    });
+    this.iFrameMessenger.messenger.ask("replayMediaEvent", msg);
   }
 
   async seek(tick: number) {
@@ -480,9 +475,7 @@ export class JellyParty {
       event: "seek",
       tick: tick,
     };
-    PromiseQueue.enqueue(() => {
-      return this.iFrameMessenger.messenger.ask("replayMediaEvent", msg);
-    });
+    this.iFrameMessenger.messenger.ask("replayMediaEvent", msg);
   }
 
   async togglePlayPause() {
@@ -491,9 +484,7 @@ export class JellyParty {
       event: "toggle",
       tick: 0,
     };
-    PromiseQueue.enqueue(() => {
-      return this.iFrameMessenger.messenger.ask("replayMediaEvent", msg);
-    });
+    this.iFrameMessenger.messenger.ask("replayMediaEvent", msg);
   }
 
   toggleFullScreen() {

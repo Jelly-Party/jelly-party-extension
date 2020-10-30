@@ -7,6 +7,7 @@ import {
   Protocol,
 } from "./protocols/Protocol";
 import { timeoutQuerySelector } from "@/helpers/querySelectors";
+import PromiseQueue from "@/helpers/promiseQueue";
 
 // Playing, pausing and seeking means actually playing, pausing and seeking the video in this context
 // We have direct access to the video, but no access to the JellyParty object.
@@ -61,16 +62,26 @@ export class HostMessenger {
     console.log(`attempting to replay ${JSON.stringify(mediaMessage)}`);
     switch (mediaMessage.event) {
       case "play": {
-        await this.jellyPartyController.provider.controller.play();
+        PromiseQueue.enqueue(() =>
+          this.jellyPartyController.provider.controller.seek(mediaMessage.tick),
+        );
+        PromiseQueue.enqueue(() =>
+          this.jellyPartyController.provider.controller.play(),
+        );
         break;
       }
       case "pause": {
-        await this.jellyPartyController.provider.controller.pause();
+        PromiseQueue.enqueue(() =>
+          this.jellyPartyController.provider.controller.seek(mediaMessage.tick),
+        );
+        PromiseQueue.enqueue(() =>
+          this.jellyPartyController.provider.controller.pause(),
+        );
         break;
       }
       case "seek": {
-        await this.jellyPartyController.provider.controller.seek(
-          mediaMessage.tick ?? 0,
+        PromiseQueue.enqueue(() =>
+          this.jellyPartyController.provider.controller.seek(mediaMessage.tick),
         );
         break;
       }
