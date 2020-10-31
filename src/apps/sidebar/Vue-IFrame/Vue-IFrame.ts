@@ -450,7 +450,6 @@ export class JellyParty {
   }
 
   async playVideo(tick: number) {
-    await this.seek(tick);
     const msg: MediaMessage = {
       type: "media",
       event: "play",
@@ -460,7 +459,6 @@ export class JellyParty {
   }
 
   async pauseVideo(tick: number) {
-    await this.seek(tick);
     const msg: MediaMessage = {
       type: "media",
       event: "pause",
