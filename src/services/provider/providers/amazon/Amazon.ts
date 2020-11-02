@@ -15,7 +15,7 @@ export class Amazon extends Provider {
   constructor() {
     super();
     this.iFrameTargetSelector = ".webPlayerSDKContainer";
-    this.awaitCSSSelector = "body";
+    this.awaitCSSSelector = "#dv-web-player";
     this.host = window.location.host;
     this.controller = new AmazonController();
     this.customizer = new AmazonCustomizer();
