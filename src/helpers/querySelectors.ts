@@ -38,19 +38,29 @@ export function getReferenceToLargestVideo() {
 
 export async function timeoutQuerySelector(
   selector: string,
-): Promise<HTMLIFrameElement | null> {
-  let counter = 0;
-  return new Promise((resolve, reject) => {
+): Promise<HTMLElement> {
+  return new Promise(resolve => {
     const interval = setInterval(() => {
-      const elem: HTMLIFrameElement | null = document.querySelector(selector);
+      const elem: HTMLElement | null = document.querySelector(selector);
       if (elem) {
         clearInterval(interval);
         resolve(elem);
       }
-      counter++;
-      if (counter >= 100) {
+    }, 200);
+  });
+}
+
+export async function timeoutQuerySelectorAll(
+  selector: string,
+): Promise<NodeListOf<HTMLElement> | null> {
+  return new Promise(resolve => {
+    const interval = setInterval(() => {
+      const elem: NodeListOf<HTMLElement> | null = document.querySelectorAll(
+        selector,
+      );
+      if (elem) {
         clearInterval(interval);
-        reject("Jelly-Party: timeoutQuerySelector timed out!");
+        resolve(elem);
       }
     }, 200);
   });
