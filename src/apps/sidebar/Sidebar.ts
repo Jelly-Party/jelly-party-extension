@@ -2,7 +2,6 @@ import { browser } from "webextension-polyfill-ts";
 import { ProviderFactory } from "@/services/provider/ProviderFactory";
 import { hostMessenger } from "@/services/messaging/HostMessenger";
 import { primeHosts as potentialPrimeHosts } from "@/helpers/domains/TLDs";
-import { timeoutQuerySelector } from "@/helpers/querySelectors";
 import { Provider } from "@/services/provider/Provider";
 import { notyf } from "@/services/notyf/notyf";
 import { Fab } from "./DOMComponents/Fab";
@@ -108,7 +107,9 @@ export class JellyPartyController {
   }
 
   async waitForHTMLElementThenInit() {
-    await timeoutQuerySelector(this.provider.awaitCSSSelector);
+    console.log("Awaiting provider specific promise");
+    await this.provider.awaitPromise;
+    console.log("Done awaiting provider specific promise");
     this.sidebar.attachSidebarToDOM();
   }
 

@@ -3,19 +3,22 @@ import { YouTubeController } from "./YouTubeController";
 import { YouTubeCustomizer } from "./YouTubeCustomizer";
 import { Controller } from "../Controller";
 import { Customizer } from "../Customizer";
+import { timeoutQuerySelector } from "@/helpers/querySelectors";
 
 export class YouTube extends Provider {
   public controller: Controller;
   public customizer: Customizer;
   public iFrameTargetSelector: string;
   public iFrameTarget: HTMLElement | null;
-  public awaitCSSSelector: string;
+  public awaitPromise: Promise<any>;
   public host: string;
 
   constructor() {
     super();
     this.iFrameTargetSelector = "ytd-app";
-    this.awaitCSSSelector = "body";
+    this.awaitPromise = new Promise(res => {
+      timeoutQuerySelector("body").then(e => res());
+    });
     this.host = window.location.host;
     this.controller = new YouTubeController();
     this.customizer = new YouTubeCustomizer();

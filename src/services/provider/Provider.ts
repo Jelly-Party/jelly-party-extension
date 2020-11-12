@@ -6,6 +6,6 @@ export abstract class Provider {
   public abstract customizer: Customizer;
   public abstract iFrameTargetSelector: string;
   public abstract iFrameTarget: HTMLElement | null;
-  public abstract awaitCSSSelector: string;
+  public abstract awaitPromise: Promise<any>;
   public abstract host: string;
 }

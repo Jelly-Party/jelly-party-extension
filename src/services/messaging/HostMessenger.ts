@@ -17,7 +17,9 @@ export class HostMessenger {
   public messenger!: ProtoframePubsub<ProtocolInterface>;
 
   async initializeMessenger() {
-    const iframe = await timeoutQuerySelector("#jellyPartyRoot");
+    const iframe = (await timeoutQuerySelector(
+      "#jellyPartyRoot",
+    )) as HTMLIFrameElement | null;
     if (!iframe) {
       console.log(`Jelly-Party: Cannot init messenger without jellyPartyRoot`);
     } else {
