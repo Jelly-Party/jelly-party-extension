@@ -1,43 +1,12 @@
 import { debounce as _debounce } from "lodash-es";
 import { sharedState } from "@/apps/sidebar/Sidebar";
-import {
-  deepQuerySelectorAll,
-  querySelector,
-  getReferenceToLargestVideo,
-} from "@/helpers/querySelectors";
+import { deepQuerySelectorAll, querySelector } from "@/helpers/querySelectors";
 
 export abstract class Customizer {
-  public observer: MutationObserver;
   constructor() {
-    // Set a mutation observer to the video
-    const mutationObserverInit = {
-      attributes: true,
-    };
     const debouncedAdjustView = _debounce(() => {
-      this.observer.disconnect();
       this.adjustView();
-      this.observer.observe(getReferenceToLargestVideo(), mutationObserverInit);
     }).bind(this);
-    this.observer = new MutationObserver((mutationsList, observer) => {
-      console.log(
-        "Jelly-Party: Observed a video style change. Recomputing styles.",
-      );
-      debouncedAdjustView();
-    });
-    const maybeStartObservation = () => {
-      try {
-        this.observer.observe(
-          getReferenceToLargestVideo(),
-          mutationObserverInit,
-        );
-      } catch {
-        console.log(
-          "Jelly-Party: Cannot initialize observer. Will try again in 500ms.",
-        );
-        setTimeout(maybeStartObservation, 500);
-      }
-    };
-    maybeStartObservation();
     // Add event listeners for fullscreenchange and resize
     window.addEventListener("fullscreenchange", debouncedAdjustView);
     window.addEventListener("resize", debouncedAdjustView);
