@@ -236,7 +236,7 @@ export class JellyParty {
       );
     }.bind(this);
 
-    this.ws.onmessage = (event: any) => {
+    this.ws.onmessage = async (event: any) => {
       const msg = JSON.parse(event.data);
       switch (msg.type) {
         case "videoUpdate": {
@@ -263,7 +263,9 @@ export class JellyParty {
               ? `${peer} played the video.`
               : msg.data.variant === "pause"
               ? `${peer} paused the video.`
-              : `${peer} jumped to ${toHHMMSS(msg.data.tick)}.`;
+              : `${peer} jumped to ${toHHMMSS(
+                  (await this.getVideoState()).duration - msg.data.tick,
+                )}.`;
           this.displayNotification(notificationText);
           this.logToChat(notificationText);
           break;

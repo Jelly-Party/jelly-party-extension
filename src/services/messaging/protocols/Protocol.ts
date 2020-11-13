@@ -5,6 +5,7 @@ import { Protoframe } from "protoframe/dist/types";
 export interface VideoState {
   paused: boolean;
   tick: number;
+  duration: number;
 }
 
 export interface MediaMessage {

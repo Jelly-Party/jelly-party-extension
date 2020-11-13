@@ -9,13 +9,17 @@ import { VideoState } from "@/services/messaging/protocols/Protocol";
 // video.pause() & video.currentTime= will work, however some websites,
 // such as Netflix, require direct access to video controllers.
 
-const videoCommandTimeout = 10000;
-
 export abstract class Controller {
+  public videoCommandTimeout = 3000;
+  public deferredPlay: DeferredPromise = new DeferredPromise();
+  public deferredPause: DeferredPromise = new DeferredPromise();
+  public deferredSeek: DeferredPromise = new DeferredPromise();
+  public seekTimeDelta = 0.5;
   findVideoInterval!: NodeJS.Timeout;
   video: HTMLVideoElement | null;
-  deferred!: DeferredPromise;
-  skipNextEvent: boolean;
+  public skipNextPlay = false;
+  public skipNextPause = false;
+  public skipNextSeek = false;
   play!: () => Promise<boolean>;
   pause!: () => Promise<boolean>;
   seek!: (tick: number) => Promise<any>;
@@ -23,7 +27,6 @@ export abstract class Controller {
   pauseAndForward!: () => Promise<void>;
 
   constructor() {
-    this.skipNextEvent = false;
     this.video = null;
     this.initializeHost();
     this.setupVideoHooks();
@@ -98,42 +101,51 @@ export abstract class Controller {
 
   wrapPlayHandler = (fun: () => Promise<void>) => {
     return async () => {
-      const deferred = this.initNewDeferred();
+      this.deferredPlay = new DeferredPromise();
       if (this.video && this.video.paused) {
-        this.skipNextEvent = true;
+        this.skipNextPlay = true;
         fun();
-        const prom = Promise.race([deferred, sleep(videoCommandTimeout)]);
-        prom.then(() => (this.skipNextEvent = false));
+        const prom = Promise.race([
+          this.deferredPlay,
+          sleep(this.videoCommandTimeout),
+        ]);
+        prom.then(() => (this.skipNextPlay = false));
         return prom;
       } else {
         // Immediately resolve deferred, video already playing
-        this.skipNextEvent = false;
-        return deferred.resolve();
+        this.skipNextPlay = false;
+        return this.deferredPlay.resolve();
       }
     };
   };
 
   wrapPauseHandler = (fun: () => Promise<void>) => {
     return async () => {
-      const deferred = this.initNewDeferred();
+      this.deferredPause = new DeferredPromise();
       if (this.video && !this.video.paused) {
-        this.skipNextEvent = true;
+        this.skipNextPause = true;
         fun();
-        const prom = Promise.race([deferred, sleep(videoCommandTimeout)]);
-        prom.then(() => (this.skipNextEvent = false));
+        const prom = Promise.race([
+          this.deferredPause,
+          sleep(this.videoCommandTimeout),
+        ]);
+        prom.then(() => (this.skipNextPause = false));
         return prom;
       } else {
         // Immediately resolve deferred, video already paused
-        this.skipNextEvent = false;
-        return deferred.resolve();
+        this.skipNextPause = false;
+        return this.deferredPause.resolve();
       }
     };
   };
 
-  wrapSeekHandler = (fun: (tick: number) => Promise<void>) => {
-    return async (tick: number) => {
-      const timeDelta = Math.abs(tick - (this.getVideoState().tick ?? tick));
-      if (timeDelta > 0.5) {
+  wrapSeekHandler = (fun: (timeFromEnd: number) => Promise<void>) => {
+    return async (timeFromEnd: number) => {
+      const currentTimeFromEnd = this.video?.duration
+        ? this.video.duration - this.getVideoState().tick
+        : 0;
+      const timeDelta = Math.abs(timeFromEnd - currentTimeFromEnd);
+      if (timeDelta > this.seekTimeDelta) {
         // Seeking is actually worth it. We're off by more than half a second.
         // First we must ensure that we're paused
         let videoWasPaused = true;
@@ -142,30 +154,27 @@ export abstract class Controller {
           await this.pause();
         }
         // Next we run the seek command. This will now only trigger the seek event!!!
-        const deferred = this.initNewDeferred();
-        this.skipNextEvent = true;
-        fun(tick);
-        return Promise.race([deferred, sleep(videoCommandTimeout)]).then(
-          async () => {
-            // If we weren't previously paused, let's resume playback
-            if (!videoWasPaused && this.video?.paused) {
-              await this.play();
-            }
-            this.skipNextEvent = false;
-          },
-        );
+        this.deferredSeek = new DeferredPromise();
+        this.skipNextSeek = true;
+        fun(timeFromEnd);
+        return Promise.race([
+          this.deferredSeek,
+          sleep(this.videoCommandTimeout),
+        ]).then(async () => {
+          // If we weren't previously paused, let's resume playback
+          if (!videoWasPaused && this.video?.paused) {
+            await this.play();
+          }
+          this.skipNextSeek = false;
+        });
       } else {
         // Immediately resolve deferred, not seeking
-        this.skipNextEvent = false;
-        return new DeferredPromise().resolve();
+        console.log(`Jelly-Party: Skipping sync - timeDelta is ${timeDelta}`);
+        this.skipNextSeek = false;
+        return this.deferredSeek.resolve();
       }
     };
   };
-
-  initNewDeferred() {
-    this.deferred = new DeferredPromise();
-    return this.deferred;
-  }
 
   injectScript(func: () => void) {
     // See https://stackoverflow.com/questions/9515704/insert-code-into-the-page-context-using-a-content-script
@@ -182,14 +191,14 @@ export abstract class Controller {
       type: "play",
       timeFromEnd: (this.video?.duration ?? 0) - (this.video?.currentTime ?? 0),
     });
-    if (this.skipNextEvent) {
+    if (this.skipNextPlay) {
       // We get here by programatically triggering a video event
-      this.skipNextEvent = false;
+      this.skipNextPlay = false;
       console.log(
         "Jelly-Party: Skipping event forwarding for event that we received.",
       );
       // Therefore we must resolve our deferred
-      this.deferred.resolve();
+      this.deferredPlay.resolve();
       return;
     }
     // We get here through a user action
@@ -212,14 +221,14 @@ export abstract class Controller {
       type: "pause",
       timeFromEnd: (this.video?.duration ?? 0) - (this.video?.currentTime ?? 0),
     });
-    if (this.skipNextEvent) {
+    if (this.skipNextPause) {
       // We get here by programatically triggering a video event
-      this.skipNextEvent = false;
+      this.skipNextPause = false;
       console.log(
         "Jelly-Party: Skipping event forwarding for event that we received.",
       );
       // Therefore we must resolve our deferred
-      this.deferred.resolve();
+      this.deferredPause.resolve();
       return;
     }
     // We get here through a user action
@@ -242,14 +251,14 @@ export abstract class Controller {
       type: "seek",
       timeFromEnd: (this.video?.duration ?? 0) - (this.video?.currentTime ?? 0),
     });
-    if (this.skipNextEvent) {
+    if (this.skipNextSeek) {
       // We get here by programatically triggering a video event
-      this.skipNextEvent = false;
+      this.skipNextSeek = false;
       console.log(
         "Jelly-Party: Skipping event forwarding for event that we received.",
       );
       // Therefore we must resolve our deferred
-      this.deferred.resolve();
+      this.deferredSeek.resolve();
       return;
     }
     // We get here through a user action
@@ -292,6 +301,7 @@ export abstract class Controller {
     return {
       paused: this.video?.paused ?? true,
       tick: this.video?.currentTime ?? 0,
+      duration: this.video?.duration ?? 0,
     };
   }
 }
