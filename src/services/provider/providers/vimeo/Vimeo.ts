@@ -9,7 +9,6 @@ export class Vimeo extends Provider {
   public controller: Controller;
   public customizer: Customizer;
   public iFrameTargetSelector: string;
-  public iFrameTarget: HTMLElement | null;
   public awaitPromise: Promise<any>;
   public host: string;
 
@@ -22,6 +21,5 @@ export class Vimeo extends Provider {
     this.host = window.location.host;
     this.controller = new VimeoController();
     this.customizer = new VimeoCustomizer();
-    this.iFrameTarget = document.querySelector(this.iFrameTargetSelector);
   }
 }

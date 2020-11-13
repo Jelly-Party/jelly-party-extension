@@ -8,6 +8,7 @@ import { Fab } from "./DOMComponents/Fab";
 import { Wrapper } from "./DOMComponents/Wrapper";
 import { IFrame } from "./DOMComponents/IFrame";
 import { CloseButton } from "./DOMComponents/CloseButton";
+import { timeoutQuerySelector } from "@/helpers/querySelectors";
 
 interface SharedState {
   sidebarVisible: boolean;
@@ -38,14 +39,18 @@ class Sidebar {
     this.wrapper = new Wrapper(this.fab, this.iFrame, this.closeButton);
   }
 
-  public attachSidebarToDOM() {
+  public async attachSidebarToDOM() {
     // Attach the iFrame to the DOM
-    if (this.provider.iFrameTarget) {
-      this.provider.iFrameTarget.appendChild(this.wrapper.wrapperElement);
+    console.log("Jelly-Party: Attaching Sidebar to DOM");
+    const target = await timeoutQuerySelector(
+      this.provider.iFrameTargetSelector,
+    );
+    if (target) {
+      target.appendChild(this.wrapper.wrapperElement);
       this.setupSideBarToggle();
     } else {
       console.error(
-        `Jelly-Party: Error attaching IFrame. provider.iFrameTarget not found.`,
+        `Jelly-Party: Error attaching IFrame. provider.iFrameTarget not found for selector: ${this.provider.iFrameTargetSelector}`,
       );
     }
     // Lastly, adjust the screen after initialization

@@ -1,7 +1,7 @@
 import { sleep } from "@/helpers/sleep";
 import { DeferredPromise } from "@/helpers/deferredPromise";
 import { hostMessenger } from "@/services/messaging/HostMessenger";
-import { getReferenceToLargestVideo } from "@/helpers/querySelectors";
+import { getRelativeReferenceToLargestVideo } from "@/helpers/querySelectors";
 import { VideoState } from "@/services/messaging/protocols/Protocol";
 
 // The VideoHandler handles playing, pausing & seeking videos
@@ -20,6 +20,7 @@ export abstract class Controller {
   public skipNextPlay = false;
   public skipNextPause = false;
   public skipNextSeek = false;
+  public videoParentDiv: Promise<HTMLElement> | null = null;
   play!: () => Promise<boolean>;
   pause!: () => Promise<boolean>;
   seek!: (tick: number) => Promise<any>;
@@ -76,10 +77,16 @@ export abstract class Controller {
     this.findVideoInterval = setInterval(this.findVideoAndAttach, 1000);
   }
 
-  findVideoAndAttach = () => {
+  findVideoAndAttach = async () => {
     if (!this.video) {
       console.log("Jelly-Party: Scanning for video to attach to.");
-      this.video = getReferenceToLargestVideo();
+      if (this.videoParentDiv) {
+        this.video = getRelativeReferenceToLargestVideo(
+          await this.videoParentDiv,
+        );
+      } else {
+        this.video = getRelativeReferenceToLargestVideo(document.body);
+      }
       if (this.video) {
         clearInterval(this.findVideoInterval);
         console.log("Jelly-Party: Found video. Attaching to video..");

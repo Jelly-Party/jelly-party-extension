@@ -9,7 +9,6 @@ export class Netflix extends Provider {
   public controller: Controller;
   public customizer: Customizer;
   public iFrameTargetSelector: string;
-  public iFrameTarget: HTMLElement | null;
   public awaitPromise: Promise<any>;
   public host: string;
 
@@ -22,6 +21,5 @@ export class Netflix extends Provider {
     this.host = window.location.host;
     this.controller = new NetflixController();
     this.customizer = new NetflixCustomizer();
-    this.iFrameTarget = document.querySelector(this.iFrameTargetSelector);
   }
 }

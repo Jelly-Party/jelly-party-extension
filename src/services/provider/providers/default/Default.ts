@@ -9,7 +9,6 @@ export class Default extends Provider {
   public controller: Controller;
   public customizer: Customizer;
   public iFrameTargetSelector: string;
-  public iFrameTarget: HTMLElement | null;
   public awaitPromise: Promise<any>;
   public host: string;
 
@@ -24,6 +23,5 @@ export class Default extends Provider {
     this.host = window.location.host;
     this.controller = new DefaultController();
     this.customizer = new DefaultCustomizer();
-    this.iFrameTarget = document.querySelector(this.iFrameTargetSelector);
   }
 }

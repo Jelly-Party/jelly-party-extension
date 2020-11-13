@@ -12,7 +12,6 @@ export class DisneyPlus extends Provider {
   public controller: Controller;
   public customizer: Customizer;
   public iFrameTargetSelector: string;
-  public iFrameTarget: HTMLElement | null;
   public awaitPromise: Promise<any>;
   public host: string;
 
@@ -35,6 +34,5 @@ export class DisneyPlus extends Provider {
     this.host = window.location.host;
     this.controller = new DisneyPlusController();
     this.customizer = new DisneyPlusCustomizer();
-    this.iFrameTarget = document.querySelector(this.iFrameTargetSelector);
   }
 }
