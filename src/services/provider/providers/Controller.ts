@@ -55,11 +55,11 @@ export abstract class Controller {
     };
   }
 
-  getSeekHook(): (tick: number) => Promise<void> {
+  getSeekHook(): (arg0: number) => Promise<void> {
     // Override this method for a custom seek hook
-    return async (tick: number) => {
+    return async (timeFromEnd: number) => {
       if (this.video?.currentTime) {
-        this.video.currentTime = tick;
+        this.video.currentTime = this.video.duration - timeFromEnd;
       }
     };
   }
@@ -178,7 +178,10 @@ export abstract class Controller {
   }
 
   playListener = () => {
-    console.log({ type: "play", tick: this.video?.currentTime });
+    console.log({
+      type: "play",
+      timeFromEnd: (this.video?.duration ?? 0) - (this.video?.currentTime ?? 0),
+    });
     if (this.skipNextEvent) {
       // We get here by programatically triggering a video event
       this.skipNextEvent = false;
@@ -190,15 +193,25 @@ export abstract class Controller {
       return;
     }
     // We get here through a user action
-    hostMessenger.messenger.tell("forwardMediaEvent", {
-      event: "play",
-      tick: this.video?.currentTime ?? 0,
-      type: "media",
-    });
+    if (!this.video?.duration || !this.video?.currentTime) {
+      console.log(
+        `Skipping event forwarding. duration: ${this.video?.duration}; currentTime: ${this.video?.currentTime}`,
+      );
+    } else {
+      const timeFromEnd = this.video.duration - this.video.currentTime;
+      hostMessenger.messenger.tell("forwardMediaEvent", {
+        event: "play",
+        tick: timeFromEnd,
+        type: "media",
+      });
+    }
   };
 
   pauseListener = () => {
-    console.log({ type: "pause", tick: this.video?.currentTime });
+    console.log({
+      type: "pause",
+      timeFromEnd: (this.video?.duration ?? 0) - (this.video?.currentTime ?? 0),
+    });
     if (this.skipNextEvent) {
       // We get here by programatically triggering a video event
       this.skipNextEvent = false;
@@ -210,15 +223,25 @@ export abstract class Controller {
       return;
     }
     // We get here through a user action
-    hostMessenger.messenger.tell("forwardMediaEvent", {
-      event: "pause",
-      tick: this.video?.currentTime ?? 0,
-      type: "media",
-    });
+    if (!this.video?.duration || !this.video?.currentTime) {
+      console.log(
+        `Skipping event forwarding. duration: ${this.video?.duration}; currentTime: ${this.video?.currentTime}`,
+      );
+    } else {
+      const timeFromEnd = this.video.duration - this.video.currentTime;
+      hostMessenger.messenger.tell("forwardMediaEvent", {
+        event: "pause",
+        tick: timeFromEnd,
+        type: "media",
+      });
+    }
   };
 
   seekedListener = () => {
-    console.log({ type: "seek", tick: this.video?.currentTime });
+    console.log({
+      type: "seek",
+      timeFromEnd: (this.video?.duration ?? 0) - (this.video?.currentTime ?? 0),
+    });
     if (this.skipNextEvent) {
       // We get here by programatically triggering a video event
       this.skipNextEvent = false;
@@ -230,11 +253,18 @@ export abstract class Controller {
       return;
     }
     // We get here through a user action
-    hostMessenger.messenger.tell("forwardMediaEvent", {
-      event: "seek",
-      tick: this.video?.currentTime ?? 0,
-      type: "media",
-    });
+    if (!this.video?.duration || !this.video?.currentTime) {
+      console.log(
+        `Skipping event forwarding. duration: ${this.video?.duration}; currentTime: ${this.video?.currentTime}`,
+      );
+    } else {
+      const timeFromEnd = this.video.duration - this.video.currentTime;
+      hostMessenger.messenger.tell("forwardMediaEvent", {
+        event: "seek",
+        tick: timeFromEnd,
+        type: "media",
+      });
+    }
   };
 
   addListeners = () => {

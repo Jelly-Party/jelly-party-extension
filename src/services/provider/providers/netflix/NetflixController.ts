@@ -15,8 +15,8 @@ export class NetflixController extends Controller {
       window.addEventListener("seekRequest", function(e: any) {
         console.log("Jelly-Party: Netflix Context: Received seek request");
         console.log(e);
-        const tick = e.detail * 1000;
-        getPlayer().seek(tick);
+        const timeFromEnd = e.detail * 1000;
+        getPlayer().seek(getPlayer().getDuration() - timeFromEnd);
       });
       window.addEventListener("playRequest", function() {
         console.log("Jelly-Party: Netflix Context: Received play request.");
