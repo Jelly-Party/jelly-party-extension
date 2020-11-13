@@ -36,6 +36,15 @@ export function getReferenceToLargestVideo() {
   return videos[maxIndex];
 }
 
+export function getRelativeReferenceToLargestVideo(el: HTMLElement) {
+  const videos = el.querySelectorAll("video");
+  const videoSizes = Array.from(videos).map(
+    v => v.offsetHeight * v.offsetWidth,
+  );
+  const maxIndex = videoSizes.indexOf(Math.max(...videoSizes));
+  return videos[maxIndex];
+}
+
 export async function timeoutQuerySelector(
   selector: string,
 ): Promise<HTMLElement> {
