@@ -19,15 +19,15 @@ export abstract class Customizer {
   querySelector = querySelector;
 
   adjustView = () => {
-    if (document.fullscreen && sharedState.sidebarVisible) {
+    if (document.fullscreenElement && sharedState.sidebarVisible) {
       // Fullscreen && sidebar showing
       console.log("Jelly-Party: Adjusting for fullscreen && sidebar showing");
       this.adjustForFullscreenAndSidebar();
-    } else if (document.fullscreen && !sharedState.sidebarVisible) {
+    } else if (document.fullscreenElement && !sharedState.sidebarVisible) {
       // Fullscreen and sidebar hidden
       console.log("Jelly-Party: Adjusting for fullscreen && sidebar hideen");
       this.adjustForFullscreenAndNoSidebar();
-    } else if (!document.fullscreen && sharedState.sidebarVisible) {
+    } else if (!document.fullscreenElement && sharedState.sidebarVisible) {
       // Non-fullscreen and sidebar showing
       console.log(
         "Jelly-Party: Adjusting for no fullscreen && sidebar showing",
