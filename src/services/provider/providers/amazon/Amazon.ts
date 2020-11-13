@@ -3,10 +3,7 @@ import { AmazonController } from "./AmazonController";
 import { AmazonCustomizer } from "./AmazonCustomizer";
 import { Controller } from "../Controller";
 import { Customizer } from "../Customizer";
-import {
-  getReferenceToLargestVideo,
-  timeoutQuerySelector,
-} from "@/helpers/querySelectors";
+import { timeoutQuerySelector } from "@/helpers/querySelectors";
 
 export class Amazon extends Provider {
   public controller: Controller;
@@ -18,16 +15,16 @@ export class Amazon extends Provider {
 
   constructor() {
     super();
-    this.iFrameTargetSelector = ".webPlayerSDKContainer";
+    this.iFrameTargetSelector = ".cascadesContainer";
     this.awaitPromise = new Promise(res => {
       timeoutQuerySelector(".webPlayerContainer").then(el => {
         const mInt = setInterval(() => {
-          const vid = getReferenceToLargestVideo();
+          const vid = el.querySelector("video");
           if (vid) {
-            if (vid.paused) {
-              clearInterval(mInt);
+            clearInterval(mInt);
+            setTimeout(() => {
               res();
-            }
+            }, 1000);
           }
         }, 500);
       });
