@@ -9,7 +9,7 @@ import { VideoState } from "@/services/messaging/protocols/Protocol";
 // video.pause() & video.currentTime= will work, however some websites,
 // such as Netflix, require direct access to video controllers.
 
-const videoCommandTimeout = 3000;
+const videoCommandTimeout = 10000;
 
 export abstract class Controller {
   findVideoInterval!: NodeJS.Timeout;
