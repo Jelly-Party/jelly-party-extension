@@ -311,4 +311,12 @@ export abstract class Controller {
       duration: this.video?.duration ?? 0,
     };
   }
+
+  toggleFullscreen = () => {
+    if (document.fullscreenElement) {
+      document.exitFullscreen();
+    } else {
+      document.documentElement.requestFullscreen();
+    }
+  };
 }
