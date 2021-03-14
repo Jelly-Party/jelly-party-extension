@@ -34,11 +34,7 @@ export class HostMessenger {
         this.jellyPartyController.sidebar.fab.showUnreadNotificationIfMinimized();
       });
       this.messenger.handleTell("toggleFullscreen", () => {
-        if (document.fullscreenElement) {
-          document.exitFullscreen();
-        } else {
-          document.documentElement.requestFullscreen();
-        }
+        this.jellyPartyController.provider.controller.toggleFullscreen();
       });
       this.messenger.handleAsk("getVideoState", async () => {
         return this.jellyPartyController.provider.controller.getVideoState();
