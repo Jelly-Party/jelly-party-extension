@@ -6,6 +6,7 @@ import { Vimeo } from "./providers/vimeo/Vimeo";
 import { Netflix } from "./providers/netflix/Netflix";
 import { DisneyPlus } from "./providers/disneyplus/DisneyPlus";
 import { Amazon } from "./providers/amazon/Amazon";
+import { FourAnime } from "./providers/4anime/FourAnime";
 
 export class ProviderFactory {
   public host: string;
@@ -42,6 +43,10 @@ export class ProviderFactory {
       }
       case "vimeo.com": {
         this.provider = new Vimeo();
+        break;
+      }
+      case "4anime.to": {
+        this.provider = new FourAnime();
         break;
       }
       default: {
