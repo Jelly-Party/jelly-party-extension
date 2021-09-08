@@ -14,7 +14,7 @@ export class Netflix extends Provider {
 
   constructor() {
     super();
-    this.iFrameTargetSelector = ".sizing-wrapper";
+    this.iFrameTargetSelector = ".watch-video";
     this.awaitPromise = new Promise(res => {
       timeoutQuerySelector("body").then(e => res());
     });

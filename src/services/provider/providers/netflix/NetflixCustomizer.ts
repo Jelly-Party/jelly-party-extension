@@ -1,7 +1,7 @@
 import { Customizer } from "../Customizer";
 
 export class NetflixCustomizer extends Customizer {
-  public styleTargetSelector = ".nfp.AkiraPlayer";
+  public styleTargetSelector = ".watch-video--player-view";
   public styleTarget: HTMLElement | null;
 
   constructor() {
