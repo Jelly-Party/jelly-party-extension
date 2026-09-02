@@ -21,6 +21,7 @@ const currentYear = new Date().getFullYear();
 				<a class="text-slate-300 no-underline hover:text-white" href="/privacy-policy">Privacy</a>
 				<a class="text-slate-300 no-underline hover:text-white" href={__JELLY_REPOSITORY_URL__} target="_blank" rel="noopener noreferrer">GitHub</a>
 				<a class="text-slate-300 no-underline hover:text-white" href="mailto:hi@jelly-party.com">Email us</a>
+				<a class="text-slate-300 no-underline hover:text-white" href="https://discord.gg/39uHVwHSKM" target="_blank" rel="noopener noreferrer">Discord</a>
 			</nav>
 		</div>
 
