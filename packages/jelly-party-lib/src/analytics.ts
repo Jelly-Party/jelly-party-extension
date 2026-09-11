@@ -26,4 +26,15 @@ export interface UsageReport {
   daily: Array<{ day: string; parties: number; participants: number; messages: number }>;
   sites: Array<{ site: string; parties: number; participants: number }>;
   sizes: Array<{ peak: number; parties: number }>;
+  parties: Array<{
+    key: string;
+    startedAt: number;
+    durationMs: number;
+    participants: number;
+    peak: number;
+    connected: number;
+    messages: number;
+    sites: string[];
+  }>;
+  hasMoreParties: boolean;
 }

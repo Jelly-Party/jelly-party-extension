@@ -229,3 +229,58 @@ test("domain collection excludes paths, subdomains, private hosts, and IPs", () 
   ])
     expect(analyticsSite(url)).toBe("unknown");
 });
+
+test("party history includes whole parties across midnight and excludes empty gaps from duration", async () => {
+  const start = Date.parse("2026-09-10T23:50:00Z");
+  vi.spyOn(Date, "now").mockReturnValue(start + 190 * 60000);
+  const events: Array<[string, string, number, number, string]> = [
+    ["closed", "party_created", 0, 1, "youtube.com"],
+    ["closed", "party_size", 0, 1, "youtube.com"],
+    ["closed", "participant_joined", 1, 1, "youtube.com"],
+    ["closed", "party_size", 10, 2, "youtube.com"],
+    ["closed", "participant_joined", 10, 1, "youtube.com"],
+    ["closed", "party_size", 20, 0, "youtube.com"],
+    ["closed", "party_size", 120, 1, "netflix.com"],
+    ["closed", "chat_sent", 121, 1, "netflix.com"],
+    ["closed", "party_size", 150, 0, "netflix.com"],
+    ["active", "party_created", 170, 1, "youtube.com"],
+    ["active", "party_size", 170, 1, "youtube.com"],
+    ["active", "participant_joined", 170, 1, "youtube.com"],
+  ];
+  await env.ANALYTICS_DB.batch(
+    events.map(([key, kind, minute, value, site]) =>
+      env.ANALYTICS_DB.prepare("INSERT INTO events VALUES (?, ?, ?, ?, ?, ?)").bind(
+        crypto.randomUUID(),
+        start + minute * 60000,
+        kind,
+        key,
+        site,
+        value,
+      ),
+    ),
+  );
+  const yesterday = await usageReport(env.ANALYTICS_DB, "2026-09-10", "2026-09-10");
+  expect(yesterday.parties).toEqual([
+    {
+      key: "closed",
+      startedAt: start,
+      durationMs: 50 * 60000,
+      participants: 2,
+      peak: 2,
+      connected: 0,
+      messages: 1,
+      sites: ["netflix.com", "youtube.com"],
+    },
+  ]);
+  expect(yesterday.hasMoreParties).toBe(false);
+  const today = await usageReport(env.ANALYTICS_DB, "2026-09-11", "2026-09-11");
+  expect(today.parties).toMatchObject([
+    {
+      key: "active",
+      durationMs: 20 * 60000,
+      connected: 1,
+      participants: 1,
+      peak: 1,
+    },
+  ]);
+});

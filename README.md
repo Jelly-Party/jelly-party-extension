@@ -112,7 +112,9 @@ D1 stores party starts, participation once per peer per party, chat counts, play
 site changes, and party sizes. Sites are reduced to public registrable domains; analytics excludes
 names, peer IDs, invite IDs, video titles, full URLs, IPs, and message contents. Random party keys
 relate events within one party, never across parties. History loads on opening the dashboard or
-applying a date range. `vp run deploy` applies the D1 migrations before uploading the Worker.
+applying a date range. Recent parties are selected by start date and show lifetime participants,
+peak size, sites, messages, and connected duration (excluding empty gaps). The list shows the latest
+100 starts in the selected range. `vp run deploy` applies the D1 migrations before uploading the Worker.
 
 Cloudflare code deployments disconnect existing party WebSockets; connected users must reconnect.
 This is a deployment interruption, separate from the small ongoing analytics overhead.

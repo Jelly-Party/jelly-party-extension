@@ -203,11 +203,46 @@ export async function usageReport(db: D1Database, from: string, to: string): Pro
       SELECT MAX(value) AS peak FROM events WHERE kind = 'party_size' AND occurred_at >= ? AND occurred_at < ?
       GROUP BY party_key) GROUP BY peak ORDER BY peak`)
       .bind(start, end),
+    db
+      .prepare(`WITH recent AS (
+      SELECT party_key, occurred_at AS startedAt FROM events
+      WHERE kind = 'party_created' AND occurred_at >= ? AND occurred_at < ?
+      ORDER BY occurred_at DESC, party_key LIMIT 101
+    ), membership AS (
+      SELECT e.party_key, e.value, e.occurred_at,
+        LEAD(e.occurred_at, 1, ?) OVER (
+          PARTITION BY e.party_key ORDER BY e.occurred_at, e.rowid
+        ) AS next_at,
+        ROW_NUMBER() OVER (
+          PARTITION BY e.party_key ORDER BY e.occurred_at DESC, e.rowid DESC
+        ) AS latest
+      FROM events e JOIN recent USING (party_key) WHERE e.kind = 'party_size'
+    ), presence AS (
+      SELECT party_key,
+        SUM(CASE WHEN value > 0 THEN MAX(0, next_at - occurred_at) ELSE 0 END) AS durationMs,
+        MAX(value) AS peak, MAX(CASE WHEN latest = 1 THEN value ELSE 0 END) AS connected
+      FROM membership GROUP BY party_key
+    )
+    SELECT recent.party_key AS key, recent.startedAt,
+      COALESCE(presence.durationMs, 0) AS durationMs,
+      COALESCE(presence.peak, 0) AS peak, COALESCE(presence.connected, 0) AS connected,
+      SUM(e.kind = 'participant_joined') AS participants,
+      SUM(e.kind = 'chat_sent') AS messages, GROUP_CONCAT(DISTINCT e.site) AS sites
+    FROM recent JOIN events e USING (party_key) LEFT JOIN presence USING (party_key)
+    GROUP BY recent.party_key ORDER BY recent.startedAt DESC, recent.party_key`)
+      .bind(start, end, Date.now()),
   ]);
+  const parties = results[4].results as Array<
+    Omit<UsageReport["parties"][number], "sites"> & { sites: string }
+  >;
   return {
     totals: results[0].results as UsageReport["totals"],
     daily: results[1].results as UsageReport["daily"],
     sites: results[2].results as UsageReport["sites"],
     sizes: results[3].results as UsageReport["sizes"],
+    parties: parties
+      .slice(0, 100)
+      .map((party) => ({ ...party, sites: party.sites.split(",").sort() })),
+    hasMoreParties: parties.length > 100,
   };
 }
