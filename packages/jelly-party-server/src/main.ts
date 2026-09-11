@@ -1,3 +1,6 @@
+import { adminRequest } from "./admin";
+import { PartyAnalytics, analyticsSite } from "./analytics";
+export { LiveStats } from "./analytics";
 import {
   HISTORY_PAGE_SIZE,
   MAX_CHAT_MESSAGES,
@@ -71,6 +74,10 @@ interface MessageWindow {
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
+    if (url.hostname === "dashboard.jelly-party.com" && url.pathname === "/")
+      return Response.redirect(new URL("/admin", url), 302);
+    if (url.pathname === "/admin" || url.pathname.startsWith("/admin/"))
+      return adminRequest(request, env);
     if (request.method === "GET" && url.pathname === "/health") {
       return Response.json({ status: "ok", version: RELEASE_VERSION });
     }
@@ -88,7 +95,7 @@ export default {
     }
 
     const partyId = /^\/party\/([^/]+)$/.exec(url.pathname)?.[1];
-    if (!partyId || !parsePartyId(partyId)) return new Response("Not found", { status: 404 });
+    if (!partyId || !parsePartyId(partyId)) return env.ASSETS.fetch(request);
     if (request.headers.get("Upgrade")?.toLowerCase() !== "websocket") {
       return new Response("WebSocket upgrade required", { status: 426 });
     }
@@ -171,6 +178,7 @@ export class PartyQuota extends DurableObject<Env> {
 
 export class Party extends DurableObject<Env> {
   private schemaReady = false;
+  private analytics = new PartyAnalytics(this.ctx.storage, this.env);
   private readonly messageWindows = new WeakMap<WebSocket, MessageWindow>();
 
   async fetch(request: Request): Promise<Response> {
@@ -209,6 +217,7 @@ export class Party extends DurableObject<Env> {
       this.ensureSchema();
       const initializePlayback = this.peers().length === 0;
       let destination = this.destination();
+      const created = !destination;
       if (!destination) {
         destination = this.saveDestination(message.destination);
         this.saveSystemEntry(message.peer, "party-started", destination);
@@ -232,6 +241,7 @@ export class Party extends DurableObject<Env> {
         initializePlayback,
       });
       this.broadcastPresence();
+      this.reportMembership(created, message.peer.id);
       return;
     }
     if (!peer) {
@@ -249,6 +259,7 @@ export class Party extends DurableObject<Env> {
       if (!this.allowChat(socket)) return;
       const entry = this.saveChat(peer, message.text);
       this.broadcast({ type: "chat", entry });
+      this.analytics.event("chat_sent", this.analyticsSite());
       return;
     }
     if (message.type === "destination") {
@@ -264,6 +275,8 @@ export class Party extends DurableObject<Env> {
       this.clearPlayback();
       this.broadcast({ type: "chat", entry });
       this.broadcast({ type: "destination", peerId: peer.id, destination });
+      this.analytics.event("video_changed", this.analyticsSite());
+      this.reportMembership();
       return;
     }
     if (message.type === "leader") {
@@ -322,11 +335,14 @@ export class Party extends DurableObject<Env> {
       },
       socket,
     );
+    this.analytics.event(message.action, this.analyticsSite());
   }
 
   async webSocketClose(socket: WebSocket): Promise<void> {
     if (!this.peer(socket)) return;
+    socket.serializeAttachment(null);
     this.broadcastPresence();
+    this.reportMembership();
     if (this.peers().length === 0) await this.ctx.storage.setAlarm(Date.now() + PARTY_RETENTION_MS);
   }
 
@@ -334,7 +350,25 @@ export class Party extends DurableObject<Env> {
     if (this.peers().length === 0) {
       await this.ctx.storage.deleteAll();
       this.schemaReady = false;
+      this.analytics = new PartyAnalytics(this.ctx.storage, this.env);
     }
+  }
+
+  private analyticsSite(): string {
+    try {
+      return analyticsSite(this.destination()?.url ?? "");
+    } catch {
+      return "unknown";
+    }
+  }
+
+  private reportMembership(created = false, joiningPeer?: string): void {
+    this.analytics.membership(
+      this.peers().map((peer) => peer.id),
+      this.analyticsSite(),
+      created,
+      joiningPeer,
+    );
   }
 
   private saveChat(peer: PeerIdentity, text: string): ChatEntry {

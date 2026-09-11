@@ -7,10 +7,12 @@
   "preview_urls": false,
   "limits": {
     "cpu_ms": 100,
-    "subrequests": 2,
+    "subrequests": 8,
   },
   "vars": {
     "MAX_PARTIES_PER_MONTH": "1000000",
+    "ACCESS_TEAM_DOMAIN": "still-bush-b570.cloudflareaccess.com",
+    "ACCESS_AUD": "1bcf73441353f22ff3a03ef62ab876be52a3a23aef17b0dcf4654c6a29abf8f3",
   },
   "ratelimits": [
     {
@@ -25,6 +27,7 @@
     },
   ],
   "routes": [
+    { "pattern": "dashboard.jelly-party.com", "custom_domain": true },
     { "pattern": "jelly-party.com/*", "zone_name": "jelly-party.com" },
     { "pattern": "www.jelly-party.com/*", "zone_name": "jelly-party.com" },
     { "pattern": "join.jelly-party.com/*", "zone_name": "jelly-party.com" },
@@ -32,17 +35,28 @@
   ],
   "assets": {
     "directory": "packages/jelly-party-website/build",
+    "binding": "ASSETS",
     "not_found_handling": "404-page",
-    "run_worker_first": ["/health", "/party", "/party/*"],
+    "run_worker_first": ["/", "/health", "/party", "/party/*", "/admin", "/admin/*"],
   },
+  "d1_databases": [
+    {
+      "binding": "ANALYTICS_DB",
+      "database_name": "jelly-party-analytics",
+      "database_id": "1f777b9f-e77e-4969-b8d8-0879bc3b2b49",
+      "migrations_dir": "migrations",
+    },
+  ],
   "durable_objects": {
     "bindings": [
       { "name": "PARTY", "class_name": "Party" },
       { "name": "PARTY_QUOTA", "class_name": "PartyQuota" },
+      { "name": "LIVE_STATS", "class_name": "LiveStats" },
     ],
   },
   "exports": {
     "Party": { "type": "durable-object", "storage": "sqlite" },
     "PartyQuota": { "type": "durable-object", "storage": "sqlite" },
+    "LiveStats": { "type": "durable-object", "storage": "sqlite" },
   },
 }

@@ -14,7 +14,10 @@ export default defineConfig({
         cache: false,
       },
       "test:server": {
-        command: "vp exec wrangler dev --config wrangler.jsonc --local --port 16080",
+        command: [
+          "vp exec wrangler d1 migrations apply ANALYTICS_DB --local",
+          "vp exec wrangler dev --config wrangler.jsonc --local --port 16080",
+        ],
         cache: false,
       },
       "test:web": {
@@ -42,11 +45,12 @@ export default defineConfig({
       },
       "check:wrangler": {
         command:
-          "vp exec wrangler types packages/jelly-party-server/src/worker-configuration.d.ts --include-runtime=false --check",
+          "vp exec wrangler types packages/jelly-party-server/src/worker-configuration.d.ts --include-runtime=false --strict-vars=false --check",
         cache: false,
       },
       deploy: {
         command: [
+          "vp exec wrangler d1 migrations apply ANALYTICS_DB --remote",
           'vp exec wrangler deploy --env=""',
           "JELLY_REQUIRE_RELEASE_VERSION=1 vp run smoke:production",
         ],
@@ -71,8 +75,17 @@ export default defineConfig({
         command: "vp exec node scripts/generate-icons.ts",
         cache: false,
       },
+      "test:analytics": {
+        command: "vp test --run --config vitest.workers.config.ts",
+        cache: false,
+      },
       "test:all": {
-        command: ["vp test --run", "vp run test:e2e", "vp run test:e2e:firefox"],
+        command: [
+          "vp test --run",
+          "vp run test:analytics",
+          "vp run test:e2e",
+          "vp run test:e2e:firefox",
+        ],
         cache: false,
       },
       "test:e2e": {

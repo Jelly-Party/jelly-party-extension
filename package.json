@@ -7,6 +7,7 @@
     "prepare": "vp config"
   },
   "devDependencies": {
+    "@cloudflare/vitest-pool-workers": "0.22.0",
     "@cloudflare/workers-types": "^5.20260901.1",
     "@playwright/test": "1.61.1",
     "@types/node": "^26.4.0",

@@ -1,3 +1,4 @@
+export type { UsageEvent, PartySnapshot, LiveSnapshot, UsageReport } from "./analytics";
 export { buildMagicLink, parseMagicLink, type MagicLink } from "./magic-link.js";
 export { liveTimeFromEnd, RemoteEchoGuard, targetTime, timeFromEnd } from "./playback.js";
 export {

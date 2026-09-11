@@ -24,6 +24,8 @@ catalog:
   vitest: 4.1.11
   vite-plus: 0.3.0
 overrides:
+  # Match the test runtime to Wrangler so it supports our compatibility date.
+  "@cloudflare/vitest-pool-workers>miniflare": "5.20260828.0-alpha"
   vite: "catalog:"
   vitest: "catalog:"
 peerDependencyRules:

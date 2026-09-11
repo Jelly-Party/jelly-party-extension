@@ -80,7 +80,7 @@ explicit localhost HTTP/WS overrides.
 ## Cloudflare deployment
 
 One Cloudflare Worker deploys the website, `/join` handoff, health endpoint, WebSocket relay, and
-party Durable Object together. Static files bypass Worker execution; `/health` and `/party/*` run
+party Durable Object together. Static files bypass Worker execution; `/`, `/health`, `/party/*`, and `/admin/*` run
 Worker-first. Local development uses `wrangler dev --local` plus the website dev server.
 
 Deploy the application to production after validation:
@@ -94,6 +94,28 @@ Production uses `https://jelly-party.com` for the website,
 WebSockets. After deployment, the task smoke-tests all three endpoints and a real secure WebSocket
 handshake. All three hostnames route to the same Worker deployment. The browser extension remains a
 separately packaged store artifact and is never published by these deploy tasks.
+
+## Private analytics
+
+`https://dashboard.jelly-party.com` shows live party membership and historical usage. Cloudflare
+Access protects the entire hostname; configure an Allow policy for the dashboard administrators.
+`ACCESS_TEAM_DOMAIN` and `ACCESS_AUD` in `wrangler.jsonc` identify that Access application. The
+Worker also verifies Access signatures, issuer, audience, and expiry on every dashboard request.
+
+Party Objects send versioned membership snapshots to one LiveStats Object on joins, leaves, and
+shared-video changes. The dashboard receives WebSocket pushes. There are no analytics heartbeats,
+polls, or alarms; quiet parties remain present, and a missed final disconnect can leave stale counts.
+Retries are bounded and analytics failures do not block chat or playback. Each membership report
+costs one Durable Object RPC request, plus any failed attempts; idle parties add no analytics requests.
+
+D1 stores party starts, participation once per peer per party, chat counts, playback actions, shared
+site changes, and party sizes. Sites are reduced to public registrable domains; analytics excludes
+names, peer IDs, invite IDs, video titles, full URLs, IPs, and message contents. Random party keys
+relate events within one party, never across parties. History loads on opening the dashboard or
+applying a date range. `vp run deploy` applies the D1 migrations before uploading the Worker.
+
+Cloudflare code deployments disconnect existing party WebSockets; connected users must reconnect.
+This is a deployment interruption, separate from the small ongoing analytics overhead.
 
 ## Store assets
 
@@ -119,6 +141,7 @@ service's player or footage in a listing image. The accompanying listing text li
 vp check          # format, lint, and type-check
 vp run check:wrangler # generated Cloudflare bindings match wrangler.jsonc
 vp test --run     # Vitest
+vp run test:analytics # real Workers/D1 analytics and Access authorization tests
 vp run test:e2e   # Playwright two-peer flow
 vp run test:e2e:firefox # Firefox loaded-extension acceptance flow
 vp run test:e2e:production # store build against the deployed /join route

@@ -258,24 +258,15 @@ async function waitForNativeSidebar(driver: FirefoxDriver): Promise<void> {
   await driver.wait(async () => nativeSidebarOpen(driver), 10_000);
   await driver.setContext(firefox.Context.CHROME);
   try {
-    const state = await driver.executeScript<Record<string, unknown>>(`
-      const browser = document.getElementById("sidebar");
-      const inner = browser?.contentDocument?.querySelector("browser");
-      return {
-        src: browser?.getAttribute("src"),
-        currentUri: browser?.currentURI?.spec,
-        contentLocation: browser?.contentDocument?.location?.href,
-        innerSrc: inner?.getAttribute("src"),
-        innerCurrentUri: inner?.currentURI?.spec,
-        innerLocation: inner?.contentDocument?.location?.href,
-      };
-    `);
-    assert.equal(
-      state.innerCurrentUri,
-      extensionPages.get(driver),
+    await driver.wait(
+      async () =>
+        (await driver.executeScript<string | null>(`
+          return document.getElementById("sidebar")?.contentDocument
+            ?.querySelector("browser")?.currentURI?.spec ?? null;
+        `)) === extensionPages.get(driver),
+      10_000,
       "Firefox native sidebar did not load the packaged Jelly Party panel",
     );
-    console.log(`Firefox native sidebar document state: ${JSON.stringify(state)}`);
   } finally {
     await driver.setContext(firefox.Context.CONTENT);
   }

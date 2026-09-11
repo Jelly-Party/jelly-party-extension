@@ -4,11 +4,13 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vp exec wrangler dev --config ../../wrangler.jsonc --local --port 8080",
+    "dev": "vp exec wrangler d1 migrations apply ANALYTICS_DB --config ../../wrangler.jsonc --local && vp exec wrangler dev --config ../../wrangler.jsonc --local --port 8080",
     "build": "vp exec wrangler deploy --config ../../wrangler.jsonc --env=\"\" --dry-run"
   },
   "dependencies": {
-    "jelly-party-lib": "workspace:*"
+    "jelly-party-lib": "workspace:*",
+    "jose": "6.2.12",
+    "tldts": "7.4.12"
   },
   "devDependencies": {
     "typescript": "^5.9.3"

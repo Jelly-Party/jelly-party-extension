@@ -53,13 +53,11 @@ test("a Firefox-led party stays synchronized after a cross-origin destination ch
     );
     await firefoxPeer.wait(async () => create.isEnabled(), 10_000);
     await create.click();
-    await firefoxPeer.wait(
-      async () =>
-        (
-          await firefoxPeer.findElement(By.css("[data-testid='connection-status']")).getText()
-        ).includes("Connected"),
+    const status = await firefoxPeer.wait(
+      until.elementLocated(By.css("[data-testid='connection-status']")),
       10_000,
     );
+    await firefoxPeer.wait(until.elementTextContains(status, "Connected"), 10_000);
     const invite = await firefoxPeer.findElement(By.css("[data-testid='invite-link']")).getText();
 
     const chromeVideo = await chromePeer.context.newPage();
