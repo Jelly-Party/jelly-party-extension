@@ -80,6 +80,7 @@ export type ClientMessage =
   | { type: "history"; beforeId: number };
 
 export type ServerMessage =
+  | { type: "heartbeat-ack" }
   | {
       type: "welcome";
       peerId: string;

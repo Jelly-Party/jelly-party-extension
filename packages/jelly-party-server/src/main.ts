@@ -181,6 +181,17 @@ export class Party extends DurableObject<Env> {
   private analytics = new PartyAnalytics(this.ctx.storage, this.env);
   private readonly messageWindows = new WeakMap<WebSocket, MessageWindow>();
 
+  constructor(ctx: DurableObjectState, env: Env) {
+    super(ctx, env);
+    // Keep idle extensions connected without waking the party for each heartbeat.
+    this.ctx.setWebSocketAutoResponse(
+      new WebSocketRequestResponsePair(
+        JSON.stringify({ type: "heartbeat" }),
+        JSON.stringify({ type: "heartbeat-ack" } satisfies ServerMessage),
+      ),
+    );
+  }
+
   async fetch(request: Request): Promise<Response> {
     if (request.headers.get("Upgrade")?.toLowerCase() !== "websocket") {
       return new Response("WebSocket upgrade required", { status: 426 });

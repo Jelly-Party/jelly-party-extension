@@ -41,11 +41,13 @@ describe("party socket", () => {
   });
 
   it("keeps a quiet Manifest V3 connection active until it is closed", () => {
+    const onMessage = vi.fn();
+    const onError = vi.fn();
     const socket = new PartySocket("wss://meet.example", {
-      onMessage: vi.fn(),
+      onMessage,
       onOpen: vi.fn(),
       onClose: vi.fn(),
-      onError: vi.fn(),
+      onError,
     });
     socket.connect(
       "a".repeat(64),
@@ -67,6 +69,15 @@ describe("party socket", () => {
     expect(webSocket.sent.map((message) => JSON.parse(message)).at(-1)).toEqual({
       type: "heartbeat",
     });
+
+    webSocket.dispatchEvent(
+      new MessageEvent("message", { data: JSON.stringify({ type: "heartbeat-ack" }) }),
+    );
+    expect(onMessage).not.toHaveBeenCalled();
+    expect(onError).not.toHaveBeenCalled();
+    const presence = { type: "presence", peers: [], leaderId: "" };
+    webSocket.dispatchEvent(new MessageEvent("message", { data: JSON.stringify(presence) }));
+    expect(onMessage).toHaveBeenCalledExactlyOnceWith(presence);
 
     socket.close();
     const messagesAtClose = webSocket.sent.length;

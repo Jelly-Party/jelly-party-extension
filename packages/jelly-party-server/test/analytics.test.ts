@@ -85,6 +85,27 @@ test("party activity pushes live counts, preserves quiet parties through hiberna
   });
   const second = await join({ ...peer, id: crypto.randomUUID() });
   expect(await live((message) => message.peers === 2)).toMatchObject({ parties: 1, together: 1 });
+  const messageHandler = await runInDurableObject(party, (instance) =>
+    vi.spyOn(instance, "webSocketMessage"),
+  );
+  first.socket.send(JSON.stringify({ type: "heartbeat" }));
+  expect(await first.messages((message) => message.type === "heartbeat-ack")).toEqual({
+    type: "heartbeat-ack",
+  });
+  expect(messageHandler).not.toHaveBeenCalled();
+  messageHandler.mockRestore();
+  await evictDurableObject(party);
+  first.socket.send(JSON.stringify({ type: "heartbeat" }));
+  expect(await first.messages((message) => message.type === "heartbeat-ack")).toEqual({
+    type: "heartbeat-ack",
+  });
+  await runInDurableObject(party, (_instance, state) => {
+    expect(
+      state
+        .getWebSockets()
+        .some((socket) => state.getWebSocketAutoResponseTimestamp(socket) !== null),
+    ).toBe(true);
+  });
   first.socket.send(JSON.stringify({ type: "chat", text: "Private chat content" }));
   expect(await second.messages((message) => message.type === "chat")).toMatchObject({
     type: "chat",

@@ -37,7 +37,9 @@ export class PartySocket {
     socket.addEventListener("message", (event) => {
       if (this.#socket !== socket) return;
       try {
-        this.handlers.onMessage(JSON.parse(String(event.data)) as ServerMessage);
+        const message = JSON.parse(String(event.data)) as ServerMessage;
+        if (message.type === "heartbeat-ack") return;
+        this.handlers.onMessage(message);
       } catch {
         this.handlers.onError("The party sent an unreadable message");
       }
