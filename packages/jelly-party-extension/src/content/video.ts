@@ -1,6 +1,7 @@
 import {
   isPlaybackAction,
   RemoteEchoGuard,
+  RemoteSeekGuard,
   targetTime,
   timeFromEnd,
   type PlaybackAction,
@@ -35,7 +36,7 @@ if (previousController?.isAlive()) {
 function start(): NonNullable<Window["__jellyPartyVideoController"]> {
   let video: HTMLVideoElement | null = null;
   let echo = new RemoteEchoGuard();
-  let remoteSeekTarget: number | null = null;
+  let remoteSeek = new RemoteSeekGuard();
   let frameScanTimer: ReturnType<typeof setTimeout> | null = null;
   const events = new AbortController();
 
@@ -43,7 +44,7 @@ function start(): NonNullable<Window["__jellyPartyVideoController"]> {
     const next = findBestVideo(video);
     if (next !== video) {
       echo = new RemoteEchoGuard();
-      remoteSeekTarget = null;
+      remoteSeek = new RemoteSeekGuard();
     }
     video = next;
     const metrics = video ? videoMetrics(video) : null;
@@ -59,11 +60,7 @@ function start(): NonNullable<Window["__jellyPartyVideoController"]> {
 
   const local = (action: PlaybackAction) => {
     if (!video) return;
-    if (action === "seek" && remoteSeekTarget !== null) {
-      const matchesRemoteTarget = Math.abs(video.currentTime - remoteSeekTarget) <= 0.5;
-      remoteSeekTarget = null;
-      if (matchesRemoteTarget) return;
-    }
+    if (action === "seek" && remoteSeek.consume(video.currentTime)) return;
     if (echo.consume(action)) return;
     const end = mediaEnd(video);
     const position = end === null ? null : timeFromEnd(end, video.currentTime);
@@ -153,11 +150,13 @@ function start(): NonNullable<Window["__jellyPartyVideoController"]> {
       };
     }
 
-    if (Math.abs(video.currentTime - desired) > 0.5) {
-      remoteSeekTarget = desired;
-      video.currentTime = desired;
-    }
+    const controlled = video;
+    const startedAt = Date.now();
     try {
+      if (Math.abs(video.currentTime - desired) > 0.5) {
+        remoteSeek.mark(desired);
+        video.currentTime = desired;
+      }
       if (action === "play" && video.paused) {
         echo.mark("play");
         await video.play();
@@ -165,6 +164,28 @@ function start(): NonNullable<Window["__jellyPartyVideoController"]> {
         echo.mark("pause");
         video.pause();
       }
+      if (controlled.seeking)
+        await new Promise<void>((resolve) => {
+          const done = () => {
+            clearTimeout(timer);
+            controlled.removeEventListener("seeked", done);
+            resolve();
+          };
+          const timer = setTimeout(done, 5000);
+          controlled.addEventListener("seeked", done, { once: true });
+        });
+      const expected = Math.min(
+        end!,
+        desired + (controlled.paused ? 0 : (Date.now() - startedAt) / 1000),
+      );
+      if (
+        controlled !== video ||
+        controlled.seeking ||
+        Math.abs(controlled.currentTime - expected) > 1 ||
+        (action === "play" && controlled.paused) ||
+        (action === "pause" && !controlled.paused)
+      )
+        return { ok: false, error: "The player did not apply the playback change." };
       return { ok: true };
     } catch (error) {
       // A rejected play() emits no play event, so remove the echo marker before

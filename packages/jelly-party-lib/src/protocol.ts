@@ -1,3 +1,11 @@
+import {
+  CLIENT_OUTCOMES,
+  SYNC_OUTCOMES,
+  isClientInfo,
+  type ClientInfo,
+  type ClientOutcome,
+  type SyncOutcome,
+} from "./analytics.js";
 export const MAX_CHAT_LENGTH = 2_000;
 export const MAX_CHAT_MESSAGES = 1_000;
 export const MAX_NAME_LENGTH = 40;
@@ -66,7 +74,9 @@ export interface ChatHistoryPage {
 }
 
 export type ClientMessage =
-  | { type: "join"; peer: PeerIdentity; destination: PartyDestinationInput }
+  | { type: "join"; peer: PeerIdentity; destination: PartyDestinationInput; client?: ClientInfo }
+  | { type: "telemetry"; outcome: ClientOutcome }
+  | { type: "sync-result"; commandId: string; outcome: SyncOutcome }
   | { type: "heartbeat" }
   | { type: "chat"; text: string }
   | {
@@ -100,6 +110,7 @@ export type ServerMessage =
     }
   | {
       type: "playback";
+      commandId?: string;
       peerId: string;
       action: PlaybackAction;
       timeFromEnd: number;
@@ -142,12 +153,40 @@ export function parseClientMessage(raw: unknown): ParseResult<ClientMessage> {
   if (!isRecord(value) || typeof value.type !== "string") return invalid("Missing message type");
 
   if (value.type === "join") {
-    if (!isPeerIdentity(value.peer) || !isPartyDestinationInput(value.destination)) {
+    if (
+      !isPeerIdentity(value.peer) ||
+      !isPartyDestinationInput(value.destination) ||
+      (value.client !== undefined && !isClientInfo(value.client))
+    ) {
       return invalid("Invalid join message");
     }
     return {
       ok: true,
-      value: { type: "join", peer: value.peer, destination: value.destination },
+      value: {
+        type: "join",
+        peer: value.peer,
+        destination: value.destination,
+        ...(value.client ? { client: value.client as ClientInfo } : {}),
+      },
+    };
+  }
+
+  if (value.type === "telemetry" && CLIENT_OUTCOMES.includes(value.outcome as ClientOutcome)) {
+    return { ok: true, value: { type: "telemetry", outcome: value.outcome as ClientOutcome } };
+  }
+  if (
+    value.type === "sync-result" &&
+    typeof value.commandId === "string" &&
+    uuidPattern.test(value.commandId) &&
+    SYNC_OUTCOMES.includes(value.outcome as SyncOutcome)
+  ) {
+    return {
+      ok: true,
+      value: {
+        type: "sync-result",
+        commandId: value.commandId,
+        outcome: value.outcome as SyncOutcome,
+      },
     };
   }
 

@@ -102,19 +102,29 @@ Access protects the entire hostname; configure an Allow policy for the dashboard
 `ACCESS_TEAM_DOMAIN` and `ACCESS_AUD` in `wrangler.jsonc` identify that Access application. The
 Worker also verifies Access signatures, issuer, audience, and expiry on every dashboard request.
 
-Party Objects send versioned membership snapshots to one LiveStats Object on joins, leaves, and
-shared-video changes. The dashboard receives WebSocket pushes. There are no analytics heartbeats,
-polls, or alarms; quiet parties remain present, and a missed final disconnect can leave stale counts.
-Retries are bounded and analytics failures do not block chat or playback. Each membership report
-costs one Durable Object RPC request, plus any failed attempts; idle parties add no analytics requests.
+Party Objects report membership on joins, leaves, video changes, and a one-minute alarm. The
+alarm checks the existing WebSocket heartbeat acknowledgements, so quiet viewers remain present
+and abandoned connections are closed. Events and the latest membership snapshot stay in a local
+outbox until D1 and LiveStats acknowledge delivery. Failures do not block chat or playback.
+This adds one alarm, one D1 checkpoint, and one LiveStats update per connected party per minute.
+The dashboard receives pushes and checks its connection; historical reports refresh on demand.
 
-D1 stores party starts, participation once per peer per party, chat counts, playback actions, shared
-site changes, and party sizes. Sites are reduced to public registrable domains; analytics excludes
-names, peer IDs, invite IDs, video titles, full URLs, IPs, and message contents. Random party keys
-relate events within one party, never across parties. History loads on opening the dashboard or
-applying a date range. Recent parties are selected by start date and show lifetime participants,
-peak size, sites, messages, and connected duration (excluding empty gaps). The list shows the latest
-100 starts in the selected range. `vp run deploy` applies the D1 migrations before uploading the Worker.
+D1 stores party starts, participation once per peer per party, chat and playback counts, and
+bounded onboarding and playback outcomes. Outcomes include browser family and extension version;
+random command IDs associate a recipient's playback result with its attempt. Sites are reduced
+to public registrable domains. Usage records exclude names, peer IDs, invite IDs, video titles,
+full URLs, IPs, and message contents. Test and development extensions mark their traffic as test;
+production reports exclude it by default. Records from older clients have unknown client metadata.
+
+The dashboard separates confirmed and uncertain membership. Open durations stop at the last
+recorded evidence; old sessions with missing disconnects no longer grow indefinitely. Connected
+duration needs one participant; together duration needs two. Neither measures watch time.
+The funnel follows parties started in the selected UTC date range through a second participant,
+five minutes together, and at least one applied remote playback change. Older clients have no
+playback outcomes, and missing results never count as success. Filters select matching parties;
+party rows and the funnel use lifetime activity, while activity totals use the selected dates.
+History includes previous-period comparisons and pages of 100 starts. `vp run deploy` applies
+D1 migrations before uploading the Worker.
 
 Cloudflare code deployments disconnect existing party WebSockets; connected users must reconnect.
 This is a deployment interruption, separate from the small ongoing analytics overhead.

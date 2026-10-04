@@ -1,6 +1,12 @@
-export type { UsageEvent, PartySnapshot, LiveSnapshot, UsageReport } from "./analytics";
+export * from "./analytics.js";
 export { buildMagicLink, parseMagicLink, type MagicLink } from "./magic-link.js";
-export { liveTimeFromEnd, RemoteEchoGuard, targetTime, timeFromEnd } from "./playback.js";
+export {
+  liveTimeFromEnd,
+  RemoteEchoGuard,
+  RemoteSeekGuard,
+  targetTime,
+  timeFromEnd,
+} from "./playback.js";
 export {
   type ChatEntry,
   type ChatHistoryPage,

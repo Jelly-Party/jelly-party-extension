@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process";
 import {
   blockNextExtensionVideoPlay,
   expect,
@@ -9,6 +10,7 @@ import {
 const videoUrl = "http://localhost:16333/autoplay-test.html";
 
 test("a blocked remote play asks for one video interaction and then catches up", async () => {
+  const began = Date.now();
   const host = await launchExtensionPeer();
   const guest = await launchExtensionPeer();
 
@@ -65,6 +67,39 @@ test("a blocked remote play asks for one video interaction and then catches up",
         ),
       )
       .toBeLessThan(1);
+    await expect
+      .poll(
+        () => {
+          const output = execFileSync(
+            "vp",
+            [
+              "exec",
+              "wrangler",
+              "d1",
+              "execute",
+              "ANALYTICS_DB",
+              "--local",
+              "--json",
+              "--command",
+              `SELECT kind,outcome,COUNT(*) AS n FROM events WHERE occurred_at >= ${began} AND source = 'test' GROUP BY kind,outcome`,
+            ],
+            { encoding: "utf8" },
+          );
+          const rows = (
+            JSON.parse(output) as Array<{
+              results: Array<{ kind: string; outcome: string; n: number }>;
+            }>
+          )[0].results;
+          return {
+            invited: rows.some((row) => row.kind === "invite_opened"),
+            attempted: rows.some((row) => row.kind === "sync_attempt"),
+            blocked: rows.some((row) => row.outcome === "autoplay-blocked"),
+            applied: rows.some((row) => row.outcome === "applied"),
+          };
+        },
+        { timeout: 15000 },
+      )
+      .toEqual({ invited: true, attempted: true, blocked: true, applied: true });
   } finally {
     await guest.close();
     await host.close();

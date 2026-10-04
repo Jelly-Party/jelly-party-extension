@@ -38,3 +38,21 @@ export class RemoteEchoGuard {
 function finiteDuration(value: number): boolean {
   return Number.isFinite(value) && value > 0;
 }
+
+// Players may emit several seeked events for one remote seek.
+export class RemoteSeekGuard {
+  private target: number | null = null;
+  private expires = 0;
+  mark(target: number, now = Date.now()): void {
+    this.target = target;
+    this.expires = now + 2000;
+  }
+  consume(position: number, now = Date.now()): boolean {
+    if (this.target === null) return false;
+    if (now > this.expires || Math.abs(position - this.target) > 0.75) {
+      this.target = null;
+      return false;
+    }
+    return true;
+  }
+}

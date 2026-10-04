@@ -1,3 +1,4 @@
+import { RemoteSeekGuard } from "./playback";
 import { describe, expect, it } from "vite-plus/test";
 import { liveTimeFromEnd, RemoteEchoGuard, targetTime, timeFromEnd } from "./playback.js";
 
@@ -34,5 +35,17 @@ describe("remote playback echo suppression", () => {
     expect(guard.consume("play")).toBe(false);
     expect(guard.consume("seek")).toBe(true);
     expect(guard.consume("seek")).toBe(false);
+  });
+});
+
+describe("remote seek echoes", () => {
+  it("suppresses duplicate player events but preserves another seek and expires", () => {
+    const guard = new RemoteSeekGuard();
+    guard.mark(20, 1000);
+    expect(guard.consume(20, 1010)).toBe(true);
+    expect(guard.consume(20.1, 1020)).toBe(true);
+    expect(guard.consume(30, 1030)).toBe(false);
+    guard.mark(40, 2000);
+    expect(guard.consume(40, 5000)).toBe(false);
   });
 });

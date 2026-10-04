@@ -1,3 +1,4 @@
+import { reportInvite } from "../telemetry";
 import "virtual:uno.css";
 import { parseMagicLink } from "jelly-party-lib";
 import "../sidebar/style.css";
@@ -12,9 +13,11 @@ let needsPermission = true;
 if (!invite) {
   description.textContent = "This invite is incomplete or unsafe. Ask your friend for a new link.";
 } else {
+  void reportInvite(invite.partyId, "invite_opened");
   const { hostname } = new URL(invite.destination);
   void chrome.permissions.contains({ origins: [invite.originPattern] }).then((granted) => {
     needsPermission = !granted;
+    if (!granted) void reportInvite(invite.partyId, "permission_required");
     description.textContent = granted
       ? `Open ${hostname} and join your friends in the Jelly Party sidebar.`
       : `Jelly Party needs access to ${hostname} to keep the video in sync with your friends.`;
@@ -35,11 +38,13 @@ allow.addEventListener("click", () => {
     : Promise.resolve(true);
   void Promise.all([permissionRequest, sidebarOpening])
     .then(async ([granted, sidebarOpened]) => {
+      void reportInvite(invite.partyId, granted ? "permission_granted" : "permission_denied");
       if (!granted) {
         allow.disabled = false;
         status.textContent = "Jelly Party needs that access to join the party.";
         return;
       }
+      void reportInvite(invite.partyId, "join_attempt");
       status.textContent = "Opening the shared video…";
       await chrome.runtime.sendMessage({
         type: "join:granted",

@@ -81,3 +81,11 @@ Use Vite+ for the complete development loop, UnoCSS for the design, Playwright f
 - Be pragmatic. Prefer deleting complexity over documenting it.
 - The existing extension is behavioral reference material, not an architecture to preserve. Keep what users notice; simplify everything else.
 - The implementation should be treated as a short rebuild with one end-to-end flow, not as a platform project.
+
+## Telemetry and recovery
+
+- Keep the private Access-protected dashboard and D1 usage store. Queue usage events and membership snapshots durably inside each party until both sinks acknowledge them. An active party checks its existing heartbeat evidence once per minute and retries outstanding delivery on its alarm; preserve the existing chat-retention countdown when the party becomes empty.
+- Distinguish confirmed, ended, and uncertain membership. Open durations stop at the last evidence of presence. Record connected time and time with at least two participants separately; neither is watch time.
+- Record bounded onboarding and playback outcomes, browser family, extension version, and test/production source. Correlate playback attempts and results with random per-recipient command IDs. Do not put names, peer IDs, invite IDs, full URLs, message contents, IPs, or arbitrary error text into usage records.
+- Reconnect interrupted extension sockets with the same identity, bounded backoff, a welcome deadline, and a heartbeat acknowledgement deadline. Explicit Leave cancels recovery. Suppress duplicate remote seek events without suppressing a different local seek.
+- Show the start-to-shared-session funnel, playback outcomes, size distribution, UTC date definitions, freshness, previous-period comparisons, filters, and paginated party histories. Keep draft filters separate from the successfully loaded report. Exclude marked test traffic by default; identify old clients as uninstrumented rather than treating absent outcomes as successful playback.

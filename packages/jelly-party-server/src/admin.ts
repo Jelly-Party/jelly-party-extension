@@ -44,6 +44,15 @@ export async function adminRequest(request: Request, env: Env): Promise<Response
           env.ANALYTICS_DB,
           url.searchParams.get("from") ?? "",
           url.searchParams.get("to") ?? "",
+          {
+            site: url.searchParams.get("site") || undefined,
+            browser: (url.searchParams.get("browser") ||
+              undefined) as import("jelly-party-lib").ReportFilters["browser"],
+            version: url.searchParams.get("version") || undefined,
+            source: (url.searchParams.get("source") ||
+              "production") as import("jelly-party-lib").ReportFilters["source"],
+            page: Number(url.searchParams.get("page") ?? 0),
+          },
         ),
         { headers },
       );

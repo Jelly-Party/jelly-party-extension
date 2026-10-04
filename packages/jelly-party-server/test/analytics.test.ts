@@ -270,18 +270,13 @@ test("party history includes whole parties across midnight and excludes empty ga
   ];
   await env.ANALYTICS_DB.batch(
     events.map(([key, kind, minute, value, site]) =>
-      env.ANALYTICS_DB.prepare("INSERT INTO events VALUES (?, ?, ?, ?, ?, ?)").bind(
-        crypto.randomUUID(),
-        start + minute * 60000,
-        kind,
-        key,
-        site,
-        value,
-      ),
+      env.ANALYTICS_DB.prepare(
+        "INSERT INTO events (id,occurred_at,kind,party_key,site,value) VALUES (?, ?, ?, ?, ?, ?)",
+      ).bind(crypto.randomUUID(), start + minute * 60000, kind, key, site, value),
     ),
   );
   const yesterday = await usageReport(env.ANALYTICS_DB, "2026-09-10", "2026-09-10");
-  expect(yesterday.parties).toEqual([
+  expect(yesterday.parties).toMatchObject([
     {
       key: "closed",
       startedAt: start,
@@ -298,10 +293,343 @@ test("party history includes whole parties across midnight and excludes empty ga
   expect(today.parties).toMatchObject([
     {
       key: "active",
-      durationMs: 20 * 60000,
+      durationMs: 0,
+      status: "uncertain",
       connected: 1,
       participants: 1,
       peak: 1,
     },
+  ]);
+});
+
+async function insertEvent(
+  key: string,
+  kind: string,
+  at: number,
+  value = 1,
+  extra: { site?: string; browser?: string; source?: string; outcome?: string } = {},
+) {
+  await env.ANALYTICS_DB.prepare(
+    "INSERT INTO events (id,occurred_at,kind,party_key,site,value,browser,version,source,outcome) VALUES (?,?,?,?,?,?,?,?,?,?)",
+  )
+    .bind(
+      crypto.randomUUID(),
+      at,
+      kind,
+      key,
+      extra.site ?? "youtube.com",
+      value,
+      extra.browser ?? "chrome",
+      "2.4.0",
+      extra.source ?? "production",
+      extra.outcome ?? "",
+    )
+    .run();
+}
+
+test("reports zero days, previous cohorts, confirmed together time, filters, and stale lower bounds", async () => {
+  const start = Date.parse("2026-09-10T12:00:00Z");
+  vi.spyOn(Date, "now").mockReturnValue(start + 60 * 60000);
+  for (const [key, at, extra] of [
+    ["current", start, {}],
+    ["previous", start - 86400000, {}],
+    ["test", start, { source: "test" }],
+    ["firefox", start, { browser: "firefox", site: "netflix.com" }],
+  ] as const) {
+    await insertEvent(key, "party_created", at, 1, extra);
+    await insertEvent(key, "party_size", at, 1, extra);
+    await insertEvent(key, "participant_joined", at, 1, extra);
+  }
+  await insertEvent("current", "party_size", start + 60000, 2);
+  await insertEvent("current", "sync_result", start + 120000, 1, { outcome: "applied" });
+  await env.ANALYTICS_DB.prepare("INSERT INTO party_presence VALUES (?,?,?,?)")
+    .bind("current", 3, 2, start + 8 * 60000)
+    .run();
+  const report = await usageReport(env.ANALYTICS_DB, "2026-09-10", "2026-09-11");
+  expect(report.daily).toEqual([
+    { day: "2026-09-10", parties: 2, participants: 2, messages: 0 },
+    { day: "2026-09-11", parties: 0, participants: 0, messages: 0 },
+  ]);
+  expect(report.funnel).toEqual({
+    started: 2,
+    together: 1,
+    fiveMinutes: 1,
+    synced: 1,
+    uncertain: 2,
+    medianTimeToJoinMs: 60000,
+  });
+  expect(report.previousFunnel.started).toBe(1);
+  expect(report.parties.find((p) => p.key === "current")).toMatchObject({
+    durationMs: 8 * 60000,
+    togetherMs: 7 * 60000,
+    status: "uncertain",
+  });
+  const filtered = await usageReport(env.ANALYTICS_DB, "2026-09-10", "2026-09-10", {
+    site: "netflix.com",
+    browser: "firefox",
+    version: "2.4.0",
+  });
+  expect(filtered.parties.map((p) => p.key)).toEqual(["firefox"]);
+  const tests = await usageReport(env.ANALYTICS_DB, "2026-09-10", "2026-09-10", { source: "test" });
+  expect(tests.totalParties).toBe(1);
+  await expect(
+    usageReport(env.ANALYTICS_DB, "2026-09-10", "2026-09-10", { page: -1 }),
+  ).rejects.toThrow(RangeError);
+});
+
+test("history paginates more than 100 matching starts deterministically", async () => {
+  const start = Date.parse("2026-09-10T12:00:00Z");
+  await env.ANALYTICS_DB.batch(
+    Array.from({ length: 102 }, (_, i) =>
+      env.ANALYTICS_DB.prepare(
+        "INSERT INTO events (id,occurred_at,kind,party_key,site,value) VALUES (?,?,'party_created',?,'youtube.com',1)",
+      ).bind(`event-${i}`, start, `party-${String(i).padStart(3, "0")}`),
+    ),
+  );
+  const first = await usageReport(env.ANALYTICS_DB, "2026-09-10", "2026-09-10");
+  const second = await usageReport(env.ANALYTICS_DB, "2026-09-10", "2026-09-10", { page: 1 });
+  expect(first.parties).toHaveLength(100);
+  expect(first.hasMoreParties).toBe(true);
+  expect(first.totalParties).toBe(102);
+  expect(second.parties.map((p) => p.key)).toEqual(["party-100", "party-101"]);
+  expect(second.hasMoreParties).toBe(false);
+});
+
+test("live snapshots exclude tests and separate stale membership without deleting quiet parties", async () => {
+  const stats = env.LIVE_STATS.getByName("global");
+  const now = Date.now();
+  await stats.update({ key: "fresh", revision: 1, peers: 2, site: "youtube.com", updatedAt: now });
+  await stats.update({
+    key: "stale",
+    revision: 1,
+    peers: 3,
+    site: "netflix.com",
+    updatedAt: now - 300000,
+  });
+  await stats.update({
+    key: "test",
+    revision: 1,
+    peers: 8,
+    site: "example.com",
+    updatedAt: now,
+    source: "test",
+  });
+  expect(await stats.snapshot()).toMatchObject({
+    parties: 1,
+    peers: 2,
+    together: 1,
+    uncertainParties: 1,
+    uncertainPeers: 3,
+    sites: [{ site: "youtube.com", peers: 2, parties: 1 }],
+  });
+  await stats.update({ key: "stale", revision: 2, peers: 3, site: "netflix.com", updatedAt: now });
+  expect(await stats.snapshot()).toMatchObject({ parties: 2, peers: 5, uncertainParties: 0 });
+});
+
+test("persisted telemetry retries after delivery failure and does not duplicate participation", async () => {
+  const party = env.PARTY.get(env.PARTY.newUniqueId());
+  const { PartyAnalytics } = await import("../src/analytics");
+  await runInDurableObject(party, async (_instance, state) => {
+    const analytics = new PartyAnalytics(state, env);
+    // A SQL trigger simulates an unavailable sink without discarding existing data.
+    await env.ANALYTICS_DB.prepare(
+      "CREATE TRIGGER fail_events BEFORE INSERT ON events BEGIN SELECT RAISE(FAIL, 'offline'); END",
+    ).run();
+    analytics.membership(["local-peer"], "youtube.com", true, "local-peer");
+    await analytics.flush();
+    expect(analytics.pending()).toBe(true);
+    await env.ANALYTICS_DB.prepare("DROP TRIGGER fail_events").run();
+    const resumed = new PartyAnalytics(state, env);
+    await resumed.flush();
+    expect(resumed.pending()).toBe(false);
+    resumed.membership(["local-peer"], "youtube.com", false, "local-peer");
+    await resumed.flush();
+  });
+  const counts = (
+    await env.ANALYTICS_DB.prepare("SELECT kind,COUNT(*) AS n FROM events GROUP BY kind").all()
+  ).results;
+  expect(counts).toEqual(
+    expect.arrayContaining([
+      { kind: "party_created", n: 1 },
+      { kind: "participant_joined", n: 1 },
+      { kind: "party_size", n: 1 },
+    ]),
+  );
+});
+
+test("membership alarms preserve responsive peers and clean up timed-out sockets", async () => {
+  const party = env.PARTY.get(env.PARTY.newUniqueId());
+  const response = await party.fetch(
+    new Request("https://example.com", { headers: { Upgrade: "websocket" } }),
+  );
+  const socket = response.webSocket!;
+  socket.accept();
+  const messages = inbox<ServerMessage>(socket);
+  socket.send(
+    JSON.stringify({
+      type: "join",
+      peer: { id: crypto.randomUUID(), name: "Viewer", emoji: "🍿" },
+      destination: { url: "https://youtube.com/watch", title: "Video" },
+    }),
+  );
+  await messages((m) => m.type === "welcome");
+  await runInDurableObject(party, async (instance, state) => {
+    await instance.alarm();
+    expect(state.getWebSockets().filter((s) => s.readyState === WebSocket.OPEN)).toHaveLength(1);
+    for (const server of state.getWebSockets())
+      server.serializeAttachment({
+        ...server.deserializeAttachment(),
+        lastSeen: Date.now() - 100000,
+        joinedAt: Date.now() - 100000,
+      });
+    await instance.alarm();
+  });
+  await expect
+    .poll(async () => (await env.LIVE_STATS.getByName("global").snapshot()).peers)
+    .toBe(0);
+  const today = new Date().toISOString().slice(0, 10);
+  await expect
+    .poll(async () => (await usageReport(env.ANALYTICS_DB, today, today)).parties[0]?.status)
+    .toBe("ended");
+  socket.close();
+});
+
+test("playback outcomes require a matching recipient command and duplicate acknowledgements are ignored", async () => {
+  const party = env.PARTY.get(env.PARTY.newUniqueId());
+  const connect = async () => {
+    const response = await party.fetch(
+      new Request("https://example.com", { headers: { Upgrade: "websocket" } }),
+    );
+    const socket = response.webSocket!;
+    socket.accept();
+    const messages = inbox<ServerMessage>(socket);
+    socket.send(
+      JSON.stringify({
+        type: "join",
+        peer: { id: crypto.randomUUID(), name: "Viewer", emoji: "🍿" },
+        destination: { url: "https://youtube.com/watch", title: "Video" },
+        client: { browser: "firefox", version: "2.4.0", source: "production" },
+      }),
+    );
+    await messages((m) => m.type === "welcome");
+    return { socket, messages };
+  };
+  const host = await connect(),
+    guest = await connect();
+  guest.socket.send(
+    JSON.stringify({ type: "sync-result", commandId: crypto.randomUUID(), outcome: "applied" }),
+  );
+  host.socket.send(
+    JSON.stringify({ type: "playback", action: "seek", timeFromEnd: 10, destinationRevision: 1 }),
+  );
+  const message = await guest.messages((m) => m.type === "playback");
+  if (message.type !== "playback") throw new Error("Expected playback");
+  expect(message.commandId).toBeDefined();
+  for (const outcome of ["autoplay-blocked", "applied", "applied"])
+    guest.socket.send(
+      JSON.stringify({ type: "sync-result", commandId: message.commandId, outcome }),
+    );
+  await expect
+    .poll(
+      async () =>
+        await env.ANALYTICS_DB.prepare(
+          "SELECT COUNT(*) AS n FROM events WHERE kind='sync_result'",
+        ).first("n"),
+    )
+    .toBe(2);
+  expect(
+    (
+      await env.ANALYTICS_DB.prepare(
+        "SELECT outcome FROM events WHERE kind='sync_result' ORDER BY occurred_at,rowid",
+      ).all()
+    ).results,
+  ).toEqual([{ outcome: "autoplay-blocked" }, { outcome: "applied" }]);
+  host.socket.close();
+  guest.socket.close();
+});
+
+test("invite telemetry validates bounded reports and never persists extra private fields", async () => {
+  const party = env.PARTY.get(env.PARTY.newUniqueId());
+  const client = { browser: "chrome", version: "2.4.0", source: "test" };
+  const post = (body: string) =>
+    party.fetch(
+      new Request("https://example.com/telemetry", {
+        method: "POST",
+        body,
+      }),
+    );
+  expect((await post("{")).status).toBe(400);
+  expect((await post("x".repeat(1025))).status).toBe(413);
+  expect((await post(JSON.stringify({ outcome: "arbitrary", client }))).status).toBe(400);
+  expect(
+    (
+      await post(
+        JSON.stringify({
+          outcome: "invite_opened",
+          client: { ...client, browser: "raw user agent" },
+        }),
+      )
+    ).status,
+  ).toBe(400);
+  expect(
+    (
+      await post(
+        JSON.stringify({
+          outcome: "invite_opened",
+          client,
+          title: "Private video title",
+          url: "https://example.com/private-path",
+          text: "Private message",
+        }),
+      )
+    ).status,
+  ).toBe(204);
+  await expect
+    .poll(async () => env.ANALYTICS_DB.prepare("SELECT COUNT(*) AS n FROM events").first("n"))
+    .toBe(1);
+  const rows = (await env.ANALYTICS_DB.prepare("SELECT * FROM events").all()).results;
+  expect(rows[0]).toMatchObject({
+    kind: "invite_opened",
+    browser: "chrome",
+    version: "2.4.0",
+    source: "test",
+    site: "unknown",
+  });
+  expect(JSON.stringify(rows)).not.toMatch(/Private|private-path|raw user agent/);
+});
+
+test("playback rates attribute replies across midnight to the attempted command's date", async () => {
+  const start = Date.parse("2026-09-10T23:59:59Z");
+  for (const [kind, at, outcome] of [
+    ["sync_attempt", start, ""],
+    ["sync_result", start + 2000, "applied"],
+  ] as const) {
+    await env.ANALYTICS_DB.prepare(
+      "INSERT INTO events (id,occurred_at,kind,party_key,site,value,command_id,outcome) VALUES (?,?,?,?,?,1,?,?)",
+    )
+      .bind(crypto.randomUUID(), at, kind, "party", "youtube.com", "command", outcome)
+      .run();
+  }
+  const yesterday = await usageReport(env.ANALYTICS_DB, "2026-09-10", "2026-09-10");
+  expect(yesterday.outcomes.map((row) => [row.kind, row.count])).toEqual([
+    ["sync_attempt", 1],
+    ["sync_result", 1],
+  ]);
+  const today = await usageReport(env.ANALYTICS_DB, "2026-09-11", "2026-09-11");
+  expect(today.outcomes).toEqual([]);
+  expect(yesterday.playbackResults).toMatchObject([
+    { attempts: 1, applied: 1, blocked: 0, failed: 0 },
+  ]);
+  expect(today.playbackResults).toEqual([]);
+  for (const outcome of ["video-missing", "autoplay-blocked", "timeout", "failed"]) {
+    await env.ANALYTICS_DB.prepare(
+      "INSERT INTO events (id,occurred_at,kind,party_key,site,value,command_id,outcome) VALUES (?,?, 'sync_result','party','youtube.com',1,'command',?)",
+    )
+      .bind(crypto.randomUUID(), start + 3000, outcome)
+      .run();
+  }
+  const retried = await usageReport(env.ANALYTICS_DB, "2026-09-10", "2026-09-10");
+  expect(retried.playbackResults).toMatchObject([
+    { attempts: 1, applied: 1, blocked: 1, failed: 1 },
   ]);
 });

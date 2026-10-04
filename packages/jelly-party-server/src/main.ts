@@ -3,6 +3,13 @@ import { PartyAnalytics, analyticsSite } from "./analytics";
 export { LiveStats } from "./analytics";
 import {
   HISTORY_PAGE_SIZE,
+  MEMBERSHIP_CHECK_MS,
+  UNKNOWN_CLIENT,
+  SYNC_OUTCOMES,
+  CLIENT_OUTCOMES,
+  isClientInfo,
+  type ClientInfo,
+  type SyncOutcome,
   MAX_CHAT_MESSAGES,
   parseClientMessage,
   parsePartyId,
@@ -56,6 +63,9 @@ interface ConnectionAttachment {
   joinedAt: number;
   leader?: boolean;
   playback?: PlaybackSnapshot;
+  client?: ClientInfo;
+  lastSeen?: number;
+  pendingSync?: { id: string; at: number; revision: number; outcomes: SyncOutcome[] };
 }
 
 interface DestinationRow extends Record<string, string | number> {
@@ -94,6 +104,14 @@ export default {
       return createParty(request, env);
     }
 
+    const telemetryParty = /^\/party\/([0-9a-f]{64})\/telemetry$/.exec(url.pathname)?.[1];
+    if (telemetryParty && request.method === "POST") {
+      const { success } = await env.PARTY_CONNECTION_RATE_LIMITER.limit({
+        key: clientKey(request),
+      });
+      if (!success) return new Response("Too many reports", { status: 429, headers: API_HEADERS });
+      return env.PARTY.get(env.PARTY.idFromString(telemetryParty)).fetch(request);
+    }
     const partyId = /^\/party\/([^/]+)$/.exec(url.pathname)?.[1];
     if (!partyId || !parsePartyId(partyId)) return env.ASSETS.fetch(request);
     if (request.headers.get("Upgrade")?.toLowerCase() !== "websocket") {
@@ -178,8 +196,9 @@ export class PartyQuota extends DurableObject<Env> {
 
 export class Party extends DurableObject<Env> {
   private schemaReady = false;
-  private analytics = new PartyAnalytics(this.ctx.storage, this.env);
+  private analytics = new PartyAnalytics(this.ctx, this.env);
   private readonly messageWindows = new WeakMap<WebSocket, MessageWindow>();
+  private readonly diagnosticWindows = new WeakMap<WebSocket, { at: number; count: number }>();
 
   constructor(ctx: DurableObjectState, env: Env) {
     super(ctx, env);
@@ -193,6 +212,54 @@ export class Party extends DurableObject<Env> {
   }
 
   async fetch(request: Request): Promise<Response> {
+    if (request.method === "POST" && new URL(request.url).pathname.endsWith("/telemetry")) {
+      if (Number(request.headers.get("Content-Length")) > 1024)
+        return new Response("Too large", { status: 413 });
+      const reader = request.body?.getReader();
+      if (!reader) return new Response("Invalid report", { status: 400 });
+      let body = "";
+      let bytes = 0;
+      const decoder = new TextDecoder();
+      for (;;) {
+        const part = await reader.read();
+        if (part.done) break;
+        bytes += part.value.byteLength;
+        if (bytes > 1024) {
+          await reader.cancel();
+          return new Response("Too large", { status: 413 });
+        }
+        body += decoder.decode(part.value, { stream: true });
+      }
+      body += decoder.decode();
+      let report: unknown;
+      try {
+        report = JSON.parse(body);
+      } catch {
+        return new Response("Invalid report", { status: 400 });
+      }
+      if (
+        !report ||
+        typeof report !== "object" ||
+        !("outcome" in report) ||
+        ![
+          "invite_opened",
+          "permission_granted",
+          "permission_denied",
+          "permission_required",
+          "join_attempt",
+        ].includes(String(report.outcome)) ||
+        !("client" in report) ||
+        !isClientInfo(report.client)
+      )
+        return new Response("Invalid report", { status: 400 });
+      await this.scheduleCheck();
+      this.analytics.event(
+        report.outcome as (typeof CLIENT_OUTCOMES)[number],
+        this.analyticsSite(),
+        report.client,
+      );
+      return new Response(null, { status: 204, headers: API_HEADERS });
+    }
     if (request.headers.get("Upgrade")?.toLowerCase() !== "websocket") {
       return new Response("WebSocket upgrade required", { status: 426 });
     }
@@ -205,19 +272,28 @@ export class Party extends DurableObject<Env> {
     const pair = new WebSocketPair();
     const [client, server] = Object.values(pair);
     this.ctx.acceptWebSocket(server);
+    await this.scheduleCheck();
     return new Response(null, { status: 101, webSocket: client });
   }
 
   async webSocketMessage(socket: WebSocket, raw: string | ArrayBuffer): Promise<void> {
-    if (!this.allowMessage(socket)) return;
     const parsed = parseClientMessage(
       typeof raw === "string" ? raw : new TextDecoder().decode(raw),
     );
+    if (parsed.ok && (parsed.value.type === "telemetry" || parsed.value.type === "sync-result")) {
+      const previous = this.diagnosticWindows.get(socket);
+      const window =
+        previous && Date.now() - previous.at < 60000 ? previous : { at: Date.now(), count: 0 };
+      this.diagnosticWindows.set(socket, window);
+      if (++window.count > 120) return;
+    } else if (!this.allowMessage(socket)) return;
     if (!parsed.ok)
       return this.send(socket, { type: "error", code: "invalid-message", message: parsed.error });
 
     const message = parsed.value;
     const peer = this.peer(socket);
+    const attachment = this.attachment(socket);
+    if (attachment) socket.serializeAttachment({ ...attachment, lastSeen: Date.now() });
     if (message.type === "join") {
       if (peer)
         return this.send(socket, {
@@ -234,13 +310,22 @@ export class Party extends DurableObject<Env> {
         this.saveSystemEntry(message.peer, "party-started", destination);
       }
       const playback = this.playback(destination.revision);
+      for (const previous of this.ctx.getWebSockets()) {
+        if (previous !== socket && this.peer(previous)?.id === message.peer.id) {
+          previous.serializeAttachment(null);
+          previous.close(1000, "Replaced by reconnect");
+        }
+      }
       socket.serializeAttachment({
         peer: message.peer,
         joinedAt: Date.now(),
         leader: initializePlayback,
         playback,
+        client: message.client ?? UNKNOWN_CLIENT,
+        lastSeen: Date.now(),
       });
-      await this.ctx.storage.deleteAlarm();
+      await this.ctx.storage.delete("emptySince");
+      await this.scheduleCheck();
       const leaderId = this.leader()?.peer.id ?? message.peer.id;
       this.send(socket, {
         type: "welcome",
@@ -252,7 +337,7 @@ export class Party extends DurableObject<Env> {
         initializePlayback,
       });
       this.broadcastPresence();
-      this.reportMembership(created, message.peer.id);
+      this.reportMembership(created, message.peer.id, message.client ?? UNKNOWN_CLIENT);
       return;
     }
     if (!peer) {
@@ -263,6 +348,42 @@ export class Party extends DurableObject<Env> {
       });
     }
     if (message.type === "heartbeat") return;
+    const client = this.attachment(socket)?.client ?? UNKNOWN_CLIENT;
+    if (message.type === "telemetry") {
+      this.analytics.once(
+        message.outcome,
+        this.analyticsSite(),
+        `${peer.id}:${this.destination()?.revision ?? 0}`,
+        client,
+      );
+      return;
+    }
+    if (message.type === "sync-result") {
+      const current = this.attachment(socket);
+      const pending = current?.pendingSync;
+      if (
+        !current ||
+        !pending ||
+        pending.id !== message.commandId ||
+        pending.revision !== this.destination()?.revision ||
+        Date.now() - pending.at > 300_000 ||
+        pending.outcomes.includes(message.outcome) ||
+        pending.outcomes.includes("applied")
+      )
+        return;
+      current.pendingSync = { ...pending, outcomes: [...pending.outcomes, message.outcome] };
+      socket.serializeAttachment(current);
+      this.analytics.event(
+        "sync_result",
+        this.analyticsSite(),
+        client,
+        undefined,
+        1,
+        message.outcome,
+        message.commandId,
+      );
+      return;
+    }
     this.ensureSchema();
     if (message.type === "history")
       return this.send(socket, { type: "history", history: this.history(message.beforeId) });
@@ -270,7 +391,7 @@ export class Party extends DurableObject<Env> {
       if (!this.allowChat(socket)) return;
       const entry = this.saveChat(peer, message.text);
       this.broadcast({ type: "chat", entry });
-      this.analytics.event("chat_sent", this.analyticsSite());
+      this.analytics.event("chat_sent", this.analyticsSite(), client);
       return;
     }
     if (message.type === "destination") {
@@ -286,7 +407,7 @@ export class Party extends DurableObject<Env> {
       this.clearPlayback();
       this.broadcast({ type: "chat", entry });
       this.broadcast({ type: "destination", peerId: peer.id, destination });
-      this.analytics.event("video_changed", this.analyticsSite());
+      this.analytics.event("video_changed", this.analyticsSite(), client);
       this.reportMembership();
       return;
     }
@@ -336,17 +457,48 @@ export class Party extends DurableObject<Env> {
       destinationRevision: destination.revision,
     };
     this.rememberPlayback(playback);
-    this.broadcast(
-      {
+    for (const recipient of this.ctx.getWebSockets()) {
+      const target = this.attachment(recipient);
+      if (recipient === socket || !target || recipient.readyState !== WebSocket.OPEN) continue;
+      if (target.pendingSync && !target.pendingSync.outcomes.length)
+        this.analytics.event(
+          "sync_result",
+          this.analyticsSite(),
+          target.client ?? UNKNOWN_CLIENT,
+          undefined,
+          1,
+          "superseded",
+          target.pendingSync.id,
+        );
+      const commandId = crypto.randomUUID();
+      recipient.serializeAttachment({
+        ...target,
+        pendingSync: {
+          id: commandId,
+          at: Date.now(),
+          revision: destination.revision,
+          outcomes: [],
+        },
+      });
+      this.analytics.event(
+        "sync_attempt",
+        this.analyticsSite(),
+        target.client ?? UNKNOWN_CLIENT,
+        undefined,
+        1,
+        undefined,
+        commandId,
+      );
+      this.send(recipient, {
         type: "playback",
+        commandId,
         peerId: peer.id,
         action: message.action,
         timeFromEnd: message.timeFromEnd,
         destinationRevision: destination.revision,
-      },
-      socket,
-    );
-    this.analytics.event(message.action, this.analyticsSite());
+      });
+    }
+    this.analytics.event(message.action, this.analyticsSite(), client);
   }
 
   async webSocketClose(socket: WebSocket): Promise<void> {
@@ -354,15 +506,75 @@ export class Party extends DurableObject<Env> {
     socket.serializeAttachment(null);
     this.broadcastPresence();
     this.reportMembership();
-    if (this.peers().length === 0) await this.ctx.storage.setAlarm(Date.now() + PARTY_RETENTION_MS);
+    if (this.peers().length === 0 && !(await this.ctx.storage.get("emptySince")))
+      await this.ctx.storage.put("emptySince", Date.now());
+    await this.scheduleCheck();
+  }
+
+  async webSocketError(socket: WebSocket): Promise<void> {
+    socket.close(1011, "Connection interrupted");
+    await this.webSocketClose(socket);
+  }
+
+  private async scheduleCheck(): Promise<void> {
+    const next = await this.ctx.storage.getAlarm();
+    if (next === null || next > Date.now() + MEMBERSHIP_CHECK_MS)
+      await this.ctx.storage.setAlarm(Date.now() + MEMBERSHIP_CHECK_MS);
   }
 
   async alarm(): Promise<void> {
-    if (this.peers().length === 0) {
+    for (const socket of this.ctx.getWebSockets()) {
+      const peer = this.attachment(socket);
+      if (!peer) {
+        socket.close(1008, "Join timed out");
+        continue;
+      }
+      const seen = Math.max(
+        peer.lastSeen ?? peer.joinedAt,
+        this.ctx.getWebSocketAutoResponseTimestamp(socket)?.getTime() ?? 0,
+      );
+      if (Date.now() - seen > 70_000) {
+        socket.serializeAttachment(null);
+        socket.close(1011, "Heartbeat timed out");
+      } else if (peer.pendingSync) {
+        const age = Date.now() - peer.pendingSync.at;
+        if (age > 30000 && !peer.pendingSync.outcomes.length) {
+          this.analytics.event(
+            "sync_result",
+            this.analyticsSite(),
+            peer.client ?? UNKNOWN_CLIENT,
+            undefined,
+            1,
+            "timeout",
+            peer.pendingSync.id,
+          );
+          peer.pendingSync.outcomes = ["timeout"];
+        }
+        socket.serializeAttachment({
+          ...peer,
+          pendingSync: age > 300000 ? undefined : peer.pendingSync,
+        });
+      }
+    }
+    this.broadcastPresence();
+    this.reportMembership();
+    await this.analytics.flush();
+    if (this.peers().length) {
+      await this.ctx.storage.delete("emptySince");
+      await this.scheduleCheck();
+      return;
+    }
+    const emptySince = (await this.ctx.storage.get<number>("emptySince")) ?? Date.now();
+    await this.ctx.storage.put("emptySince", emptySince);
+    if (this.analytics.pending()) {
+      await this.scheduleCheck();
+      return;
+    }
+    if (Date.now() - emptySince >= PARTY_RETENTION_MS) {
       await this.ctx.storage.deleteAll();
       this.schemaReady = false;
-      this.analytics = new PartyAnalytics(this.ctx.storage, this.env);
-    }
+      this.analytics = new PartyAnalytics(this.ctx, this.env);
+    } else await this.ctx.storage.setAlarm(emptySince + PARTY_RETENTION_MS);
   }
 
   private analyticsSite(): string {
@@ -373,12 +585,13 @@ export class Party extends DurableObject<Env> {
     }
   }
 
-  private reportMembership(created = false, joiningPeer?: string): void {
+  private reportMembership(created = false, joiningPeer?: string, client?: ClientInfo): void {
     this.analytics.membership(
       this.peers().map((peer) => peer.id),
       this.analyticsSite(),
       created,
       joiningPeer,
+      client ?? this.leader()?.client ?? UNKNOWN_CLIENT,
     );
   }
 
@@ -623,6 +836,23 @@ export class Party extends DurableObject<Env> {
       joinedAt:
         typeof value.joinedAt === "number" && Number.isFinite(value.joinedAt) ? value.joinedAt : 0,
       playback: isPlaybackSnapshot(value.playback) ? value.playback : undefined,
+      client: isClientInfo(value.client) ? value.client : UNKNOWN_CLIENT,
+      lastSeen: typeof value.lastSeen === "number" ? value.lastSeen : undefined,
+      pendingSync:
+        isRecord(value.pendingSync) &&
+        typeof value.pendingSync.id === "string" &&
+        typeof value.pendingSync.at === "number" &&
+        typeof value.pendingSync.revision === "number" &&
+        Array.isArray(value.pendingSync.outcomes)
+          ? {
+              id: value.pendingSync.id,
+              at: value.pendingSync.at,
+              revision: value.pendingSync.revision,
+              outcomes: value.pendingSync.outcomes.filter((outcome): outcome is SyncOutcome =>
+                SYNC_OUTCOMES.includes(outcome),
+              ),
+            }
+          : undefined,
       leader: value.leader === true,
     };
   }

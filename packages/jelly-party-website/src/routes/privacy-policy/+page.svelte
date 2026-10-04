@@ -18,7 +18,7 @@
 
 			<section>
 				<h2 class="m-0 text-xl font-750 text-white">Usage statistics</h2>
-                <p class="mb-0 mt-3 leading-7">The relay records party and participation counts, chat-message counts, playback-action counts, and the domain of the shared video site. Usage records exclude full video URLs, chat contents, names, emoji, IP addresses, and invitation identifiers. A separate random party identifier groups usage within a party; it cannot be used to join. Usage statistics are kept separately from party chat history. Our private dashboard also shows reported connected-party counts.</p>
+                <p class="mb-0 mt-3 leading-7">The relay records party and participation counts, chat-message counts, playback-action counts, and the domain of the shared video site. The extension also reports bounded outcomes such as permission denial, missing video, blocked playback, and successful playback changes, along with browser family and extension version. Random command identifiers connect playback attempts to their results; test traffic is marked separately. Usage records exclude full video URLs, chat contents, names, emoji, IP addresses, and invitation identifiers. A separate random party identifier groups usage within a party; it cannot be used to join. Usage statistics are kept separately from party chat history. Our private dashboard also shows reported connected-party counts.</p>
             </section>
             <section>
                 <h2 class="m-0 text-xl font-750 text-white">Data stored in your browser</h2>
@@ -32,7 +32,7 @@
 
 			<section class="border-t border-white/10 pt-8">
 				<p class="m-0 leading-7">Questions: <a href="mailto:hi@jelly-party.com" class="jp-link">hi@jelly-party.com</a></p>
-				<p class="mb-0 mt-3 text-sm text-slate-500">Effective 11 September 2026.</p>
+				<p class="mb-0 mt-3 text-sm text-slate-500">Effective 4 October 2026.</p>
 			</section>
 		</div>
 	</div>

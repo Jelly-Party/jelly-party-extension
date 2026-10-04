@@ -82,6 +82,7 @@ export default defineConfig(({ mode }) => {
       emptyOutDir: true,
     },
     define: {
+      __JELLY_TEST__: JSON.stringify(isTest || isDevelopment),
       __JELLY_WS_URL__: JSON.stringify(urls.websocket),
       __JELLY_JOIN_URL__: JSON.stringify(urls.join),
       __JELLY_PARTY_CREATION_URL__: JSON.stringify(partyCreationUrl(urls.websocket)),

@@ -1,3 +1,4 @@
+import { clientInfo } from "../telemetry";
 import {
   buildMagicLink,
   getRandomEmoji,
@@ -39,6 +40,7 @@ interface PendingJoin {
 }
 
 interface RemotePlaybackTarget {
+  commandId?: string;
   action: PlaybackAction;
   timeFromEnd: number;
   updatedAt: number;
@@ -256,6 +258,7 @@ async function handleMessage(
       if ((becameAvailable || becameSyncable) && playbackTarget) {
         void applyLatestRemotePlayback(partyId);
       }
+      partySocket?.telemetry(hasVideo ? "video_ready" : "video_missing");
       if (hasVideo) void maybePublishLeaderDestination(sender.tab.id);
     }
     await notifyViews({ type: "video:status", tabId: sender.tab.id, hasVideo });
@@ -471,20 +474,33 @@ function connectParty(partyId: string, identity: PeerIdentity): void {
   partySocket?.close();
   transition({ type: "connection", status: "connecting" });
   partySocket = new PartySocket(__JELLY_WS_URL__, {
+    onConnecting: () => transitionIfCurrent(partyId, { type: "connection", status: "connecting" }),
     onOpen: () => transitionIfCurrent(partyId, { type: "connection", status: "connected" }),
     onClose: () => transitionIfCurrent(partyId, { type: "connection", status: "disconnected" }),
     onError: (notice) => transitionIfCurrent(partyId, { type: "notice", notice }),
     onMessage: (message) => handlePartyMessage(partyId, message),
   });
-  partySocket.connect(partyId, identity, {
-    url: partyState.party.tabUrl,
-    title: partyState.party.tabTitle,
-  });
+  partySocket.connect(
+    partyId,
+    identity,
+    {
+      url: partyState.party.tabUrl,
+      title: partyState.party.tabTitle,
+    },
+    clientInfo(),
+  );
 }
 
 function handlePartyMessage(partyId: string, message: ServerMessage): void {
   if (partyState.kind === "idle" || partyState.party.partyId !== partyId) return;
   if (message.type === "welcome") {
+    partySocket?.telemetry(
+      partyState.party.accessRequired
+        ? "permission_required"
+        : partyState.party.hasVideo
+          ? "video_ready"
+          : "video_missing",
+    );
     const currentUrl = partyState.party.atDestination ? partyState.party.tabUrl : "";
     transition({
       type: "session",
@@ -567,6 +583,7 @@ function handlePartyMessage(partyId: string, message: ServerMessage): void {
     if (message.destinationRevision !== partyState.party.destinationRevision) return;
     const previousAction = playbackTarget?.action;
     playbackTarget = {
+      commandId: message.commandId,
       action:
         message.action === "seek" && previousAction && previousAction !== "seek"
           ? previousAction
@@ -1009,6 +1026,25 @@ async function applyLatestRemotePlayback(partyId: string): Promise<void> {
         })
       : target.timeFromEnd;
   const result = await applyPlayback(partyState.party.tabId, target.action, position);
+  if (
+    (partyState as PartyState).kind === "idle" ||
+    partyState.party.partyId !== partyId ||
+    playbackTarget !== target
+  )
+    return;
+  if (target.commandId)
+    partySocket?.syncResult(
+      target.commandId,
+      result.ok
+        ? "applied"
+        : result.reason === "interaction-required"
+          ? "autoplay-blocked"
+          : partyState.party.accessRequired
+            ? "permission-required"
+            : result.reason === "video-unavailable"
+              ? "video-missing"
+              : "failed",
+    );
   if (result.ok) {
     if (playbackTarget === target) retriedPlaybackTarget = null;
     transitionIfCurrent(partyId, { type: "playback-blocked", blocked: false });

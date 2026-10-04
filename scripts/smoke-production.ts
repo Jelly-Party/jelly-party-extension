@@ -3,7 +3,6 @@ import { randomBytes } from "node:crypto";
 import { connect } from "node:tls";
 import { RELEASE_VERSION } from "../config/release.ts";
 import { DEFAULT_BUILD_URLS, partyCreationUrl } from "../config/urls.ts";
-import { parsePartyId } from "../packages/jelly-party-lib/src/protocol.ts";
 
 await verifyPage(DEFAULT_BUILD_URLS.website, "Jelly Party");
 await verifyPage(DEFAULT_BUILD_URLS.join, "You’re invited to watch together");
@@ -51,8 +50,11 @@ async function verifyWebSocket(baseUrl: string): Promise<void> {
     );
   }
   const creation = (await creationResponse.json()) as { partyId?: unknown };
-  const partyId = parsePartyId(creation.partyId);
-  assert.ok(partyId, `${creationUrl} returned an invalid party ID`);
+  const partyId = creation.partyId;
+  assert.ok(
+    typeof partyId === "string" && /^[a-f0-9]{64}$/.test(partyId),
+    `${creationUrl} returned an invalid party ID`,
+  );
 
   const url = new URL(baseUrl);
   url.pathname = `/party/${partyId}`;
