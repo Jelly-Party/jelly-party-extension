@@ -15,8 +15,8 @@ export default defineConfig({
       },
       "test:server": {
         command: [
-          "vp exec wrangler d1 migrations apply ANALYTICS_DB --config wrangler.jsonc --local --persist-to .wrangler/state",
-          "vp exec wrangler dev --config wrangler.jsonc --local --port 16080 --persist-to .wrangler/state",
+          "CHOKIDAR_USEPOLLING=1 vp exec cf d1 migrations apply 1f777b9f-e77e-4969-b8d8-0879bc3b2b49 --dir migrations --local --persist-to .wrangler/state",
+          "vp exec node scripts/dev-server.ts --port 16080",
         ],
         cache: false,
       },
@@ -136,6 +136,7 @@ export default defineConfig({
     environment: "node",
     include: [
       "config/**/*.{test,spec}.ts",
+      "scripts/**/*.{test,spec}.ts",
       "packages/jelly-party-lib/src/**/*.{test,spec}.ts",
       "packages/jelly-party-extension/src/**/*.{test,spec}.ts",
       "packages/jelly-party-server/src/**/*.{test,spec}.ts",

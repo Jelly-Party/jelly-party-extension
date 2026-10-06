@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vp exec wrangler d1 migrations apply ANALYTICS_DB --config ../../wrangler.jsonc --local --persist-to ../../.wrangler/state && vp exec wrangler dev --config ../../wrangler.jsonc --local --port 8080 --persist-to ../../.wrangler/state",
+    "dev": "CHOKIDAR_USEPOLLING=1 vp exec cf d1 migrations apply 1f777b9f-e77e-4969-b8d8-0879bc3b2b49 --dir ../../migrations --local --persist-to ../../.wrangler/state && vp exec node ../../scripts/dev-server.ts --port 8080",
     "build": "vp exec cf build",
     "prepare": "vp exec cf workers types --include-runtime=false"
   },

@@ -81,7 +81,7 @@ explicit localhost HTTP/WS overrides.
 
 One Cloudflare Worker deploys the website, `/join` handoff, health endpoint, WebSocket relay, and
 party Durable Object together. Static files bypass Worker execution; `/`, `/health`, `/party/*`, and `/admin/*` run
-Worker-first. Local development retains `wrangler dev --local` plus the website dev server because cf beta does not forward the persistence path. Builds, deployment, types, and remote D1 migrations use the pinned cf CLI. Local migrations retain Wrangler because cf beta can hang after completing them on ARM.
+Worker-first. Local development uses cf plus the website dev server, preserving the existing local D1 and Durable Object state. Builds, deployment, types, and local and remote D1 migrations use the pinned cf CLI.
 
 Deploy the application to production after validation:
 
