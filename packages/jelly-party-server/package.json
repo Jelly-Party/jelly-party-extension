@@ -4,8 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vp exec wrangler d1 migrations apply ANALYTICS_DB --config ../../wrangler.jsonc --local && vp exec wrangler dev --config ../../wrangler.jsonc --local --port 8080",
-    "build": "vp exec wrangler deploy --config ../../wrangler.jsonc --env=\"\" --dry-run"
+    "dev": "vp exec wrangler d1 migrations apply ANALYTICS_DB --config ../../wrangler.jsonc --local --persist-to ../../.wrangler/state && vp exec wrangler dev --config ../../wrangler.jsonc --local --port 8080 --persist-to ../../.wrangler/state",
+    "build": "vp exec cf build",
+    "prepare": "vp exec cf workers types --include-runtime=false"
   },
   "dependencies": {
     "jelly-party-lib": "workspace:*",
@@ -13,6 +14,8 @@
     "tldts": "7.4.12"
   },
   "devDependencies": {
-    "typescript": "^5.9.3"
+    "cf": "1.0.0-beta.12",
+    "typescript": "^5.9.3",
+    "wrangler": "4.147.0"
   }
 }

@@ -23,7 +23,7 @@ Jelly Party is a deliberately small browser extension: create a temporary watch 
 ## Deployment
 
 - All work happens on `main`. Do not create feature branches or pull requests: commit to `main` and push it.
-- Deployments are done live from a developer machine with the `wrangler` CLI, through the Vite Task that wraps it (`vp run deploy`). There is no CI pipeline: nothing builds, tests, or deploys on push. There is no staging environment; production is the only deployment target.
+- Deployments are done live from a developer machine with the project-local `cf` CLI, through the Vite Task that wraps it (`vp run deploy`). There is no CI pipeline: nothing builds, tests, or deploys on push. There is no staging environment; production is the only deployment target.
 - Validation is therefore entirely local: run the checks, tests, and builds below yourself before deploying, and treat a successful deploy as the last step of that same local pass.
 
 ## Validation
@@ -64,3 +64,10 @@ release. Add a tool name to select part of the graph. For example, run
 ## Local specifications
 
 Specs live at `.scratch/<feature>/spec.md`; implementation tickets, when genuinely useful, live at `.scratch/<feature>/issues/`. Keep the spec authoritative and avoid duplicating its decisions into extra planning documents.
+
+## Cloudflare tooling
+
+- `packages/jelly-party-server/cloudflare.config.ts` owns deployment bindings, domains, and Durable Object exports. Preserve Worker names, D1 IDs, and the three existing SQLite Durable Object classes. `wrangler.config.ts` holds the required Wrangler bundler settings.
+- `cf` and its Wrangler bundler are pinned. Use the existing Vite Tasks; `check:wrangler` is retained as the task name but now generates `cf` types. The existing install preparation runs it automatically; rerun it after changing bindings. Run cf project commands from the server package: cf rejects a workspace root.
+- Remote D1 migrations use cf with the existing database UUID and `--dir migrations`; cf defaults to remote. Local D1 migrations retain Wrangler because cf beta.12 intermittently hangs after reporting completion on ARM, including with Node 24. Preserve `--local --persist-to .wrangler/state`.
+- Local dev and the Workers Vitest pool retain `wrangler.jsonc`. cf beta.12 silently drops `--persist-to`, including after `--`, and its bundler config has no persistence option. Keep the existing root state directory so local D1 and Durable Object data remain available. Keep bindings in sync with the cf configuration; deploy through cf only.

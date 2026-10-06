@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { mkdir, readFile, readdir, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import JSZip from "jszip";
-import { parse } from "jsonc-parser";
+import { productionRoutes } from "../config/production-routes.ts";
 import { FIREFOX_ADDON_GUID, FIREFOX_MIN_VERSION, RELEASE_VERSION } from "../config/release.ts";
 import {
   DEFAULT_BUILD_URLS,
@@ -45,7 +45,7 @@ const sourceFiles = [
   "flake.nix",
   "flake.lock",
   "vite.config.ts",
-  "wrangler.jsonc",
+  "config/production-routes.ts",
   "config/build-environment.ts",
   "config/extension-manifest.test.ts",
   "config/extension-manifest.ts",
@@ -173,10 +173,7 @@ async function validateManifest(directory, browser) {
 }
 
 async function validateProductionRoutes() {
-  const wrangler = parse(await readFile(path.join(root, "wrangler.jsonc"), "utf8"));
-  const routes = new Set(
-    (wrangler.routes ?? []).map((route) => `${route.pattern}|${route.zone_name}`),
-  );
+  const routes = new Set(productionRoutes.map((route) => `${route.pattern}|${route.zone}`));
   for (const endpoint of [
     DEFAULT_BUILD_URLS.website,
     DEFAULT_BUILD_URLS.join,
@@ -184,7 +181,7 @@ async function validateProductionRoutes() {
   ]) {
     const route = `${new URL(endpoint).hostname}/*|jelly-party.com`;
     if (!routes.has(route)) {
-      throw new Error(`${endpoint}: no matching production route in wrangler.jsonc`);
+      throw new Error(`${endpoint}: no matching production route in config/production-routes.ts`);
     }
   }
 }

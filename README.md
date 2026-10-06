@@ -81,7 +81,7 @@ explicit localhost HTTP/WS overrides.
 
 One Cloudflare Worker deploys the website, `/join` handoff, health endpoint, WebSocket relay, and
 party Durable Object together. Static files bypass Worker execution; `/`, `/health`, `/party/*`, and `/admin/*` run
-Worker-first. Local development uses `wrangler dev --local` plus the website dev server.
+Worker-first. Local development retains `wrangler dev --local` plus the website dev server because cf beta does not forward the persistence path. Builds, deployment, types, and remote D1 migrations use the pinned cf CLI. Local migrations retain Wrangler because cf beta can hang after completing them on ARM.
 
 Deploy the application to production after validation:
 
@@ -99,7 +99,7 @@ separately packaged store artifact and is never published by these deploy tasks.
 
 `https://dashboard.jelly-party.com` shows live party membership and historical usage. Cloudflare
 Access protects the entire hostname; configure an Allow policy for the dashboard administrators.
-`ACCESS_TEAM_DOMAIN` and `ACCESS_AUD` in `wrangler.jsonc` identify that Access application. The
+`ACCESS_TEAM_DOMAIN` and `ACCESS_AUD` in `packages/jelly-party-server/cloudflare.config.ts` identify that Access application. The
 Worker also verifies Access signatures, issuer, audience, and expiry on every dashboard request.
 
 Party Objects report membership on joins, leaves, video changes, and a one-minute alarm. The
@@ -151,7 +151,7 @@ service's player or footage in a listing image. The accompanying listing text li
 
 ```bash
 vp check          # format, lint, and type-check
-vp run check:wrangler # generated Cloudflare bindings match wrangler.jsonc
+vp run check:wrangler # generate binding types from cloudflare.config.ts
 vp test --run     # Vitest
 vp run test:analytics # real Workers/D1 analytics and Access authorization tests
 vp run test:e2e   # Playwright two-peer flow

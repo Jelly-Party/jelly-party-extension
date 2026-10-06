@@ -15,8 +15,8 @@ export default defineConfig({
       },
       "test:server": {
         command: [
-          "vp exec wrangler d1 migrations apply ANALYTICS_DB --local",
-          "vp exec wrangler dev --config wrangler.jsonc --local --port 16080",
+          "vp exec wrangler d1 migrations apply ANALYTICS_DB --config wrangler.jsonc --local --persist-to .wrangler/state",
+          "vp exec wrangler dev --config wrangler.jsonc --local --port 16080 --persist-to .wrangler/state",
         ],
         cache: false,
       },
@@ -35,23 +35,22 @@ export default defineConfig({
         cache: false,
       },
       "build:cloudflare": {
-        command: 'vp exec wrangler deploy --env="" --dry-run',
+        command: "vp -C packages/jelly-party-server exec cf build",
         dependsOn: ["jelly-party-website#build"],
         cache: false,
       },
       predeploy: {
-        command: ["vp check", "vp run check:wrangler", "vp run test:all", "vp run build:all"],
+        command: ["vp run check:wrangler", "vp check", "vp run test:all", "vp run build:all"],
         cache: false,
       },
       "check:wrangler": {
-        command:
-          "vp exec wrangler types packages/jelly-party-server/src/worker-configuration.d.ts --include-runtime=false --strict-vars=false --check",
+        command: "vp -C packages/jelly-party-server exec cf workers types --include-runtime=false",
         cache: false,
       },
       deploy: {
         command: [
-          "vp exec wrangler d1 migrations apply ANALYTICS_DB --remote",
-          'vp exec wrangler deploy --env=""',
+          "vp exec cf d1 migrations apply 1f777b9f-e77e-4969-b8d8-0879bc3b2b49 --dir migrations",
+          "vp -C packages/jelly-party-server exec cf deploy",
           "JELLY_REQUIRE_RELEASE_VERSION=1 vp run smoke:production",
         ],
         dependsOn: ["predeploy"],

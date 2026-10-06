@@ -1,5 +1,4 @@
-import { readFileSync } from "node:fs";
-import { parse } from "jsonc-parser";
+import { productionRoutes } from "./production-routes";
 import { describe, expect, it } from "vite-plus/test";
 import {
   DEFAULT_BUILD_URLS,
@@ -85,13 +84,8 @@ describe("build URL configuration", () => {
     );
   });
 
-  it("keeps every production service endpoint on a route deployed by Wrangler", () => {
-    const wrangler = parse(readFileSync(new URL("../wrangler.jsonc", import.meta.url), "utf8")) as {
-      routes?: Array<{ pattern?: string; zone_name?: string }>;
-    };
-    const routes = new Set(
-      (wrangler.routes ?? []).map((route) => `${route.pattern}|${route.zone_name}`),
-    );
+  it("keeps every production service endpoint on a deployed Cloudflare route", () => {
+    const routes = new Set(productionRoutes.map((route) => `${route.pattern}|${route.zone}`));
 
     expect(DEFAULT_BUILD_URLS).toMatchObject({
       website: "https://jelly-party.com",
