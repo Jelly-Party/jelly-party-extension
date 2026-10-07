@@ -1,5 +1,4 @@
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
   "name": "jelly-party-relay",
   "main": "packages/jelly-party-server/src/main.ts",
   "compatibility_date": "2026-09-01",

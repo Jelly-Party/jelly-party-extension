@@ -74,27 +74,32 @@ test("a blocked remote play asks for one video interaction and then catches up",
             "vp",
             [
               "exec",
-              "wrangler",
+              "cf",
               "d1",
-              "execute",
-              "ANALYTICS_DB",
+              "raw",
+              "1f777b9f-e77e-4969-b8d8-0879bc3b2b49",
               "--local",
-              "--json",
-              "--command",
+              "--persist-to",
+              ".wrangler/state",
+              "--sql",
               `SELECT kind,outcome,COUNT(*) AS n FROM events WHERE occurred_at >= ${began} AND source = 'test' GROUP BY kind,outcome`,
             ],
-            { encoding: "utf8" },
+            {
+              encoding: "utf8",
+              env: { ...process.env, CHOKIDAR_USEPOLLING: "1" },
+              timeout: 10000,
+            },
           );
           const rows = (
             JSON.parse(output) as Array<{
-              results: Array<{ kind: string; outcome: string; n: number }>;
+              results: { rows: Array<[kind: string, outcome: string, count: number]> };
             }>
-          )[0].results;
+          )[0].results.rows;
           return {
-            invited: rows.some((row) => row.kind === "invite_opened"),
-            attempted: rows.some((row) => row.kind === "sync_attempt"),
-            blocked: rows.some((row) => row.outcome === "autoplay-blocked"),
-            applied: rows.some((row) => row.outcome === "applied"),
+            invited: rows.some(([kind]) => kind === "invite_opened"),
+            attempted: rows.some(([kind]) => kind === "sync_attempt"),
+            blocked: rows.some(([, outcome]) => outcome === "autoplay-blocked"),
+            applied: rows.some(([, outcome]) => outcome === "applied"),
           };
         },
         { timeout: 15000 },

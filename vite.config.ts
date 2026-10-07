@@ -16,7 +16,7 @@ export default defineConfig({
       "test:server": {
         command: [
           "CHOKIDAR_USEPOLLING=1 vp exec cf d1 migrations apply 1f777b9f-e77e-4969-b8d8-0879bc3b2b49 --dir migrations --local --persist-to .wrangler/state",
-          "vp exec node scripts/dev-server.ts --port 16080",
+          "vp -C packages/jelly-party-server dev --port 16080",
         ],
         cache: false,
       },
@@ -35,7 +35,7 @@ export default defineConfig({
         cache: false,
       },
       "build:cloudflare": {
-        command: "vp -C packages/jelly-party-server exec cf build",
+        command: "vp -C packages/jelly-party-server build",
         dependsOn: ["jelly-party-website#build"],
         cache: false,
       },
@@ -50,7 +50,7 @@ export default defineConfig({
       deploy: {
         command: [
           "vp exec cf d1 migrations apply 1f777b9f-e77e-4969-b8d8-0879bc3b2b49 --dir migrations",
-          "vp -C packages/jelly-party-server exec cf deploy",
+          "vp -C packages/jelly-party-server exec cf deploy --prebuilt --mode production",
           "JELLY_REQUIRE_RELEASE_VERSION=1 vp run smoke:production",
         ],
         dependsOn: ["predeploy"],

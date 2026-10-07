@@ -12,5 +12,11 @@
     "allowImportingTsExtensions": true,
     "noEmit": true
   },
-  "include": ["src/**/*", "cloudflare.config.ts", "test/**/*", ".cloudflare/types/**/*.d.ts"]
+  "include": [
+    "src/**/*",
+    "cloudflare.config.ts",
+    "test/**/*",
+    ".cloudflare/types/**/*.d.ts",
+    "vite.config.ts"
+  ]
 }

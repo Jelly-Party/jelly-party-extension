@@ -20,8 +20,7 @@
     "vite": "catalog:",
     "vite-plus": "catalog:",
     "vitest": "catalog:",
-    "web-ext-run": "0.2.4",
-    "wrangler": "4.147.0"
+    "web-ext-run": "0.2.4"
   },
   "devEngines": {
     "packageManager": {
