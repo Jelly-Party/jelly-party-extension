@@ -52,6 +52,8 @@ the grant flow be tested repeatedly. Development targets the local website and `
 reached from macOS through the VM's forwarded port.
 
 Cross-package workflows belong in Vite Task and are listed by `vp run`.
+Dependency installation generates the website's SvelteKit configuration, so static checks work
+before the first development server or build.
 
 Before submitting a release to the extension stores, run:
 
@@ -126,8 +128,8 @@ party rows and the funnel use lifetime activity, while activity totals use the s
 History includes previous-period comparisons and pages of 100 starts. `vp run deploy` applies
 D1 migrations before uploading the Worker.
 
-Cloudflare code deployments disconnect existing party WebSockets; connected users must reconnect.
-This is a deployment interruption, separate from the small ongoing analytics overhead.
+Cloudflare code deployments interrupt existing party WebSockets. The extension reconnects
+automatically; if its retries fail, the sidebar offers Retry.
 
 ## Store assets
 

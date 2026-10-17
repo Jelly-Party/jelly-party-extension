@@ -50,6 +50,101 @@ function inbox<T>(socket: WebSocket) {
   };
 }
 
+test("only the private reconnect credential can replace an active connection", async () => {
+  const party = env.PARTY.get(env.PARTY.newUniqueId());
+  const peer = { id: crypto.randomUUID(), name: "Viewer", emoji: "🍿" };
+  const reconnectToken = crypto.randomUUID();
+  const sockets: WebSocket[] = [];
+  const connect = async (identity = peer, token: string | null = reconnectToken) => {
+    const response = await party.fetch(
+      new Request("https://example.com", { headers: { Upgrade: "websocket" } }),
+    );
+    const socket = response.webSocket!;
+    socket.accept();
+    sockets.push(socket);
+    const messages = inbox<ServerMessage>(socket);
+    socket.send(
+      JSON.stringify({
+        type: "join",
+        peer: identity,
+        reconnectToken: token ?? undefined,
+        destination: { url: "https://example.com/watch", title: "Video" },
+      }),
+    );
+    return { socket, messages };
+  };
+  try {
+    const original = await connect();
+    expect(await original.messages((message) => message.type === "welcome")).toMatchObject({
+      peerId: peer.id,
+      leaderId: peer.id,
+    });
+    const guest = await connect({ ...peer, id: crypto.randomUUID() }, crypto.randomUUID());
+    await guest.messages((message) => message.type === "welcome");
+    await evictDurableObject(party);
+
+    for (const token of [null, crypto.randomUUID()]) {
+      const rejected = await connect(peer, token);
+      expect(await rejected.messages((message) => message.type === "error")).toMatchObject({
+        code: "invalid-message",
+      });
+    }
+    original.socket.send(JSON.stringify({ type: "chat", text: "Still connected" }));
+    expect(await guest.messages((message) => message.type === "chat")).toMatchObject({
+      entry: { peer: { id: peer.id }, text: "Still connected" },
+    });
+    const originalClosed = new Promise<number>((resolve) =>
+      original.socket.addEventListener("close", (event) => resolve(event.code), { once: true }),
+    );
+    const resumed = await connect();
+    const welcome = await resumed.messages((message) => message.type === "welcome");
+    expect(welcome).toMatchObject({ peerId: peer.id, leaderId: peer.id });
+    expect(JSON.stringify(welcome)).not.toContain(reconnectToken);
+    expect(await originalClosed).toBe(1000);
+    resumed.socket.send(JSON.stringify({ type: "chat", text: "Resumed" }));
+    expect(await guest.messages((message) => message.type === "chat")).toMatchObject({
+      entry: { peer: { id: peer.id }, text: "Resumed" },
+    });
+  } finally {
+    for (const socket of sockets) socket.close();
+  }
+});
+
+test("published clients can join without a credential but cannot replace an active peer", async () => {
+  const party = env.PARTY.get(env.PARTY.newUniqueId());
+  const peer = { id: crypto.randomUUID(), name: "Viewer", emoji: "🍿" };
+  const sockets: WebSocket[] = [];
+  try {
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const response = await party.fetch(
+        new Request("https://example.com", { headers: { Upgrade: "websocket" } }),
+      );
+      const socket = response.webSocket!;
+      socket.accept();
+      sockets.push(socket);
+      const messages = inbox<ServerMessage>(socket);
+      socket.send(
+        JSON.stringify({
+          type: "join",
+          peer,
+          destination: { url: "https://example.com/watch", title: "Video" },
+        }),
+      );
+      const reply = await messages(
+        (message) => message.type === "welcome" || message.type === "error",
+      );
+      expect(reply.type).toBe(attempt === 0 ? "welcome" : "error");
+    }
+    const messages = inbox<ServerMessage>(sockets[0]!);
+    sockets[0]!.send(JSON.stringify({ type: "chat", text: "Still here" }));
+    expect(await messages((message) => message.type === "chat")).toMatchObject({
+      entry: { text: "Still here" },
+    });
+  } finally {
+    for (const socket of sockets) socket.close();
+  }
+});
+
 test("party activity pushes live counts, preserves quiet parties through hibernation, and records only sanitized usage", async () => {
   const stats = env.LIVE_STATS.getByName("global");
   const response = await stats.fetch(

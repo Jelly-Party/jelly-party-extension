@@ -1,4 +1,9 @@
-import { FIREFOX_ADDON_GUID, FIREFOX_MIN_VERSION, RELEASE_VERSION } from "./release";
+import {
+  CHROME_MIN_VERSION,
+  FIREFOX_ADDON_GUID,
+  FIREFOX_MIN_VERSION,
+  RELEASE_VERSION,
+} from "./release";
 import type { BuildUrls } from "./urls";
 import { partyCreationUrl, toWebExtensionMatchPattern, toWebExtensionPagePattern } from "./urls";
 
@@ -53,7 +58,7 @@ export function createExtensionManifest(urls: BuildUrls, options: ExtensionManif
     content_security_policy: {
       extension_pages: `script-src 'self'; object-src 'self'; connect-src 'self' ${socket.protocol}//${socket.host} ${new URL(creationUrl).origin}`,
     },
-    ...(!options.firefox && { minimum_chrome_version: "116" }),
+    ...(!options.firefox && { minimum_chrome_version: CHROME_MIN_VERSION }),
     ...(options.firefox && {
       sidebar_action: {
         default_panel: "src/sidebar/sidebar.html",

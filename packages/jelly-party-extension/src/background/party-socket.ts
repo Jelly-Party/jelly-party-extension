@@ -36,6 +36,7 @@ export class PartySocket {
     peer: PeerIdentity;
     destination: PartyDestinationInput;
     client?: ClientInfo;
+    reconnectToken: string;
   } | null = null;
   constructor(
     private readonly url: string,
@@ -52,7 +53,16 @@ export class PartySocket {
     this.#attempts = 0;
     this.#hasJoined = false;
     this.#outcomes.clear();
-    this.#session = { partyId, peer, destination, client };
+    this.#session = { partyId, peer, destination, client, reconnectToken: crypto.randomUUID() };
+    this.open();
+  }
+
+  retry(): void {
+    const session = this.#session;
+    if (!session) return;
+    this.close();
+    this.#session = session;
+    this.#attempts = 0;
     this.open();
   }
 
@@ -70,6 +80,7 @@ export class PartySocket {
         type: "join",
         peer: session.peer,
         destination: session.destination,
+        reconnectToken: session.reconnectToken,
         ...(session.client ? { client: session.client } : {}),
       });
       this.#lastAck = Date.now();

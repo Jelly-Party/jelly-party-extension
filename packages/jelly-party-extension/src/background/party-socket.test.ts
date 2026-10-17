@@ -81,6 +81,9 @@ describe("party connection recovery", () => {
   it("recovers a half-open connection with the same identity and latest destination", () => {
     const { client, handlers, socket } = setup();
     socket.open();
+    const { reconnectToken } = JSON.parse(socket.sent[0]!);
+    expect(reconnectToken).toEqual(expect.any(String));
+    expect(reconnectToken).not.toBe(peer.id);
     socket.message(welcome);
     const next = { url: "https://example.com/next", title: "Next", revision: 2 };
     socket.message({ type: "destination", peerId: peer.id, destination: next });
@@ -90,7 +93,12 @@ describe("party connection recovery", () => {
     vi.advanceTimersByTime(1000);
     const replacement = FakeWebSocket.instances[1]!;
     replacement.open();
-    expect(JSON.parse(replacement.sent[0]!)).toEqual({ type: "join", peer, destination: next });
+    expect(JSON.parse(replacement.sent[0]!)).toEqual({
+      type: "join",
+      peer,
+      destination: next,
+      reconnectToken,
+    });
     replacement.message({ ...welcome, destination: next });
     expect(JSON.parse(replacement.sent.at(-1)!)).toEqual({
       type: "telemetry",
@@ -100,6 +108,24 @@ describe("party connection recovery", () => {
     expect(handlers.onMessage).not.toHaveBeenCalledWith(
       expect.objectContaining({ leaderId: "stale" }),
     );
+    client.close();
+  });
+  it("retains the credential on manual retry and renews it after leaving", () => {
+    const { client, socket } = setup();
+    socket.open();
+    const { reconnectToken } = JSON.parse(socket.sent[0]!);
+    socket.message(welcome);
+    client.retry();
+    const replacement = FakeWebSocket.instances.at(-1)!;
+    replacement.open();
+    expect(JSON.parse(replacement.sent[0]!).reconnectToken).toBe(reconnectToken);
+    client.close();
+    client.retry();
+    expect(FakeWebSocket.instances).toHaveLength(2);
+    client.connect("a".repeat(64), peer, destination);
+    const rejoined = FakeWebSocket.instances.at(-1)!;
+    rejoined.open();
+    expect(JSON.parse(rejoined.sent[0]!).reconnectToken).not.toBe(reconnectToken);
     client.close();
   });
   it("bounds retries when the server never welcomes the client", () => {

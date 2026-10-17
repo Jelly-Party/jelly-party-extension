@@ -3,7 +3,12 @@ import { mkdir, readFile, readdir, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import JSZip from "jszip";
 import { productionRoutes } from "../config/production-routes.ts";
-import { FIREFOX_ADDON_GUID, FIREFOX_MIN_VERSION, RELEASE_VERSION } from "../config/release.ts";
+import {
+  CHROME_MIN_VERSION,
+  FIREFOX_ADDON_GUID,
+  FIREFOX_MIN_VERSION,
+  RELEASE_VERSION,
+} from "../config/release.ts";
 import {
   DEFAULT_BUILD_URLS,
   partyCreationUrl,
@@ -86,6 +91,7 @@ async function validateManifest(directory, browser) {
   if (browser === "chromium") {
     if (
       manifest.side_panel?.default_path !== "src/sidebar/sidebar.html" ||
+      manifest.minimum_chrome_version !== CHROME_MIN_VERSION ||
       manifest.sidebar_action
     ) {
       throw new Error("chromium: invalid side panel manifest");

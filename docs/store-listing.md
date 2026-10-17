@@ -110,9 +110,12 @@ packaged video controller into all frames because a page's active video may be i
   sent to the relay to identify the party destination, record video changes, and synchronize peers.
 - **User identifiers:** A random peer identifier is generated locally and sent with party messages
   so the relay can distinguish participants. Jelly Party has no accounts.
-- Data is used only for the extension's visible watch-party features. It is not sold, used for
+- **Usage statistics:** The relay records party activity and shared-site domains. The extension
+  reports permission, video, and playback outcomes with browser family and extension version.
+  Usage records exclude full URLs, chat contents, names, emoji, IP addresses, and invitation identifiers.
+- Data is used for watch-party features and reliability statistics. It is not sold, used for
   advertising or creditworthiness, or transferred for unrelated purposes.
-- The extension contains no analytics, advertising SDK, or remotely hosted executable code.
+- The extension contains no advertising SDK or remotely hosted executable code.
 
 ## Firefox data disclosure
 

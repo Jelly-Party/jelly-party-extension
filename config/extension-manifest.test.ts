@@ -27,7 +27,8 @@ describe("extension manifest configuration", () => {
     );
     expect(manifest.content_security_policy.extension_pages).toContain("https://relay.example");
     expect(manifest.permissions).toContain("sidePanel");
-    expect(manifest).toHaveProperty("minimum_chrome_version", "116");
+    // Tracking native side-panel closure requires Chrome 142's onClosed event.
+    expect(manifest).toHaveProperty("minimum_chrome_version", "142");
     expect(manifest).toHaveProperty("side_panel.default_path", "src/sidebar/sidebar.html");
   });
 

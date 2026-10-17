@@ -74,7 +74,13 @@ export interface ChatHistoryPage {
 }
 
 export type ClientMessage =
-  | { type: "join"; peer: PeerIdentity; destination: PartyDestinationInput; client?: ClientInfo }
+  | {
+      type: "join";
+      peer: PeerIdentity;
+      destination: PartyDestinationInput;
+      client?: ClientInfo;
+      reconnectToken?: string;
+    }
   | { type: "telemetry"; outcome: ClientOutcome }
   | { type: "sync-result"; commandId: string; outcome: SyncOutcome }
   | { type: "heartbeat" }
@@ -156,7 +162,9 @@ export function parseClientMessage(raw: unknown): ParseResult<ClientMessage> {
     if (
       !isPeerIdentity(value.peer) ||
       !isPartyDestinationInput(value.destination) ||
-      (value.client !== undefined && !isClientInfo(value.client))
+      (value.client !== undefined && !isClientInfo(value.client)) ||
+      (value.reconnectToken !== undefined &&
+        (typeof value.reconnectToken !== "string" || !uuidPattern.test(value.reconnectToken)))
     ) {
       return invalid("Invalid join message");
     }
@@ -167,6 +175,7 @@ export function parseClientMessage(raw: unknown): ParseResult<ClientMessage> {
         peer: value.peer,
         destination: value.destination,
         ...(value.client ? { client: value.client as ClientInfo } : {}),
+        ...(typeof value.reconnectToken === "string" && { reconnectToken: value.reconnectToken }),
       },
     };
   }

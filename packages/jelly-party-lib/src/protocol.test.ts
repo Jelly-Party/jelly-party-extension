@@ -32,6 +32,19 @@ describe("client protocol validation", () => {
     expect(parseClientMessage(JSON.stringify(message))).toEqual({ ok: true, value: message });
   });
 
+  it("validates optional reconnect credentials independently of the public peer", () => {
+    const message = {
+      type: "join",
+      peer: { id: "11111111-1111-4111-8111-111111111111", name: "Mira", emoji: "🪼" },
+      destination: { url: "https://example.com/watch", title: "Movie" },
+      reconnectToken: crypto.randomUUID(),
+    };
+    expect(parseClientMessage(JSON.stringify(message))).toEqual({ ok: true, value: message });
+    for (const reconnectToken of [null, 123, "", "x".repeat(1024)]) {
+      expect(parseClientMessage(JSON.stringify({ ...message, reconnectToken })).ok).toBe(false);
+    }
+  });
+
   it("accepts bounded chat and finite playback messages", () => {
     expect(parseClientMessage(JSON.stringify({ type: "heartbeat" }))).toEqual({
       ok: true,

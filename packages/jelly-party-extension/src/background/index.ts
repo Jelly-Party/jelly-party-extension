@@ -23,7 +23,7 @@ import {
   type PartyState,
   type PartyStateEvent,
 } from "./party-state";
-import { injectVideoController } from "./video-injection";
+import { injectVideoController, setVideoScanId } from "./video-injection";
 
 interface VideoCandidate {
   frameId: number;
@@ -31,7 +31,7 @@ interface VideoCandidate {
   score: number;
   hasVideo: boolean;
   canSync: boolean;
-  scanId: number;
+  scanId: string;
 }
 
 interface PendingJoin {
@@ -55,7 +55,7 @@ type PlaybackResult =
     };
 
 const candidates = new Map<number, Map<number, VideoCandidate>>();
-const activeVideoScans = new Map<number, number>();
+const activeVideoScans = new Map<number, string>();
 const frameScanTimers = new Map<number, ReturnType<typeof setTimeout>>();
 const navigationScanTimers = new Map<number, ReturnType<typeof setTimeout>>();
 const openSidePanelTabs = new Set<number>();
@@ -70,6 +70,7 @@ let retriedPlaybackTarget: RemotePlaybackTarget | null = null;
 let pendingLeaderDestination = "";
 let leaderDestinationTimer: ReturnType<typeof setTimeout> | null = null;
 let scheduledLeaderDestination = "";
+const videoScanSessionId = crypto.randomUUID();
 let nextVideoScanId = 1;
 let activityTimer: ReturnType<typeof setTimeout> | null = null;
 let nextActivityId = 1;
@@ -174,8 +175,7 @@ async function handleMessage(
 
   if (message.type === "party:retry") {
     if (partyState.kind === "idle") return { ok: false, error: "There is no party to retry." };
-    const identity = await ensureIdentity();
-    connectParty(partyState.party.partyId, identity);
+    partySocket?.retry();
     return { ok: true };
   }
 
@@ -232,7 +232,7 @@ async function handleMessage(
 
   if (message.type === "video:frame-status" && sender.tab?.id && sender.frameId !== undefined) {
     const scanId = activeVideoScans.get(sender.tab.id);
-    if (typeof message.scanId !== "number" || message.scanId !== scanId) return undefined;
+    if (typeof message.scanId !== "string" || message.scanId !== scanId) return undefined;
     const frames = candidates.get(sender.tab.id) ?? new Map<number, VideoCandidate>();
     const wasSyncable = bestCandidate(sender.tab.id)?.canSync === true;
     frames.set(sender.frameId, {
@@ -858,15 +858,12 @@ function transitionIfCurrent(partyId: string, event: PartyStateEvent): void {
 }
 
 async function scanTab(tabId: number): Promise<boolean> {
-  const scanId = activeVideoScans.get(tabId) ?? nextVideoScanId++;
+  const scanId = activeVideoScans.get(tabId) ?? `${videoScanSessionId}:${nextVideoScanId++}`;
   activeVideoScans.set(tabId, scanId);
   const accessGranted = await injectVideoController(async (allFrames) => {
     await chrome.scripting.executeScript({
       target: { tabId, allFrames },
-      func: (currentScanId) => {
-        const page = window as Window & { __jellyPartyVideoScanId?: number };
-        page.__jellyPartyVideoScanId = Math.max(page.__jellyPartyVideoScanId ?? 0, currentScanId);
-      },
+      func: setVideoScanId,
       args: [scanId],
     });
     await chrome.scripting.executeScript({

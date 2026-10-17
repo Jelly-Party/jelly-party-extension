@@ -14,7 +14,7 @@ declare global {
       refresh(): void;
       stop(): void;
     };
-    __jellyPartyVideoScanId?: number;
+    __jellyPartyVideoScanId?: string;
   }
 }
 

@@ -25,6 +25,7 @@ import {
   type SystemEntryAction,
 } from "jelly-party-lib";
 import { DurableObject } from "cloudflare:workers";
+import type { SubtleCrypto as WorkerSubtleCrypto } from "@cloudflare/workers-types/index";
 import { RELEASE_VERSION } from "../../../config/release";
 import {
   CHAT_BURST_LIMIT,
@@ -60,6 +61,7 @@ interface ChatRow extends Record<string, string | number | null> {
 
 interface ConnectionAttachment {
   peer: PeerIdentity;
+  reconnectToken?: string;
   joinedAt: number;
   leader?: boolean;
   playback?: PlaybackSnapshot;
@@ -302,6 +304,24 @@ export class Party extends DurableObject<Env> {
           message: "Already joined",
         });
       this.ensureSchema();
+      const previous = this.connection(message.peer.id);
+      if (
+        previous &&
+        (!message.reconnectToken ||
+          !previous.attachment.reconnectToken ||
+          !(crypto.subtle as WorkerSubtleCrypto).timingSafeEqual(
+            new TextEncoder().encode(message.reconnectToken),
+            new TextEncoder().encode(previous.attachment.reconnectToken),
+          ))
+      ) {
+        this.send(socket, {
+          type: "error",
+          code: "invalid-message",
+          message: "That participant is already connected. Rejoin with a new session.",
+        });
+        socket.close(1008, "Participant already connected");
+        return;
+      }
       const initializePlayback = this.peers().length === 0;
       let destination = this.destination();
       const created = !destination;
@@ -310,16 +330,15 @@ export class Party extends DurableObject<Env> {
         this.saveSystemEntry(message.peer, "party-started", destination);
       }
       const playback = this.playback(destination.revision);
-      for (const previous of this.ctx.getWebSockets()) {
-        if (previous !== socket && this.peer(previous)?.id === message.peer.id) {
-          previous.serializeAttachment(null);
-          previous.close(1000, "Replaced by reconnect");
-        }
+      if (previous) {
+        previous.socket.serializeAttachment(null);
+        previous.socket.close(1000, "Replaced by reconnect");
       }
       socket.serializeAttachment({
         peer: message.peer,
-        joinedAt: Date.now(),
-        leader: initializePlayback,
+        reconnectToken: message.reconnectToken,
+        joinedAt: previous?.attachment.joinedAt ?? Date.now(),
+        leader: previous?.attachment.leader ?? initializePlayback,
         playback,
         client: message.client ?? UNKNOWN_CLIENT,
         lastSeen: Date.now(),
@@ -833,6 +852,7 @@ export class Party extends DurableObject<Env> {
     if (!isRecord(value) || !isPeer(value.peer)) return null;
     return {
       peer: value.peer,
+      reconnectToken: typeof value.reconnectToken === "string" ? value.reconnectToken : undefined,
       joinedAt:
         typeof value.joinedAt === "number" && Number.isFinite(value.joinedAt) ? value.joinedAt : 0,
       playback: isPlaybackSnapshot(value.playback) ? value.playback : undefined,

@@ -16,6 +16,7 @@ Jelly Party is a deliberately small browser extension: create a temporary watch 
 - Enter the Nix development environment through the configured nix-direnv setup (`direnv allow` once). Nix supplies Playwright browsers.
 - Use `vp` for Node.js, dependency management, formatting, linting, type-checking, tests, builds, and tasks. Never invoke `node`, `npm`, `npx`, `pnpm`, `vite`, or `vitest` directly.
 - Use `vp install`, `vp dev`, `vp check`, `vp test --run`, and `vp build` for built-in workflows.
+- `vp install` generates the website's `.svelte-kit/tsconfig.json` before static checks. If that generated directory is removed, restore it with `vp run jelly-party-website#prepare`.
 - Inspect project workflows with `vp run` and invoke them with `vp run <task>`. Add cross-package workflows to Vite Task in `vite.config.ts`; do not add another task runner.
 - Use `vp node` for a Node.js script from the shell and `vp exec node` inside a Vite Task.
 - Vite+ owns formatting, linting, type-checking, Vitest, builds, and tasks. Do not add Biome, ESLint, Prettier, or `just`.

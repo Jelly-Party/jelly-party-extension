@@ -1,6 +1,6 @@
 # Firefox source review
 
-Jelly Party 2.3 is built entirely from the checked-in TypeScript and Svelte sources with Vite+.
+Jelly Party 2.4 is built entirely from the checked-in TypeScript and Svelte sources with Vite+.
 
 1. Enter the repository Nix environment with `direnv allow`.
 2. Install the locked workspace with `vp install --frozen-lockfile`.
@@ -13,7 +13,7 @@ Jelly Party 2.3 is built entirely from the checked-in TypeScript and Svelte sour
 
 4. Return to the source root and run `vp exec node scripts/package-extension.mjs`.
 
-The Firefox extension is `artifacts/jelly-party-2.3.0-firefox.zip`. The build task validates the
+The Firefox extension is `artifacts/jelly-party-2.4.0-firefox.zip`. The build task validates the
 manifest and uses a fixed timestamp, sorted paths, and fixed compression settings so repeated builds
 from the same source produce the same bytes.
 
