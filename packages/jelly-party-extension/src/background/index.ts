@@ -56,6 +56,7 @@ type PlaybackResult =
 
 const candidates = new Map<number, Map<number, VideoCandidate>>();
 const activeVideoScans = new Map<number, string>();
+const currentFrameScans = new Map<number, { frameIds: Set<number>; complete: boolean }>();
 const frameScanTimers = new Map<number, ReturnType<typeof setTimeout>>();
 const navigationScanTimers = new Map<number, ReturnType<typeof setTimeout>>();
 const openSidePanelTabs = new Set<number>();
@@ -233,8 +234,15 @@ async function handleMessage(
   if (message.type === "video:frame-status" && sender.tab?.id && sender.frameId !== undefined) {
     const scanId = activeVideoScans.get(sender.tab.id);
     if (typeof message.scanId !== "string" || message.scanId !== scanId) return undefined;
+    const scan = currentFrameScans.get(sender.tab.id);
+    if (scan?.complete && !scan.frameIds.has(sender.frameId)) {
+      scheduleFrameScan(sender.tab.id);
+      return undefined;
+    }
     const frames = candidates.get(sender.tab.id) ?? new Map<number, VideoCandidate>();
-    const wasSyncable = bestCandidate(sender.tab.id)?.canSync === true;
+    const previous = bestCandidate(sender.tab.id);
+    const selectedVideoRemoved = previous?.frameId === sender.frameId && message.hasVideo !== true;
+    const wasSyncable = !selectedVideoRemoved && previous?.canSync === true;
     frames.set(sender.frameId, {
       frameId: sender.frameId,
       area: typeof message.area === "number" ? message.area : 0,
@@ -244,24 +252,7 @@ async function handleMessage(
       scanId,
     });
     candidates.set(sender.tab.id, frames);
-    const hasVideo = Boolean(bestCandidate(sender.tab.id)?.hasVideo);
-    if (partyState.kind === "active" && partyState.party.tabId === sender.tab.id) {
-      const becameAvailable =
-        partyState.party.atDestination && hasVideo && !partyState.party.hasVideo;
-      const becameSyncable = !wasSyncable && bestCandidate(sender.tab.id)?.canSync === true;
-      const partyId = partyState.party.partyId;
-      transition({
-        type: "video",
-        hasVideo: partyState.party.atDestination && hasVideo,
-        accessRequired: false,
-      });
-      if ((becameAvailable || becameSyncable) && playbackTarget) {
-        void applyLatestRemotePlayback(partyId);
-      }
-      partySocket?.telemetry(hasVideo ? "video_ready" : "video_missing");
-      if (hasVideo) void maybePublishLeaderDestination(sender.tab.id);
-    }
-    await notifyViews({ type: "video:status", tabId: sender.tab.id, hasVideo });
+    await reportVideoStatus(sender.tab.id, wasSyncable);
     return undefined;
   }
 
@@ -294,7 +285,7 @@ async function handleMessage(
   if (
     message.type === "video:frames-changed" &&
     sender.tab?.id &&
-    sender.frameId === 0 &&
+    sender.frameId !== undefined &&
     message.scanId === activeVideoScans.get(sender.tab.id)
   ) {
     scheduleFrameScan(sender.tab.id);
@@ -860,19 +851,67 @@ function transitionIfCurrent(partyId: string, event: PartyStateEvent): void {
 async function scanTab(tabId: number): Promise<boolean> {
   const scanId = activeVideoScans.get(tabId) ?? `${videoScanSessionId}:${nextVideoScanId++}`;
   activeVideoScans.set(tabId, scanId);
+  const frameIds = new Set<number>();
+  const frameScan = { frameIds, complete: false };
+  let scannedAllFrames = false;
+  currentFrameScans.set(tabId, frameScan);
   const accessGranted = await injectVideoController(async (allFrames) => {
     await chrome.scripting.executeScript({
       target: { tabId, allFrames },
       func: setVideoScanId,
       args: [scanId],
     });
-    await chrome.scripting.executeScript({
+    const results = await chrome.scripting.executeScript({
       target: { tabId, allFrames },
       files: ["src/content/video.js"],
     });
+    for (const result of results) frameIds.add(result.frameId);
+    if (allFrames) scannedAllFrames = true;
   });
-  if (activeVideoScans.get(tabId) !== scanId) return accessGranted;
+  if (activeVideoScans.get(tabId) !== scanId || currentFrameScans.get(tabId) !== frameScan)
+    return accessGranted;
   if (accessGranted) {
+    const frames = candidates.get(tabId);
+    if (!scannedAllFrames) {
+      // An unrelated inaccessible frame can reject all-frame injection in Chrome.
+      // Check known players individually before discarding their candidates.
+      await Promise.all(
+        [...(frames?.keys() ?? [])]
+          .filter((frameId) => !frameIds.has(frameId))
+          .map(async (frameId) => {
+            try {
+              await chrome.scripting.executeScript({
+                target: { tabId, frameIds: [frameId] },
+                func: setVideoScanId,
+                args: [scanId],
+              });
+              await chrome.scripting.executeScript({
+                target: { tabId, frameIds: [frameId] },
+                files: ["src/content/video.js"],
+              });
+              frameIds.add(frameId);
+            } catch {
+              // Removed or inaccessible players cannot control this tab anymore.
+            }
+          }),
+      );
+      if (activeVideoScans.get(tabId) !== scanId || currentFrameScans.get(tabId) !== frameScan)
+        return accessGranted;
+    }
+    frameScan.complete = true;
+    const previous = bestCandidate(tabId);
+    let removed = false;
+    for (const frameId of frames?.keys() ?? []) {
+      if (!frameIds.has(frameId)) {
+        frames?.delete(frameId);
+        removed = true;
+      }
+    }
+    if (removed)
+      await reportVideoStatus(
+        tabId,
+        previous?.frameId === bestCandidate(tabId)?.frameId && previous?.canSync === true,
+      );
     await chrome.tabs.sendMessage(tabId, { type: "video:refresh" }).catch(() => undefined);
   }
   if (!accessGranted) {
@@ -886,8 +925,31 @@ async function scanTab(tabId: number): Promise<boolean> {
   return accessGranted;
 }
 
+async function reportVideoStatus(tabId: number, wasSyncable: boolean): Promise<void> {
+  const candidate = bestCandidate(tabId);
+  const hasVideo = Boolean(candidate?.hasVideo);
+  if (partyState.kind === "active" && partyState.party.tabId === tabId) {
+    const becameAvailable =
+      partyState.party.atDestination && hasVideo && !partyState.party.hasVideo;
+    const becameSyncable = !wasSyncable && candidate?.canSync === true;
+    const partyId = partyState.party.partyId;
+    transition({
+      type: "video",
+      hasVideo: partyState.party.atDestination && hasVideo,
+      accessRequired: false,
+    });
+    if ((becameAvailable || becameSyncable) && playbackTarget) {
+      void applyLatestRemotePlayback(partyId);
+    }
+    partySocket?.telemetry(hasVideo ? "video_ready" : "video_missing");
+    if (hasVideo) void maybePublishLeaderDestination(tabId);
+  }
+  await notifyViews({ type: "video:status", tabId, hasVideo });
+}
+
 function invalidateVideoScan(tabId: number): void {
   activeVideoScans.delete(tabId);
+  currentFrameScans.delete(tabId);
   candidates.delete(tabId);
   clearScheduledTabScan(frameScanTimers, tabId);
 }

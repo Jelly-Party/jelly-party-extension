@@ -1,5 +1,5 @@
 <script lang="ts">
-import { getDownloadLink } from "$lib/download-link";
+import { getDownloadLink } from "#lib/download-link.ts";
 
 const currentYear = new Date().getFullYear();
 </script>

@@ -20,14 +20,19 @@ allowBuilds:
   spawn-sync: false
   workerd: true
 catalog:
-  vite: npm:@voidzero-dev/vite-plus-core@0.3.0
-  vitest: 4.1.11
-  vite-plus: 0.3.0
+  vite: npm:@voidzero-dev/vite-plus-core@1.4.0
+  vitest: 5.0.5
+  vite-plus: 1.4.0
 overrides:
-  # Keep the test runtime compatible with the Worker compatibility date.
-  "@cloudflare/vitest-pool-workers>miniflare": "5.20260828.0-alpha"
-  vite: "catalog:"
-  vitest: "catalog:"
+  "vite@*": "catalog:"
+  "vitest@*": "catalog:"
+  # The desktop launcher still pins an older profile/quoting stack upstream.
+  "web-ext-run>firefox-profile": "4.7.1"
+  "web-ext-run>fx-runner": "1.7.0"
+  "web-ext-run>tmp": "0.2.7"
+  "shell-quote@<1.11.0": "1.12.0"
+  # The notifier only uses the CommonJS v4() API retained by uuid 11.
+  "node-notifier@10.0.1>uuid": "11.1.1"
 peerDependencyRules:
   allowAny:
     - vite
@@ -36,13 +41,28 @@ peerDependencyRules:
     vite: "*"
     vitest: "*"
 minimumReleaseAgeExclude:
-  - "@voidzero-dev/vite-plus-core@0.3.0"
-  - "@voidzero-dev/vite-plus-darwin-arm64@0.3.0"
-  - "@voidzero-dev/vite-plus-darwin-x64@0.3.0"
-  - "@voidzero-dev/vite-plus-linux-arm64-gnu@0.3.0"
-  - "@voidzero-dev/vite-plus-linux-arm64-musl@0.3.0"
-  - "@voidzero-dev/vite-plus-linux-x64-gnu@0.3.0"
-  - "@voidzero-dev/vite-plus-linux-x64-musl@0.3.0"
-  - "@voidzero-dev/vite-plus-win32-arm64-msvc@0.3.0"
-  - "@voidzero-dev/vite-plus-win32-x64-msvc@0.3.0"
-  - vite-plus@0.3.0
+  - "@voidzero-dev/vite-plus-core@1.4.0"
+  - "@voidzero-dev/vite-plus-darwin-arm64@1.4.0"
+  - "@voidzero-dev/vite-plus-darwin-x64@1.4.0"
+  - "@voidzero-dev/vite-plus-linux-arm64-gnu@1.4.0"
+  - "@voidzero-dev/vite-plus-linux-arm64-musl@1.4.0"
+  - "@voidzero-dev/vite-plus-linux-x64-gnu@1.4.0"
+  - "@voidzero-dev/vite-plus-linux-x64-musl@1.4.0"
+  - "@voidzero-dev/vite-plus-win32-arm64-msvc@1.4.0"
+  - "@voidzero-dev/vite-plus-win32-x64-msvc@1.4.0"
+  - vite-plus@1.4.0
+  - "@cloudflare/build-output-utils@0.9.9"
+  - "@cloudflare/config@0.30.1"
+  - "@cloudflare/runtime-types@0.1.22"
+  - "@cloudflare/vite-plugin@2.0.0-beta.v.11"
+  - "@cloudflare/vitest-plugin@1.5.1"
+  - "@cloudflare/workerd-darwin-64@1.20261103.1"
+  - "@cloudflare/workerd-darwin-arm64@1.20261103.1"
+  - "@cloudflare/workerd-linux-64@1.20261103.1"
+  - "@cloudflare/workerd-linux-arm64@1.20261103.1"
+  - "@cloudflare/workerd-windows-64@1.20261103.1"
+  - "@cloudflare/workers-types@5.20261103.1"
+  - cf@1.0.0-beta.27
+  - miniflare@5.20261103.0-beta
+  - workerd@1.20261103.1
+  - wrangler@4.157.0

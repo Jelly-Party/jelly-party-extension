@@ -74,7 +74,7 @@ function start(): NonNullable<Window["__jellyPartyVideoController"]> {
   };
 
   const requestFrameScan = () => {
-    if (window !== window.top || frameScanTimer) return;
+    if (frameScanTimer) return;
     frameScanTimer = setTimeout(() => {
       frameScanTimer = null;
       void chrome.runtime.sendMessage({
@@ -205,7 +205,7 @@ function start(): NonNullable<Window["__jellyPartyVideoController"]> {
     report();
     if (
       mutations.some((mutation) =>
-        [...mutation.addedNodes].some(
+        [...mutation.addedNodes, ...mutation.removedNodes].some(
           (node) =>
             node instanceof HTMLIFrameElement ||
             (node instanceof Element && Boolean(node.querySelector("iframe"))),

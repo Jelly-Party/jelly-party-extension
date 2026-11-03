@@ -7,16 +7,16 @@
     "prepare": "vp config"
   },
   "devDependencies": {
-    "@cloudflare/vitest-pool-workers": "0.22.0",
-    "@cloudflare/workers-types": "^5.20260901.1",
-    "@playwright/test": "1.61.1",
-    "@types/node": "^26.4.0",
-    "@types/selenium-webdriver": "^4.35.6",
-    "cf": "1.0.0-beta.12",
-    "concurrently": "^10.0.5",
-    "jszip": "^3.10.1",
-    "selenium-webdriver": "^4.48.0",
-    "typescript": "^5.9.3",
+    "@cloudflare/vitest-plugin": "1.5.1",
+    "@cloudflare/workers-types": "5.20261103.1",
+    "@playwright/test": "1.64.1",
+    "@types/node": "26.6.6",
+    "@types/selenium-webdriver": "4.35.7",
+    "cf": "1.0.0-beta.27",
+    "concurrently": "10.0.6",
+    "jszip": "3.10.2",
+    "selenium-webdriver": "4.52.0",
+    "typescript": "6.0.3",
     "vite": "catalog:",
     "vite-plus": "catalog:",
     "vitest": "catalog:",
@@ -25,14 +25,14 @@
   "devEngines": {
     "packageManager": {
       "name": "pnpm",
-      "version": "11.13.1",
+      "version": "11.28.10",
       "onFail": "download"
     },
     "runtime": {
       "name": "node",
-      "version": "26.8.1",
+      "version": "26.13.0",
       "onFail": "download"
     }
   },
-  "packageManager": "pnpm@11.13.1"
+  "packageManager": "pnpm@11.28.10"
 }

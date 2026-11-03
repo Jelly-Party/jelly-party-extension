@@ -68,6 +68,8 @@ party creation, and secure WebSocket handshake, then loads those immutable produ
 fresh temporary Chrome and Firefox profiles. It neither deploys nor hot-reloads. Close both browsers
 to finish the task.
 
+See [Releasing](docs/releasing.md) for the deploy, download, and store submission sequence.
+
 ## Build configuration
 
 All public endpoints and project/store links have validated production defaults in `config/urls.ts`.

@@ -2,8 +2,8 @@
 import "virtual:uno.css";
 import "../app.css";
 import { page } from "$app/state";
-import Footer from "$lib/components/Footer.svelte";
-import Navbar from "$lib/components/Navbar.svelte";
+import Footer from "#lib/components/Footer.svelte";
+import Navbar from "#lib/components/Navbar.svelte";
 
 let { children } = $props();
 // /join is a landing page for invites and /press is a capture surface for store assets: neither

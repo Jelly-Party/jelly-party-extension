@@ -1,8 +1,8 @@
 <script lang="ts">
-import HeroSection from "$lib/components/HeroSection.svelte";
-import HowItWorksSection from "$lib/components/HowItWorksSection.svelte";
-import PerksSection from "$lib/components/PerksSection.svelte";
-import SyncDemoSection from "$lib/components/SyncDemoSection.svelte";
+import HeroSection from "#lib/components/HeroSection.svelte";
+import HowItWorksSection from "#lib/components/HowItWorksSection.svelte";
+import PerksSection from "#lib/components/PerksSection.svelte";
+import SyncDemoSection from "#lib/components/SyncDemoSection.svelte";
 </script>
 
 <svelte:head>

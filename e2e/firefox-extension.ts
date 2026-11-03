@@ -170,8 +170,7 @@ try {
   await closeNativeSidebar(peerA);
   await waitForSidebarClosed(peerA);
   await waitForSidebarCount(peerB, "[data-testid='peer']", 2);
-  await reopenNativeSidebar(peerA);
-  await waitForNativeSidebar(peerA);
+  await openSidebar(peerA);
   await openSidebarPage(peerA, nextVideoUrl);
   await waitForSidebarText(peerA, "[data-testid='connection-status']", "Connected");
   await waitForSidebarText(peerA, "[data-testid='messages']", "Firefox movie night is ready.");
@@ -319,7 +318,12 @@ async function closeNativeSidebar(driver: FirefoxDriver): Promise<void> {
   await driver.setContext(firefox.Context.CHROME);
   try {
     const result = await driver.executeScript<false | Record<string, unknown>>(`
-      const button = document.getElementById("sidebar-close");
+      // The revamped sidebar renders its close control inside the panel header.
+      const button = SidebarController.sidebarRevampEnabled
+        ? document.getElementById("sidebar")?.contentDocument
+          ?.querySelector("sidebar-panel-header")?.shadowRoot
+          ?.querySelector('moz-button[data-l10n-id="sidebar-panel-header-close-button"]')
+        : document.getElementById("sidebar-close");
       if (!button) return false;
       button.click();
       return {
@@ -331,23 +335,6 @@ async function closeNativeSidebar(driver: FirefoxDriver): Promise<void> {
     `);
     assert.notEqual(result, false, "Firefox native sidebar close control was not available");
     console.log(`Firefox native sidebar close state: ${JSON.stringify(result)}`);
-  } finally {
-    await driver.setContext(firefox.Context.CONTENT);
-  }
-}
-
-async function reopenNativeSidebar(driver: FirefoxDriver): Promise<void> {
-  await driver.setContext(firefox.Context.CHROME);
-  try {
-    const opened = await driver.executeScript<boolean>(`
-      const item = document.querySelector(
-        '[id^="sidebarswitcher_menu_"][id$="-sidebar-action"]',
-      );
-      if (!item) return false;
-      item.click();
-      return true;
-    `);
-    assert.equal(opened, true, "Firefox Jelly Party sidebar menu item was not available");
   } finally {
     await driver.setContext(firefox.Context.CONTENT);
   }

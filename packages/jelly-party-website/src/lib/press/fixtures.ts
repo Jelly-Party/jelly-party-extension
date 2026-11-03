@@ -1,5 +1,5 @@
 import type { ChatEntry, PeerIdentity } from "jelly-party-lib";
-import type { ActiveParty } from "$extension/background/party-state";
+import type { ActiveParty } from "../../../../jelly-party-extension/src/background/party-state.ts";
 
 /**
  * Sample content for the store assets. Timestamps are fixed instants rather than "now", so the

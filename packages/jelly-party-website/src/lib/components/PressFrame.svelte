@@ -1,6 +1,6 @@
 <script lang="ts">
 import type { Snippet } from "svelte";
-import type { PressShot } from "$lib/press/shots";
+import type { PressShot } from "#lib/press/shots.ts";
 
 interface Props {
 	shot: PressShot;

@@ -1,5 +1,5 @@
 <script lang="ts">
-import { getDownloadLink } from "$lib/download-link";
+import { getDownloadLink } from "#lib/download-link.ts";
 </script>
 
 <nav class="sticky top-0 z-50 border-b border-white/10 bg-jelly-ink/92 backdrop-blur-lg" aria-label="Primary navigation">

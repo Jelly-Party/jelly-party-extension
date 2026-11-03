@@ -1,5 +1,5 @@
 <script lang="ts">
-import ServiceLogos from "$lib/components/ServiceLogos.svelte";
+import ServiceLogos from "#lib/components/ServiceLogos.svelte";
 </script>
 
 <svelte:head>

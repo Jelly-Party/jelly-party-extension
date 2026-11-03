@@ -1,5 +1,5 @@
 <script lang="ts">
-import { features } from "$lib/features";
+import { features } from "#lib/features.ts";
 import LucideIcon from "./LucideIcon.svelte";
 </script>
 

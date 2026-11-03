@@ -1,8 +1,8 @@
 <script lang="ts">
 import type { ChatEntry, PeerIdentity } from "jelly-party-lib";
-import type { ActiveParty } from "$extension/background/party-state";
-import PartyView from "$extension/sidebar/PartyView.svelte";
-import "$extension/sidebar/sidebar-ui.css";
+import type { ActiveParty } from "../../../../jelly-party-extension/src/background/party-state.ts";
+import PartyView from "../../../../jelly-party-extension/src/sidebar/PartyView.svelte";
+import "../../../../jelly-party-extension/src/sidebar/sidebar-ui.css";
 
 /** Keeps the sample chat readable at the same wall-clock time wherever the page is rendered. */
 function atLocalTime(hour: number, minute: number): number {

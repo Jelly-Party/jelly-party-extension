@@ -1,4 +1,6 @@
+import adapter from "@sveltejs/adapter-static";
 import { sveltekit } from "@sveltejs/kit/vite";
+import { vitePreprocess } from "@sveltejs/vite-plugin-svelte";
 import { defineConfig, lazyPlugins } from "vite-plus";
 import UnoCSS from "unocss/vite";
 import { loadBuildEnvironment } from "../../config/build-environment";
@@ -16,6 +18,19 @@ export default defineConfig(({ mode }) => {
       __JELLY_REPOSITORY_URL__: JSON.stringify(urls.repository),
       __JELLY_WEBSITE_URL__: JSON.stringify(urls.website),
     },
-    plugins: lazyPlugins(() => [UnoCSS(), sveltekit()]),
+    plugins: lazyPlugins(() => [
+      UnoCSS(),
+      sveltekit({
+        preprocess: vitePreprocess(),
+        adapter: adapter({
+          pages: "build",
+          assets: "build",
+          fallback: undefined,
+          precompress: false,
+          strict: true,
+        }),
+        version: { pollInterval: 0 },
+      }),
+    ]),
   };
 });

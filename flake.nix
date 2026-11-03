@@ -19,6 +19,8 @@
       devShells = forAllSystems (system:
         let
           pkgs = nixpkgs.legacyPackages.${system};
+          chromiumPlatform =
+            if pkgs.stdenv.hostPlatform.isAarch64 then "chrome-linux-arm64" else "chrome-linux64";
         in
         {
           default = pkgs.mkShell {
@@ -44,7 +46,7 @@
                 # Playwright directory differs between Intel and Apple Silicon releases.
                 "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
               else
-                "${pkgs.playwright-driver.browsers}/chromium-1228/chrome-linux/chrome";
+                "${pkgs.playwright-driver.browsers}/chromium-1248/${chromiumPlatform}/chrome";
             FIREFOX_BIN =
               if pkgs.stdenv.hostPlatform.isDarwin then
                 "/Applications/Firefox.app/Contents/MacOS/firefox"

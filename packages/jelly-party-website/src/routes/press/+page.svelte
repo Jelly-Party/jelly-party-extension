@@ -1,13 +1,13 @@
 <script lang="ts">
-import BrandHeader from "$extension/sidebar/BrandHeader.svelte";
-import PartyView from "$extension/sidebar/PartyView.svelte";
-import SetupView from "$extension/sidebar/SetupView.svelte";
-import LucideIcon from "$lib/components/LucideIcon.svelte";
-import PartyWindow from "$lib/components/PartyWindow.svelte";
-import PressFrame from "$lib/components/PressFrame.svelte";
-import ServiceLogos from "$lib/components/ServiceLogos.svelte";
-import VideoStage from "$lib/components/VideoStage.svelte";
-import { features } from "$lib/features";
+import BrandHeader from "../../../../jelly-party-extension/src/sidebar/BrandHeader.svelte";
+import PartyView from "../../../../jelly-party-extension/src/sidebar/PartyView.svelte";
+import SetupView from "../../../../jelly-party-extension/src/sidebar/SetupView.svelte";
+import LucideIcon from "#lib/components/LucideIcon.svelte";
+import PartyWindow from "#lib/components/PartyWindow.svelte";
+import PressFrame from "#lib/components/PressFrame.svelte";
+import ServiceLogos from "#lib/components/ServiceLogos.svelte";
+import VideoStage from "#lib/components/VideoStage.svelte";
+import { features } from "#lib/features.ts";
 import {
 	duoParty,
 	duoPartyShort,
@@ -16,8 +16,8 @@ import {
 	inviteLink,
 	mira,
 	partyVideo,
-} from "$lib/press/fixtures";
-import { pressShot } from "$lib/press/shots";
+} from "#lib/press/fixtures.ts";
+import { pressShot } from "#lib/press/shots.ts";
 
 const video = {
 	videoSrc: partyVideo.src,

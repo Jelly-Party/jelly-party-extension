@@ -1,5 +1,5 @@
 <script lang="ts">
-import { serviceLogos, type ServiceLogo } from "$lib/service-logos";
+import { serviceLogos, type ServiceLogo } from "#lib/service-logos.ts";
 
 /** Which services to show, in order. Defaults to the full list. */
 export let ids: string[] = serviceLogos.map((logo) => logo.id);

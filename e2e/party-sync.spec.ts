@@ -306,8 +306,117 @@ test("discovers a video inside an iframe added after the initial scan", async ()
     await page.getByRole("button", { name: "Add framed video" }).click();
     await expect(page.frameLocator("iframe").locator("video")).toHaveJSProperty("readyState", 4);
     await expect(sidebar.getByTestId("video-state")).toHaveText("Video ready");
+    await page
+      .frameLocator("iframe")
+      .locator("video")
+      .evaluate((video) => video.remove());
+    await expect(sidebar.getByTestId("video-state")).toHaveText("No video found in this tab");
+    await page
+      .frameLocator("iframe")
+      .locator("body")
+      .evaluate((body) => {
+        const frame = document.createElement("iframe");
+        frame.src = "frame-video.html";
+        body.append(frame);
+      });
+    await expect(
+      page.frameLocator("iframe").frameLocator("iframe").locator("video"),
+    ).toHaveJSProperty("readyState", 4);
+    await expect(sidebar.getByTestId("video-state")).toHaveText("Video ready");
+    await page
+      .frameLocator("iframe")
+      .locator("iframe")
+      .evaluate((frame) => frame.remove());
+    await expect(sidebar.getByTestId("video-state")).toHaveText("No video found in this tab");
+    await page.locator("iframe").evaluate((frame) => frame.remove());
+    await expect(sidebar.getByTestId("video-state")).toHaveText("No video found in this tab");
   } finally {
     await peer.close();
+  }
+});
+
+test("removing the selected video frame restores synchronization with the surviving page video", async () => {
+  const host = await launchExtensionPeer();
+  const guest = await launchExtensionPeer();
+  try {
+    const videoUrl = "http://localhost:16333/video-swap-test.html";
+    const hostPage = await host.context.newPage();
+    await hostPage.goto(videoUrl);
+    await expect(hostPage.locator("video")).toHaveJSProperty("readyState", 4);
+    const framedVideo = hostPage.frameLocator("iframe").locator("video");
+    await expect(framedVideo).toHaveJSProperty("readyState", 4);
+    await hostPage.evaluate(() => {
+      document.querySelector("video")!.style.width = "160px";
+      const frame = document.querySelector("iframe")!;
+      frame.style.width = "720px";
+      frame.style.height = "405px";
+      const container = document.createElement("div");
+      container.id = "framed-player";
+      frame.replaceWith(container);
+      container.append(frame);
+    });
+    await expect(framedVideo).toHaveJSProperty("readyState", 4);
+    await framedVideo.evaluate((video: HTMLVideoElement) => {
+      video.style.width = "640px";
+    });
+    const hostSidebar = await openSidebar(host, hostPage);
+    await hostSidebar.getByTestId("create-party").click();
+    await expect(hostSidebar.getByTestId("connection-status")).toContainText("Connected");
+    const invite = (await hostSidebar.getByTestId("invite-link").textContent())!;
+    const guestPage = await guest.context.newPage();
+    await guestPage.goto(invite);
+    await guestPage.waitForURL(/\/src\/grant\/grant\.html\?/);
+    await guestPage.getByRole("button", { name: "Open video and join" }).click();
+    await guestPage.waitForURL(videoUrl);
+    await expect(guestPage.locator("video")).toHaveJSProperty("readyState", 4);
+    const guestSidebar = await openSidebar(guest, guestPage);
+    await expect(guestSidebar.getByTestId("connection-status")).toContainText("Connected");
+
+    await framedVideo.evaluate((video: HTMLVideoElement) => {
+      video.currentTime = 2;
+    });
+    await expect.poll(() => currentTime(guestPage)).toBeCloseTo(2, 0);
+    expect(await currentTime(hostPage)).toBeCloseTo(0, 1);
+
+    await framedVideo.evaluate((video) => video.remove());
+    await expect.poll(() => currentTime(hostPage)).toBeCloseTo(2, 0);
+    await hostPage
+      .frameLocator("iframe")
+      .locator("body")
+      .evaluate((body) => {
+        const video = document.createElement("video");
+        video.src = "flower.webm";
+        video.muted = true;
+        video.style.width = "640px";
+        body.append(video);
+      });
+    await expect(framedVideo).toHaveJSProperty("readyState", 4);
+    await framedVideo.evaluate((video: HTMLVideoElement) => {
+      video.currentTime = 1;
+    });
+    await expect.poll(() => currentTime(guestPage)).toBeCloseTo(1, 0);
+    expect(await currentTime(hostPage)).toBeCloseTo(2, 0);
+
+    await hostPage.locator("#framed-player").evaluate((container) => container.remove());
+    await expect(hostPage.locator("iframe")).toHaveCount(0);
+    await expect.poll(() => currentTime(hostPage)).toBeCloseTo(1, 0);
+    await seek(hostPage, 3);
+    await expect.poll(() => currentTime(guestPage)).toBeCloseTo(3, 0);
+    await seek(guestPage, 1);
+    await expect.poll(() => currentTime(hostPage)).toBeCloseTo(1, 0);
+    await guestPage.locator("video").evaluate((video: HTMLVideoElement) => video.play());
+    await expect.poll(() => paused(hostPage)).toBe(false);
+    await hostPage.locator("video").evaluate((video: HTMLVideoElement) => video.pause());
+    await expect.poll(() => paused(guestPage)).toBe(true);
+
+    await hostPage.locator("video").evaluate((video) => video.remove());
+    await expect(
+      hostSidebar.getByText("The video is unavailable. Return to the page or reload it."),
+    ).toBeVisible();
+    await expect(hostSidebar.getByTestId("connection-status")).toContainText("Connected");
+  } finally {
+    await guest.close();
+    await host.close();
   }
 });
 

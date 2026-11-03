@@ -18,7 +18,7 @@ Jelly Party is a deliberately small browser extension: create a temporary watch 
 - Enter the Nix development environment through the configured nix-direnv setup (`direnv allow` once). Nix supplies Playwright browsers.
 - Use `vp` for Node.js, dependency management, formatting, linting, type-checking, tests, builds, and tasks. Never invoke `node`, `npm`, `npx`, `pnpm`, `vite`, or `vitest` directly.
 - Use `vp install`, `vp dev`, `vp check`, `vp test --run`, and `vp build` for built-in workflows.
-- `vp install` generates the website's `.svelte-kit/tsconfig.json` before static checks. If that generated directory is removed, restore it with `vp run jelly-party-website#prepare`.
+- `vp install` generates SvelteKit's website types and configuration before static checks. If generated files are removed, restore them with `vp run jelly-party-website#prepare`; the website tsconfig extends `$app/tsconfig`.
 - Inspect project workflows with `vp run` and invoke them with `vp run <task>`. Add cross-package workflows to Vite Task in `vite.config.ts`; do not add another task runner.
 - Use `vp node` for a Node.js script from the shell and `vp exec node` inside a Vite Task.
 - Vite+ owns formatting, linting, type-checking, Vitest, builds, and tasks. Do not add Biome, ESLint, Prettier, or `just`.
@@ -28,6 +28,7 @@ Jelly Party is a deliberately small browser extension: create a temporary watch 
 - All work happens on `main`. Do not create feature branches or pull requests: commit to `main` and push it.
 - Deployments are done live from a developer machine with the project-local `cf` CLI, through the Vite Task that wraps it (`vp run deploy`). There is no CI pipeline: nothing builds, tests, or deploys on push. There is no staging environment; production is the only deployment target.
 - Validation is therefore entirely local: run the checks, tests, and builds below yourself before deploying, and treat a successful deploy as the last step of that same local pass.
+- Follow [docs/releasing.md](docs/releasing.md) for extension release validation, the Downloads handoff, and manual uploads to the existing store listings. Preparing archives does not publish them.
 
 ## Validation
 
@@ -47,6 +48,10 @@ Docs are local at `node_modules/vite-plus/docs` or online at https://viteplus.de
 ## Built-in Commands vs Scripts
 
 `vp <name>` runs a built-in command. `vp run <name>` runs a `package.json` script or a `vite.config.ts` task. Scripts cannot overwrite built-ins, so `vp dev` and `vp run dev` may do different things. Check `package.json` and `vite.config.ts` first, and run `vp run <name>` when the project defines a script or task with that name.
+
+## Running Scripts
+
+Run TypeScript and JavaScript files with `vpx <file>`, for example `vpx ./scripts/seed.ts --dry-run`. It handles enums, decorators, JSX, and tsconfig `paths`, so do not add `tsx` or `ts-node` to run scripts. `vpx --watch <file>` reruns the file when a file it uses changes, in place of `tsx watch`. `vp node <file>` runs plain Node.js.
 
 ## Tool Versions
 
@@ -76,6 +81,7 @@ Track unresolved follow-up work in [TASKS.md](TASKS.md). Keep one short checkbox
 - `packages/jelly-party-server/cloudflare.config.ts` owns deployment bindings, domains, and Durable Object exports. Preserve Worker names, D1 IDs, and the three existing SQLite Durable Object classes.
 - The pinned Cloudflare Vite plugin builds and serves the Worker through `vp`. Use the existing Vite Tasks: cf's framework detection inside this workspace can select `npx` instead of the pinned Vite+ runtime. Deploy the validated build with `cf deploy --prebuilt --mode production` from the server package.
 - `check:wrangler` retains its established name and generates cf binding types. The install preparation also runs it; rerun it after changing bindings.
-- Remote D1 migrations use cf with the existing database UUID and `--dir migrations`; cf defaults to remote. Local D1 migrations also use cf with `CHOKIDAR_USEPOLLING=1` scoped to that command: cf beta.12’s Miniflare registry can otherwise leave a native watcher alive after completion. Preserve the existing migration table and `--local --persist-to .wrangler/state`.
+- Remote D1 migrations use cf with the existing database UUID and `--dir migrations`; cf defaults to remote. Local D1 migrations scope `CHOKIDAR_USEPOLLING=1` to that command to avoid lingering native registry watchers. Preserve the existing migration table and `--local --persist-to .wrangler/state`.
+- If remote D1 reports error 7403 despite the correct account, run `vp exec cf auth whoami` to check and refresh saved OAuth, then retry once before changing accounts or credentials.
 - The server Vite config explicitly keeps local D1 and Durable Object data in the root `.wrangler/state` and reads root `.dev.vars*` through `envDir`. Do not switch to the plugin's default `.cloudflare/state` directory; existing development data would appear lost.
-- `wrangler.jsonc` is only for `@cloudflare/vitest-pool-workers` 0.22.0, whose internal Wrangler dependency remains. Keep its test bindings in sync with the cf configuration. The newer Vitest plugin also depends on Wrangler, so upgrading solely to remove that dependency does not help.
+- `wrangler.jsonc` is only for `@cloudflare/vitest-plugin`, whose internal Wrangler dependency remains. Keep its test bindings in sync with the cf configuration; deployment uses `cloudflare.config.ts`.

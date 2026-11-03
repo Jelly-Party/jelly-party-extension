@@ -1,6 +1,6 @@
 <script lang="ts">
 import type { Snippet } from "svelte";
-import "$extension/sidebar/sidebar-ui.css";
+import "../../../../jelly-party-extension/src/sidebar/sidebar-ui.css";
 import VideoStage from "./VideoStage.svelte";
 
 interface Props {

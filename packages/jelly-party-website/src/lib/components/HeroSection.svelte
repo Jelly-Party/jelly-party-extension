@@ -1,5 +1,5 @@
 <script lang="ts">
-import { getDownloadLink } from "$lib/download-link";
+import { getDownloadLink } from "#lib/download-link.ts";
 import PartyPreview from "./PartyPreview.svelte";
 import ServiceLogos from "./ServiceLogos.svelte";
 </script>
