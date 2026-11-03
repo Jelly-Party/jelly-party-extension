@@ -15,6 +15,7 @@ Jelly Party is a browser extension and small Cloudflare Durable Object relay. Op
 - New protocol and backend at `wss://meet.jelly-party.com`; no old-client compatibility
 
 The implementation contract is the [Jelly Party 2.0 specification](.scratch/jelly-party/spec.md).
+Open follow-up work is tracked in [TASKS.md](TASKS.md).
 
 ## Repository
 

@@ -32,7 +32,9 @@ import {
   CHAT_COOLDOWN_MS,
   maxPartiesPerMonth,
   MAX_PARTY_CONNECTIONS,
+  MAX_PENDING_CONNECTIONS,
   monthKey,
+  PARTY_JOIN_TIMEOUT_MS,
   PARTY_RETENTION_MS,
   SOCKET_MESSAGE_LIMIT,
   SOCKET_MESSAGE_WINDOW_MS,
@@ -265,20 +267,27 @@ export class Party extends DurableObject<Env> {
     if (request.headers.get("Upgrade")?.toLowerCase() !== "websocket") {
       return new Response("WebSocket upgrade required", { status: 426 });
     }
-    const connections = this.ctx
+    const pending = this.ctx
       .getWebSockets()
-      .filter((socket) => socket.readyState === WebSocket.OPEN).length;
-    if (connections >= MAX_PARTY_CONNECTIONS) {
-      return new Response("This party is full", { status: 429 });
+      .filter((socket) => socket.readyState === WebSocket.OPEN && !this.peer(socket)).length;
+    if (pending >= MAX_PENDING_CONNECTIONS) {
+      return new Response("Too many pending party connections", { status: 429 });
     }
     const pair = new WebSocketPair();
     const [client, server] = Object.values(pair);
     this.ctx.acceptWebSocket(server);
-    await this.scheduleCheck();
+    const joinDeadline = Date.now() + PARTY_JOIN_TIMEOUT_MS;
+    server.serializeAttachment({ joinDeadline });
+    await this.scheduleCheck(joinDeadline);
     return new Response(null, { status: 101, webSocket: client });
   }
 
   async webSocketMessage(socket: WebSocket, raw: string | ArrayBuffer): Promise<void> {
+    if (socket.readyState !== WebSocket.OPEN) return;
+    if (!this.peer(socket) && this.pendingJoinDeadline(socket) <= Date.now()) {
+      socket.close(1008, "Join timed out");
+      return;
+    }
     const parsed = parseClientMessage(
       typeof raw === "string" ? raw : new TextDecoder().decode(raw),
     );
@@ -320,6 +329,15 @@ export class Party extends DurableObject<Env> {
           message: "That participant is already connected. Rejoin with a new session.",
         });
         socket.close(1008, "Participant already connected");
+        return;
+      }
+      if (!previous && this.peers().length >= MAX_PARTY_CONNECTIONS) {
+        this.send(socket, {
+          type: "error",
+          code: "invalid-message",
+          message: "This party is full",
+        });
+        socket.close(1008, "This party is full");
         return;
       }
       const initializePlayback = this.peers().length === 0;
@@ -535,17 +553,20 @@ export class Party extends DurableObject<Env> {
     await this.webSocketClose(socket);
   }
 
-  private async scheduleCheck(): Promise<void> {
+  private async scheduleCheck(at = Date.now() + MEMBERSHIP_CHECK_MS): Promise<void> {
     const next = await this.ctx.storage.getAlarm();
-    if (next === null || next > Date.now() + MEMBERSHIP_CHECK_MS)
-      await this.ctx.storage.setAlarm(Date.now() + MEMBERSHIP_CHECK_MS);
+    if (next === null || next > at) await this.ctx.storage.setAlarm(at);
   }
 
   async alarm(): Promise<void> {
+    let pendingDeadline = Infinity;
     for (const socket of this.ctx.getWebSockets()) {
+      if (socket.readyState !== WebSocket.OPEN) continue;
       const peer = this.attachment(socket);
       if (!peer) {
-        socket.close(1008, "Join timed out");
+        const deadline = this.pendingJoinDeadline(socket);
+        if (deadline > Date.now()) pendingDeadline = Math.min(pendingDeadline, deadline);
+        else socket.close(1008, "Join timed out");
         continue;
       }
       const seen = Math.max(
@@ -578,9 +599,10 @@ export class Party extends DurableObject<Env> {
     this.broadcastPresence();
     this.reportMembership();
     await this.analytics.flush();
-    if (this.peers().length) {
-      await this.ctx.storage.delete("emptySince");
-      await this.scheduleCheck();
+    const hasPeers = this.peers().length > 0;
+    if (hasPeers || pendingDeadline < Infinity) {
+      if (hasPeers) await this.ctx.storage.delete("emptySince");
+      await this.scheduleCheck(Math.min(Date.now() + MEMBERSHIP_CHECK_MS, pendingDeadline));
       return;
     }
     const emptySince = (await this.ctx.storage.get<number>("emptySince")) ?? Date.now();
@@ -843,6 +865,11 @@ export class Party extends DurableObject<Env> {
 
   private peer(socket: WebSocket): PeerIdentity | null {
     return this.attachment(socket)?.peer ?? null;
+  }
+
+  private pendingJoinDeadline(socket: WebSocket): number {
+    const value = socket.deserializeAttachment();
+    return isRecord(value) && typeof value.joinDeadline === "number" ? value.joinDeadline : 0;
   }
 
   private attachment(socket: WebSocket): ConnectionAttachment | null {

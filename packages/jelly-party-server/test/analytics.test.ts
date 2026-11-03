@@ -10,6 +10,11 @@ import { beforeEach, afterEach, test, expect, vi } from "vite-plus/test";
 import { generateKeyPair, exportJWK, SignJWT } from "jose";
 import type { ServerMessage, LiveSnapshot } from "jelly-party-lib";
 import { analyticsSite, usageReport } from "../src/analytics";
+import {
+  MAX_PARTY_CONNECTIONS,
+  MAX_PENDING_CONNECTIONS,
+  PARTY_JOIN_TIMEOUT_MS,
+} from "../src/limits";
 
 declare global {
   namespace Cloudflare {
@@ -142,6 +147,149 @@ test("published clients can join without a credential but cannot replace an acti
     });
   } finally {
     for (const socket of sockets) socket.close();
+  }
+});
+
+test("a full party accepts authenticated replacement but rejects a new participant", async () => {
+  const party = env.PARTY.get(env.PARTY.newUniqueId());
+  const peer = { id: crypto.randomUUID(), name: "Viewer", emoji: "🍿" };
+  const reconnectToken = crypto.randomUUID();
+  const sockets: WebSocket[] = [];
+  const connect = async (identity = peer, token = reconnectToken) => {
+    const response = await party.fetch(
+      new Request("https://example.com", { headers: { Upgrade: "websocket" } }),
+    );
+    expect(response.status).toBe(101);
+    const socket = response.webSocket!;
+    socket.accept();
+    sockets.push(socket);
+    const messages = inbox<ServerMessage>(socket);
+    const closed = new Promise<number>((resolve) =>
+      socket.addEventListener("close", (event) => resolve(event.code), { once: true }),
+    );
+    socket.send(
+      JSON.stringify({
+        type: "join",
+        peer: identity,
+        reconnectToken: token,
+        destination: { url: "https://example.com/watch", title: "Video" },
+      }),
+    );
+    return { socket, messages, closed };
+  };
+  try {
+    const original = await connect();
+    await original.messages((message) => message.type === "welcome");
+    for (let index = 1; index < MAX_PARTY_CONNECTIONS; index++) {
+      const guest = await connect({ ...peer, id: crypto.randomUUID() }, crypto.randomUUID());
+      await guest.messages((message) => message.type === "welcome");
+    }
+    await evictDurableObject(party);
+    const unauthorized = await connect(peer, crypto.randomUUID());
+    expect(await unauthorized.messages((message) => message.type === "error")).toMatchObject({
+      message: "That participant is already connected. Rejoin with a new session.",
+    });
+    expect(await unauthorized.closed).toBe(1008);
+    const extra = await connect({ ...peer, id: crypto.randomUUID() }, crypto.randomUUID());
+    expect(await extra.messages((message) => message.type === "error")).toMatchObject({
+      message: "This party is full",
+    });
+    expect(await extra.closed).toBe(1008);
+    const resumed = await connect();
+    expect(await resumed.messages((message) => message.type === "welcome")).toMatchObject({
+      peerId: peer.id,
+      leaderId: peer.id,
+    });
+    expect(await original.closed).toBe(1000);
+    await runInDurableObject(party, (_instance, state) => {
+      expect(
+        state.getWebSockets().filter((socket) => socket.readyState === WebSocket.OPEN),
+      ).toHaveLength(MAX_PARTY_CONNECTIONS);
+    });
+    resumed.socket.send(JSON.stringify({ type: "chat", text: "Reconnected to a full party" }));
+    expect(await resumed.messages((message) => message.type === "chat")).toMatchObject({
+      entry: { peer: { id: peer.id }, text: "Reconnected to a full party" },
+    });
+  } finally {
+    for (const socket of sockets) socket.close();
+  }
+});
+
+test("pending joins are bounded and keep their own expiry through hibernation", async () => {
+  const party = env.PARTY.get(env.PARTY.newUniqueId());
+  const sockets: WebSocket[] = [];
+  const closed: Promise<number>[] = [];
+  const open = () =>
+    party.fetch(new Request("https://example.com", { headers: { Upgrade: "websocket" } }));
+  try {
+    const before = Date.now();
+    for (let index = 0; index < MAX_PENDING_CONNECTIONS; index++) {
+      const response = await open();
+      expect(response.status).toBe(101);
+      const socket = response.webSocket!;
+      socket.accept();
+      sockets.push(socket);
+      closed.push(
+        new Promise<number>((resolve) =>
+          socket.addEventListener("close", (event) => resolve(event.code), { once: true }),
+        ),
+      );
+    }
+    const rejected = await open();
+    expect(rejected.status).toBe(429);
+    expect(await rejected.text()).toBe("Too many pending party connections");
+    await evictDurableObject(party);
+    await runInDurableObject(party, async (instance, state) => {
+      const alarm = await state.storage.getAlarm();
+      expect(alarm).toBeGreaterThanOrEqual(before + PARTY_JOIN_TIMEOUT_MS);
+      expect(alarm).toBeLessThanOrEqual(Date.now() + PARTY_JOIN_TIMEOUT_MS);
+      const pending = state.getWebSockets();
+      for (const socket of pending) socket.serializeAttachment({ joinDeadline: Date.now() - 1 });
+      const laterDeadline = Date.now() + PARTY_JOIN_TIMEOUT_MS;
+      pending.at(-1)!.serializeAttachment({ joinDeadline: laterDeadline });
+      await state.storage.deleteAlarm();
+      await instance.alarm();
+      expect(
+        state.getWebSockets().filter((socket) => socket.readyState === WebSocket.OPEN),
+      ).toHaveLength(1);
+      expect(await state.storage.getAlarm()).toBe(laterDeadline);
+      pending.at(-1)!.serializeAttachment({ joinDeadline: Date.now() - 1 });
+      await instance.alarm();
+    });
+    expect(await Promise.all(closed)).toEqual(Array(MAX_PENDING_CONNECTIONS).fill(1008));
+    const reopened = await open();
+    expect(reopened.status).toBe(101);
+    reopened.webSocket!.accept();
+    sockets.push(reopened.webSocket!);
+  } finally {
+    for (const socket of sockets) socket.close();
+  }
+});
+
+test("an expired pending socket cannot join before its alarm runs", async () => {
+  const party = env.PARTY.get(env.PARTY.newUniqueId());
+  const response = await party.fetch(
+    new Request("https://example.com", { headers: { Upgrade: "websocket" } }),
+  );
+  const socket = response.webSocket!;
+  socket.accept();
+  try {
+    await runInDurableObject(party, (_instance, state) => {
+      state.getWebSockets()[0]!.serializeAttachment({ joinDeadline: Date.now() - 1 });
+    });
+    const closed = new Promise<number>((resolve) =>
+      socket.addEventListener("close", (event) => resolve(event.code), { once: true }),
+    );
+    socket.send(
+      JSON.stringify({
+        type: "join",
+        peer: { id: crypto.randomUUID(), name: "Viewer", emoji: "🍿" },
+        destination: { url: "https://example.com/watch", title: "Video" },
+      }),
+    );
+    expect(await closed).toBe(1008);
+  } finally {
+    socket.close();
   }
 });
 

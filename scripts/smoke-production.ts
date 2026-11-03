@@ -6,10 +6,18 @@ import { DEFAULT_BUILD_URLS, partyCreationUrl } from "../config/urls.ts";
 
 await verifyPage(DEFAULT_BUILD_URLS.website, "Jelly Party");
 await verifyPage(DEFAULT_BUILD_URLS.join, "You’re invited to watch together");
+await verifyHttpsRedirect(DEFAULT_BUILD_URLS.website);
+const wwwUrl = new URL(DEFAULT_BUILD_URLS.website);
+wwwUrl.hostname = `www.${wwwUrl.hostname}`;
+await verifyHttpsRedirect(wwwUrl);
+const joinRedirectUrl = new URL(DEFAULT_BUILD_URLS.join);
+joinRedirectUrl.searchParams.set("https-check", "1");
+await verifyHttpsRedirect(joinRedirectUrl);
 
 const healthUrl = new URL(DEFAULT_BUILD_URLS.websocket);
 healthUrl.protocol = "https:";
 healthUrl.pathname = "/health";
+await verifyHttpsRedirect(healthUrl);
 const healthResponse = await fetch(healthUrl, { cache: "no-store" });
 assert.equal(healthResponse.status, 200, `${healthUrl} returned ${healthResponse.status}`);
 const health = (await healthResponse.json()) as { status?: unknown; version?: unknown };
@@ -32,13 +40,29 @@ if (process.env.JELLY_REQUIRE_RELEASE_VERSION === "1") {
 
 await verifyWebSocket(DEFAULT_BUILD_URLS.websocket);
 console.log(
-  `production website, join route, ${productionVersion} health endpoint, and WebSocket verified`,
+  `production website, join route, HTTPS redirects, ${productionVersion} health endpoint, and WebSocket verified`,
 );
 
 async function verifyPage(url: string, expectedText: string): Promise<void> {
   const response = await fetch(url, { cache: "no-store" });
   assert.equal(response.status, 200, `${url} returned ${response.status}`);
   assert.ok((await response.text()).includes(expectedText), `${url} has unexpected HTML`);
+}
+
+async function verifyHttpsRedirect(value: string | URL): Promise<void> {
+  const secureUrl = new URL(value);
+  const insecureUrl = new URL(secureUrl);
+  insecureUrl.protocol = "http:";
+  const response = await fetch(insecureUrl, { redirect: "manual", cache: "no-store" });
+  assert.ok(
+    response.status === 301 || response.status === 308,
+    `${insecureUrl} must permanently redirect to HTTPS, returned ${response.status}`,
+  );
+  assert.equal(
+    response.headers.get("Location"),
+    secureUrl.href,
+    `${insecureUrl} must preserve its hostname, path, and query when redirecting to HTTPS`,
+  );
 }
 
 async function verifyWebSocket(baseUrl: string): Promise<void> {

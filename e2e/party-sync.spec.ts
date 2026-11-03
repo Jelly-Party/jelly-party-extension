@@ -160,6 +160,7 @@ test("two peers create, join, chat, and synchronize playback in both directions"
     await expect.poll(() => paused(joinPage)).toBe(false);
     await videoA.locator("video").evaluate((video: HTMLVideoElement) => video.pause());
     await expect.poll(() => paused(joinPage)).toBe(true);
+    const pausedTime = await currentTime(videoA);
 
     await videoA.locator("video").evaluate((video: HTMLVideoElement) => {
       const replacement = video.cloneNode(true) as HTMLVideoElement;
@@ -167,7 +168,7 @@ test("two peers create, join, chat, and synchronize playback in both directions"
       replacement.load();
     });
     await expect(videoA.locator("video")).toHaveJSProperty("readyState", 4);
-    await expect.poll(() => currentTime(videoA)).toBeCloseTo(1, 0);
+    await expect.poll(() => currentTime(videoA)).toBeCloseTo(pausedTime, 0);
     await seek(videoA, 3);
     await expect.poll(() => currentTime(joinPage)).toBeCloseTo(3, 0);
     await joinPage.locator("video").evaluate((video: HTMLVideoElement) => video.play());

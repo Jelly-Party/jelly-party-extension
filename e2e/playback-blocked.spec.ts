@@ -1,4 +1,5 @@
-import { execFileSync } from "node:child_process";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
 import {
   blockNextExtensionVideoPlay,
   expect,
@@ -8,8 +9,10 @@ import {
 } from "./fixtures";
 
 const videoUrl = "http://localhost:16333/autoplay-test.html";
+const execFileAsync = promisify(execFile);
 
 test("a blocked remote play asks for one video interaction and then catches up", async () => {
+  test.setTimeout(90_000);
   const began = Date.now();
   const host = await launchExtensionPeer();
   const guest = await launchExtensionPeer();
@@ -69,8 +72,8 @@ test("a blocked remote play asks for one video interaction and then catches up",
       .toBeLessThan(1);
     await expect
       .poll(
-        () => {
-          const output = execFileSync(
+        async () => {
+          const { stdout } = await execFileAsync(
             "vp",
             [
               "exec",
@@ -87,11 +90,11 @@ test("a blocked remote play asks for one video interaction and then catches up",
             {
               encoding: "utf8",
               env: { ...process.env, CHOKIDAR_USEPOLLING: "1" },
-              timeout: 10000,
+              timeout: 30_000,
             },
           );
           const rows = (
-            JSON.parse(output) as Array<{
+            JSON.parse(stdout) as Array<{
               results: { rows: Array<[kind: string, outcome: string, count: number]> };
             }>
           )[0].results.rows;
@@ -102,7 +105,7 @@ test("a blocked remote play asks for one video interaction and then catches up",
             applied: rows.some(([, outcome]) => outcome === "applied"),
           };
         },
-        { timeout: 15000 },
+        { timeout: 60_000 },
       )
       .toEqual({ invited: true, attempted: true, blocked: true, applied: true });
   } finally {

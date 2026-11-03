@@ -10,6 +10,8 @@ Jelly Party is a deliberately small browser extension: create a temporary watch 
 - Production uses the endpoints resolved from `config/urls.ts` (`https://jelly-party.com`, `https://join.jelly-party.com/join`, and `wss://meet.jelly-party.com` by default). Do not implement compatibility with the old extension or backend.
 - A peer has a display name and emoji. Do not add avatars.
 - Use TypeScript, Svelte, and UnoCSS. Prefer browser APIs and small local modules over dependencies.
+- Extension store releases are costly. Prefer server fixes that preserve the behavior and message formats of installed clients. Put adjustable limits and policy on the server where practical; do not require a client update for a server repair.
+- When a client change is necessary, test recovery from interrupted connections, navigation, and player replacement before shipping. Batch non-urgent client fixes into deliberate store releases; do not defer a serious client defect just to avoid a release.
 
 ## Tooling
 
@@ -66,8 +68,11 @@ release. Add a tool name to select part of the graph. For example, run
 
 Specs live at `.scratch/<feature>/spec.md`; implementation tickets, when genuinely useful, live at `.scratch/<feature>/issues/`. Keep the spec authoritative and avoid duplicating its decisions into extra planning documents.
 
+Track unresolved follow-up work in [TASKS.md](TASKS.md). Keep one short checkbox per task with its scope (server, client, or operations), reproduction or blocker, and completion criterion. Update it during implementation and remove completed tasks after delivery. Do not add a second task tracker.
+
 ## Cloudflare tooling
 
+- Production HTTPS redirects use the zone's Always Use HTTPS setting. Static assets bypass the Worker, so a redirect in the fetch handler alone is insufficient. `vp run smoke:production` verifies the redirects as well as the application endpoints.
 - `packages/jelly-party-server/cloudflare.config.ts` owns deployment bindings, domains, and Durable Object exports. Preserve Worker names, D1 IDs, and the three existing SQLite Durable Object classes.
 - The pinned Cloudflare Vite plugin builds and serves the Worker through `vp`. Use the existing Vite Tasks: cf's framework detection inside this workspace can select `npx` instead of the pinned Vite+ runtime. Deploy the validated build with `cf deploy --prebuilt --mode production` from the server package.
 - `check:wrangler` retains its established name and generates cf binding types. The install preparation also runs it; rerun it after changing bindings.

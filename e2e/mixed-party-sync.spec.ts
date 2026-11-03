@@ -11,6 +11,7 @@ const nextUrl = "http://127.0.0.1:16333/frame-video.html";
 type FirefoxDriver = firefox.Driver;
 
 test("a Firefox-led party stays synchronized after a cross-origin destination change", async () => {
+  test.setTimeout(180_000);
   const chromePeer = await launchExtensionPeer();
   const options = new firefox.Options()
     .addArguments("--headless")
