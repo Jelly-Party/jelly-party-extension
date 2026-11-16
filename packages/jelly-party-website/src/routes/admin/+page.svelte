@@ -441,9 +441,12 @@ onMount(() => {
                 </dd>
               </div>
               <div>
-                <dt class="text-sm text-slate-300">Parties with issues</dt>
-                <dd class="mx-0 my-1 text-3xl font-700 tabular-nums">{number(playback.affectedParties)}</dd>
-                <dd class="m-0 text-xs text-slate-400">Of {number(playback.parties)} parties with playback attempts</dd>
+                <dt class="text-sm text-slate-300">Parties in sync</dt>
+                <dd class="mx-0 my-1 text-3xl font-700 tabular-nums">{percent(playback.syncedParties, playback.eligibleParties)}</dd>
+                <dd class="m-0 text-xs text-slate-400">
+                  {number(playback.syncedParties)} of {number(playback.eligibleParties)} parties applied a command ·
+                  {number(playback.affectedParties)} had an issue
+                </dd>
               </div>
               <div class="col-span-2 sm:col-span-1">
                 <dt class="text-sm text-slate-300">Attempts by outcome</dt>
@@ -456,7 +459,8 @@ onMount(() => {
             <p class="my-2 text-xs text-slate-400">
               {number(playback.attempts)} attempts in this range, one per receiving player for each command. The applied rate excludes
               {number(playback.unsupported)} without telemetry support, {number(playback.superseded)} superseded, and {number(playback.pending)} pending.
-              Applied confirms a playback change on the receiving player.
+              Applied confirms a playback change on the receiving player. One busy party can dominate the applied rate;
+              parties in sync counts each party once.
             </p>
             {#if report.playbackResults.length}
               <details class="mt-4 border-t border-white/10 pt-4">

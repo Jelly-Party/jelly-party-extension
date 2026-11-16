@@ -22,6 +22,9 @@ Jelly Party is a deliberately small browser extension: create a temporary watch 
 - Inspect project workflows with `vp run` and invoke them with `vp run <task>`. Add cross-package workflows to Vite Task in `vite.config.ts`; do not add another task runner.
 - Use `vp node` for a Node.js script from the shell and `vp exec node` inside a Vite Task.
 - Vite+ owns formatting, linting, type-checking, Vitest, builds, and tasks. Do not add Biome, ESLint, Prettier, or `just`.
+- Keep `@playwright/test` at the version of `playwright-driver` in the pinned nixpkgs; a newer package looks for browser builds the flake does not provide. Update `flake.lock` first.
+- Stay on TypeScript 6 until SvelteKit supports TypeScript 7. Its config sync reads `ts.sys`, which the native compiler does not expose, so the website dev server fails to start.
+- `pnpm audit` reports a low-severity [deepmerge advisory](https://github.com/advisories/GHSA-gcqx-w48m-w2h4) through the Svelte Vite plugin. No patched release exists; update through the plugin when one does.
 
 ## Deployment
 
@@ -34,6 +37,8 @@ Jelly Party is a deliberately small browser extension: create a temporary watch 
 
 - Prefer one high-value Playwright flow over many brittle tests: create, share, join, chat, play, pause, and seek with two peers.
 - Use Vitest for meaningful pure logic only, especially protocol validation, magic-link parsing, and playback synchronization behavior.
+- Keep sharing the seek a looping video makes when it starts over. A guest whose own video does not loop depends on it to follow the leader.
+- The receiver reports `video-missing` only when it has no controllable video, and `failed` when the player did not do what was asked. Keep the two apart; the dashboard's blocked and failed counts rely on it.
 - Before handing off changes, run `vp check`, `vp test --run`, the Playwright E2E task, and the relevant Vite Task build.
 - Extension build work is not complete until deterministic Chrome, Edge, and Firefox store archives are produced and their manifests are validated.
 
@@ -72,8 +77,6 @@ release. Add a tool name to select part of the graph. For example, run
 ## Local specifications
 
 Specs live at `.scratch/<feature>/spec.md`; implementation tickets, when genuinely useful, live at `.scratch/<feature>/issues/`. Keep the spec authoritative and avoid duplicating its decisions into extra planning documents.
-
-Track unresolved follow-up work in [TASKS.md](TASKS.md). Keep one short checkbox per task with its scope (server, client, or operations), reproduction or blocker, and completion criterion. Update it during implementation and remove completed tasks after delivery. Do not add a second task tracker.
 
 ## Cloudflare tooling
 

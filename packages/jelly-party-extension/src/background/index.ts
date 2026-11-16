@@ -292,15 +292,6 @@ async function handleMessage(
     return undefined;
   }
 
-  if (
-    message.type === "video:apply" &&
-    typeof message.tabId === "number" &&
-    isPlaybackAction(message.action) &&
-    typeof message.timeFromEnd === "number"
-  ) {
-    return applyPlayback(message.tabId, message.action, message.timeFromEnd);
-  }
-
   if (message.type === "pending:consume" && typeof message.tabId === "number") {
     return consumePendingJoin(message.tabId);
   }
@@ -762,10 +753,13 @@ async function applyPlayback(
       { frameId: best.frameId },
     );
     if (result?.ok === true) return { ok: true };
+    // Only a controller that answered can say the player itself refused.
+    if (result?.ok === false && typeof result.error === "string")
+      return { ok: false, error: result.error, reason: result.reason };
     return {
       ok: false,
-      error: result?.error ?? "The video controller is not ready yet.",
-      reason: result?.reason ?? "video-unavailable",
+      error: "The video controller is not ready yet.",
+      reason: "video-unavailable",
     };
   } catch {
     return {
@@ -1113,7 +1107,9 @@ async function applyLatestRemotePlayback(partyId: string): Promise<void> {
     transitionIfCurrent(partyId, { type: "playback-blocked", blocked: true });
     return;
   }
-  if (result.reason === "video-unavailable" && retriedPlaybackTarget !== target) {
+  // The page may have replaced its player or still be loading it. Find the
+  // video again and apply the same target once more before giving up.
+  if (retriedPlaybackTarget !== target) {
     retriedPlaybackTarget = target;
     const tabId = partyState.party.tabId;
     invalidateVideoScan(tabId);

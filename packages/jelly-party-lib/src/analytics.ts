@@ -99,6 +99,9 @@ export interface PlaybackSummary {
   attempts: number;
   parties: number;
   affectedParties: number;
+  /** Parties with at least one eligible attempt, and those among them where one applied. */
+  eligibleParties: number;
+  syncedParties: number;
   applied: number;
   recovered: number;
   blocked: number;

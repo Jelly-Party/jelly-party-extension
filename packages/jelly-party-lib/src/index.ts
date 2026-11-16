@@ -2,6 +2,7 @@ export * from "./analytics.js";
 export { buildMagicLink, parseMagicLink, type MagicLink } from "./magic-link.js";
 export {
   liveTimeFromEnd,
+  reachedTarget,
   RemoteEchoGuard,
   RemoteSeekGuard,
   targetTime,
@@ -12,13 +13,9 @@ export {
   type ChatHistoryPage,
   type ClientMessage,
   HISTORY_PAGE_SIZE,
-  isPeerIdentity,
-  isPartyDestinationInput,
   isPlaybackAction,
   MAX_CHAT_LENGTH,
   MAX_CHAT_MESSAGES,
-  MAX_DESTINATION_TITLE_LENGTH,
-  MAX_DESTINATION_URL_LENGTH,
   MAX_EMOJI_LENGTH,
   MAX_NAME_LENGTH,
   parseClientMessage,

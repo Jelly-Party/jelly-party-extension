@@ -19,6 +19,24 @@ export function liveTimeFromEnd(
   return Math.max(0, snapshot.timeFromEnd - elapsedSeconds);
 }
 
+/**
+ * Whether a player that was asked to be at `desired` got there. A playing video
+ * may have advanced by up to `elapsedSeconds` since the request, or by less when
+ * it needed part of that time to start.
+ */
+export function reachedTarget(
+  position: number,
+  desired: number,
+  end: number,
+  elapsedSeconds: number,
+  tolerance = 1,
+): boolean {
+  return (
+    position >= desired - tolerance &&
+    position <= Math.min(end, desired + Math.max(0, elapsedSeconds)) + tolerance
+  );
+}
+
 export class RemoteEchoGuard {
   readonly #pending = new Map<PlaybackAction, number>();
 

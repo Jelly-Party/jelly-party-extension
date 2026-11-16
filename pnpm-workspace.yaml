@@ -20,9 +20,9 @@ allowBuilds:
   spawn-sync: false
   workerd: true
 catalog:
-  vite: npm:@voidzero-dev/vite-plus-core@1.4.0
-  vitest: 5.0.5
-  vite-plus: 1.4.0
+  vite: npm:@voidzero-dev/vite-plus-core@1.6.0
+  vitest: 5.1.0
+  vite-plus: 1.6.0
 overrides:
   "vite@*": "catalog:"
   "vitest@*": "catalog:"
@@ -40,29 +40,3 @@ peerDependencyRules:
   allowedVersions:
     vite: "*"
     vitest: "*"
-minimumReleaseAgeExclude:
-  - "@voidzero-dev/vite-plus-core@1.4.0"
-  - "@voidzero-dev/vite-plus-darwin-arm64@1.4.0"
-  - "@voidzero-dev/vite-plus-darwin-x64@1.4.0"
-  - "@voidzero-dev/vite-plus-linux-arm64-gnu@1.4.0"
-  - "@voidzero-dev/vite-plus-linux-arm64-musl@1.4.0"
-  - "@voidzero-dev/vite-plus-linux-x64-gnu@1.4.0"
-  - "@voidzero-dev/vite-plus-linux-x64-musl@1.4.0"
-  - "@voidzero-dev/vite-plus-win32-arm64-msvc@1.4.0"
-  - "@voidzero-dev/vite-plus-win32-x64-msvc@1.4.0"
-  - vite-plus@1.4.0
-  - "@cloudflare/build-output-utils@0.9.9"
-  - "@cloudflare/config@0.30.1"
-  - "@cloudflare/runtime-types@0.1.22"
-  - "@cloudflare/vite-plugin@2.0.0-beta.v.11"
-  - "@cloudflare/vitest-plugin@1.5.1"
-  - "@cloudflare/workerd-darwin-64@1.20261103.1"
-  - "@cloudflare/workerd-darwin-arm64@1.20261103.1"
-  - "@cloudflare/workerd-linux-64@1.20261103.1"
-  - "@cloudflare/workerd-linux-arm64@1.20261103.1"
-  - "@cloudflare/workerd-windows-64@1.20261103.1"
-  - "@cloudflare/workers-types@5.20261103.1"
-  - cf@1.0.0-beta.27
-  - miniflare@5.20261103.0-beta
-  - workerd@1.20261103.1
-  - wrangler@4.157.0

@@ -139,6 +139,8 @@ const attributedResult = `r.command_id = a.command_id AND r.command_id != '' AND
 
 const playbackCounts = `COUNT(*) AS attempts, COUNT(DISTINCT party_key) AS parties,
   COUNT(DISTINCT party_key) FILTER (WHERE result IN ('blocked','failed','unanswered')) AS affectedParties,
+  COUNT(DISTINCT party_key) FILTER (WHERE result IN ('applied','blocked','failed','unanswered')) AS eligibleParties,
+  COUNT(DISTINCT party_key) FILTER (WHERE result = 'applied') AS syncedParties,
   COUNT(*) FILTER (WHERE result = 'applied') AS applied,
   COUNT(*) FILTER (WHERE result = 'applied' AND issueAt <= appliedAt) AS recovered,
   COUNT(*) FILTER (WHERE result = 'blocked') AS blocked,

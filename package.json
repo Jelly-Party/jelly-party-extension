@@ -7,13 +7,13 @@
     "prepare": "vp config"
   },
   "devDependencies": {
-    "@cloudflare/vitest-plugin": "1.5.1",
-    "@cloudflare/workers-types": "5.20261103.1",
+    "@cloudflare/vitest-plugin": "1.8.2",
+    "@cloudflare/workers-types": "5.20261115.1",
     "@playwright/test": "1.64.1",
     "@types/node": "26.6.6",
     "@types/selenium-webdriver": "4.35.7",
-    "cf": "1.0.0-beta.27",
-    "concurrently": "10.0.6",
+    "cf": "1.0.0-beta.32",
+    "concurrently": "10.0.7",
     "jszip": "3.10.2",
     "selenium-webdriver": "4.52.0",
     "typescript": "6.0.3",

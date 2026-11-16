@@ -1,6 +1,12 @@
-import { RemoteSeekGuard } from "./playback";
 import { describe, expect, it } from "vite-plus/test";
-import { liveTimeFromEnd, RemoteEchoGuard, targetTime, timeFromEnd } from "./playback.js";
+import {
+  liveTimeFromEnd,
+  reachedTarget,
+  RemoteEchoGuard,
+  RemoteSeekGuard,
+  targetTime,
+  timeFromEnd,
+} from "./playback.js";
 
 describe("finite playback positions", () => {
   it("translates positions through distance from the end", () => {
@@ -23,6 +29,7 @@ describe("live playback snapshots", () => {
   it("keeps paused snapshots fixed and ignores future timestamps", () => {
     expect(liveTimeFromEnd({ playing: false, timeFromEnd: 90, updatedAt: 1_000 }, 3_500)).toBe(90);
     expect(liveTimeFromEnd({ playing: true, timeFromEnd: 90, updatedAt: 3_500 }, 1_000)).toBe(90);
+    expect(liveTimeFromEnd({ playing: true, timeFromEnd: 2, updatedAt: 1_000 }, 6_000)).toBe(0);
   });
 });
 
@@ -47,5 +54,23 @@ describe("remote seek echoes", () => {
     expect(guard.consume(30, 1030)).toBe(false);
     guard.mark(40, 2000);
     expect(guard.consume(40, 5000)).toBe(false);
+  });
+});
+
+describe("verifying an applied command", () => {
+  it("accepts a player that needed the elapsed time to start", () => {
+    // play() took 1.5 seconds to resolve, so the video is still at the target.
+    expect(reachedTarget(30, 30, 120, 1.5)).toBe(true);
+    expect(reachedTarget(31.5, 30, 120, 1.5)).toBe(true);
+  });
+
+  it("rejects a player that stayed behind or ran past the target", () => {
+    expect(reachedTarget(12, 30, 120, 1.5)).toBe(false);
+    expect(reachedTarget(33, 30, 120, 1.5)).toBe(false);
+    expect(reachedTarget(31.5, 30, 120, 0)).toBe(false);
+  });
+
+  it("does not expect playback beyond the end", () => {
+    expect(reachedTarget(120, 119.5, 120, 4)).toBe(true);
   });
 });

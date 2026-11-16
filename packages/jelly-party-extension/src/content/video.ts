@@ -1,5 +1,6 @@
 import {
   isPlaybackAction,
+  reachedTarget,
   RemoteEchoGuard,
   RemoteSeekGuard,
   targetTime,
@@ -139,10 +140,10 @@ function start(): NonNullable<Window["__jellyPartyVideoController"]> {
 
   async function apply(action: PlaybackAction, positionFromEnd: number): Promise<object> {
     report();
-    if (!video) return { ok: false, error: "No video found" };
+    if (!video) return { ok: false, reason: "video-unavailable", error: "No video found" };
     const end = mediaEnd(video);
     const desired = end === null ? null : targetTime(end, positionFromEnd);
-    if (desired === null) {
+    if (end === null || desired === null) {
       return {
         ok: false,
         reason: "video-unavailable",
@@ -164,24 +165,20 @@ function start(): NonNullable<Window["__jellyPartyVideoController"]> {
         echo.mark("pause");
         video.pause();
       }
-      if (controlled.seeking)
-        await new Promise<void>((resolve) => {
-          const done = () => {
-            clearTimeout(timer);
-            controlled.removeEventListener("seeked", done);
-            resolve();
-          };
-          const timer = setTimeout(done, 5000);
-          controlled.addEventListener("seeked", done, { once: true });
-        });
-      const expected = Math.min(
-        end!,
-        desired + (controlled.paused ? 0 : (Date.now() - startedAt) / 1000),
-      );
+      await seekSettled(controlled);
+      const elapsed = () => (controlled.paused ? 0 : (Date.now() - startedAt) / 1000);
+      // Starting playback or seeking can take a while. Catch up once with where
+      // the party is by now; the short hop ahead is usually buffered already.
+      const live = Math.min(end, desired + elapsed());
+      if (controlled === video && !controlled.seeking && live - controlled.currentTime > 1) {
+        remoteSeek.mark(live);
+        controlled.currentTime = live;
+        await seekSettled(controlled);
+      }
       if (
         controlled !== video ||
         controlled.seeking ||
-        Math.abs(controlled.currentTime - expected) > 1 ||
+        !reachedTarget(controlled.currentTime, desired, end, elapsed()) ||
         (action === "play" && controlled.paused) ||
         (action === "pause" && !controlled.paused)
       )
@@ -249,6 +246,20 @@ function start(): NonNullable<Window["__jellyPartyVideoController"]> {
       if (frameScanTimer) clearTimeout(frameScanTimer);
     },
   };
+}
+
+/** Resolves when the current seek finishes, or after five seconds without one. */
+function seekSettled(video: HTMLVideoElement): Promise<void> {
+  if (!video.seeking) return Promise.resolve();
+  return new Promise((resolve) => {
+    const done = () => {
+      clearTimeout(timer);
+      video.removeEventListener("seeked", done);
+      resolve();
+    };
+    const timer = setTimeout(done, 5000);
+    video.addEventListener("seeked", done, { once: true });
+  });
 }
 
 function isAutoplayBlock(error: unknown): boolean {

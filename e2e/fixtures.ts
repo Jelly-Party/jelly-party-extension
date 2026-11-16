@@ -1,7 +1,9 @@
+import { execFile } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { promisify } from "node:util";
 import { type BrowserContext, type Page, chromium, test } from "@playwright/test";
 
 const directory = path.dirname(fileURLToPath(import.meta.url));
@@ -126,6 +128,71 @@ export async function openSidebar(peer: ExtensionPeer, videoPage: Page): Promise
     `chrome-extension://${peer.extensionId}/src/sidebar/sidebar.html?tab=${tabId}`,
   );
   return sidebar;
+}
+
+/** Makes the extension's play() calls on this page take `delayMs` to start. */
+export async function delayExtensionVideoPlay(
+  peer: ExtensionPeer,
+  page: Page,
+  delayMs: number,
+): Promise<void> {
+  const tabId = await extensionTabId(peer, page);
+  const worker = peer.context.serviceWorkers()[0];
+  await worker.evaluate(
+    async ({ targetTabId, delay }) => {
+      const extension = globalThis as typeof globalThis & {
+        chrome: {
+          scripting: {
+            executeScript(options: {
+              target: { tabId: number };
+              func: (delay: number) => void;
+              args: [number];
+            }): Promise<unknown>;
+          };
+        };
+      };
+      await extension.chrome.scripting.executeScript({
+        target: { tabId: targetTabId },
+        func: (delay) => {
+          const video = document.querySelector("video");
+          if (!video) throw new Error("No video to instrument");
+          const play = video.play.bind(video);
+          video.play = async () => {
+            await new Promise((resolve) => setTimeout(resolve, delay));
+            return play();
+          };
+        },
+        args: [delay],
+      });
+    },
+    { targetTabId: tabId, delay: delayMs },
+  );
+}
+
+/** Test-source analytics rows recorded by the local relay since `began`. */
+export async function recordedEvents(
+  began: number,
+): Promise<Array<{ kind: string; outcome: string; count: number }>> {
+  const { stdout } = await promisify(execFile)(
+    "vp",
+    [
+      "exec",
+      "cf",
+      "d1",
+      "raw",
+      "1f777b9f-e77e-4969-b8d8-0879bc3b2b49",
+      "--local",
+      "--persist-to",
+      ".wrangler/state",
+      "--sql",
+      `SELECT kind,outcome,COUNT(*) AS n FROM events WHERE occurred_at >= ${began} AND source = 'test' GROUP BY kind,outcome`,
+    ],
+    { encoding: "utf8", env: { ...process.env, CHOKIDAR_USEPOLLING: "1" }, timeout: 30_000 },
+  );
+  const [{ results }] = JSON.parse(stdout) as Array<{
+    results: { rows: Array<[kind: string, outcome: string, count: number]> };
+  }>;
+  return results.rows.map(([kind, outcome, count]) => ({ kind, outcome, count }));
 }
 
 export { test };

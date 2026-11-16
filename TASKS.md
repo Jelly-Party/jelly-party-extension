@@ -1,5 +1,0 @@
-# Open tasks
-
-- [ ] Release 2.5.0: download the four validated ZIPs using the [release workflow](docs/releasing.md) and upload the new version to the existing Chrome, Firefox, and Edge listings. Store submission remains manual. Confirm the published version and invitation flow in each store-installed extension.
-- [ ] Tooling: track the low-severity [deepmerge advisory](https://github.com/advisories/GHSA-gcqx-w48m-w2h4). Version 4.3.1 has no published patch and is used by the Svelte Vite plugin to merge local build configuration. Update through a compatible parent or patched release when available; keep the remaining audit finding visible.
-- [ ] Tooling: track the moderate [minimatch advisory](https://github.com/advisories/GHSA-g3hv-75wg-m249) under the extension launcher. Its broad affected range includes 3.1.5, but the described `optimizationLevel >= 2` preprocessing code is absent from 3.x. Reassess an advisory correction or compatible upstream update; forcing the 11.x API would break the launcher's current glob dependency.

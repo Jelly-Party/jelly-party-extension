@@ -958,6 +958,8 @@ test("playback outcomes are exclusive and count affected parties independently o
     attempts: 11,
     parties: 6,
     affectedParties: 2,
+    eligibleParties: 4,
+    syncedParties: 2,
     applied: 3,
     recovered: 1,
     blocked: 1,
