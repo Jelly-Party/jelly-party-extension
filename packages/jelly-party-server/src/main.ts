@@ -1,6 +1,8 @@
 import { adminRequest } from "./admin";
 import { PartyAnalytics, analyticsSite } from "./analytics";
 export { LiveStats } from "./analytics";
+import { logOperationalEvent } from "./operational-log";
+export { OperationalLog } from "./operational-log";
 import {
   HISTORY_PAGE_SIZE,
   MEMBERSHIP_CHECK_MS,
@@ -86,12 +88,12 @@ interface MessageWindow {
 }
 
 export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
+  async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
     if (url.hostname === "dashboard.jelly-party.com" && url.pathname === "/")
       return Response.redirect(new URL("/admin", url), 302);
     if (url.pathname === "/admin" || url.pathname.startsWith("/admin/"))
-      return adminRequest(request, env);
+      return adminRequest(request, env, ctx);
     if (request.method === "GET" && url.pathname === "/health") {
       return Response.json({ status: "ok", version: RELEASE_VERSION });
     }
@@ -105,16 +107,21 @@ export default {
       });
     }
     if (url.pathname === "/party" && request.method === "POST") {
-      return createParty(request, env);
+      return createParty(request, env, ctx);
     }
 
     const telemetryParty = /^\/party\/([0-9a-f]{64})\/telemetry$/.exec(url.pathname)?.[1];
     if (telemetryParty && request.method === "POST") {
-      const { success } = await env.PARTY_CONNECTION_RATE_LIMITER.limit({
+      const { success } = await env.INVITE_TELEMETRY_RATE_LIMITER.limit({
         key: clientKey(request),
       });
-      if (!success) return new Response("Too many reports", { status: 429, headers: API_HEADERS });
-      return env.PARTY.get(env.PARTY.idFromString(telemetryParty)).fetch(request);
+      if (!success) {
+        logNetworkRateLimit(ctx, "invite_telemetry");
+        return new Response("Too many reports", { status: 429, headers: API_HEADERS });
+      }
+      const id = partyObjectId(env, telemetryParty);
+      if (!id) return new Response("Not found", { status: 404, headers: API_HEADERS });
+      return env.PARTY.get(id).fetch(request);
     }
     const partyId = /^\/party\/([^/]+)$/.exec(url.pathname)?.[1];
     if (!partyId || !parsePartyId(partyId)) return env.ASSETS.fetch(request);
@@ -124,19 +131,48 @@ export default {
     const { success } = await env.PARTY_CONNECTION_RATE_LIMITER.limit({
       key: clientKey(request),
     });
-    if (!success) return new Response("Too many party connections", { status: 429 });
-
-    try {
-      return env.PARTY.get(env.PARTY.idFromString(partyId)).fetch(request);
-    } catch {
+    if (!success) {
+      logNetworkRateLimit(ctx, "party_connection");
+      return new Response("Too many party connections", { status: 429 });
+    }
+    const id = partyObjectId(env, partyId);
+    if (!id) {
+      logOperationalEvent(ctx, "warn", {
+        event: "party_connection",
+        outcome: "rejected",
+        reason: "invalid_party_id",
+      });
       return new Response("Not found", { status: 404 });
     }
+    return env.PARTY.get(id).fetch(request);
   },
 } satisfies ExportedHandler<Env>;
 
-async function createParty(request: Request, env: Env): Promise<Response> {
+function partyObjectId(env: Env, partyId: string): DurableObjectId | null {
+  try {
+    return env.PARTY.idFromString(partyId);
+  } catch {
+    return null;
+  }
+}
+
+function logNetworkRateLimit(
+  ctx: ExecutionContext,
+  route: "party_create" | "party_connection" | "invite_telemetry",
+): void {
+  logOperationalEvent(ctx, "warn", {
+    event: "rate_limit",
+    outcome: "rejected",
+    reason: "network",
+    route,
+    status: 429,
+  });
+}
+
+async function createParty(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
   const { success } = await env.PARTY_CREATION_RATE_LIMITER.limit({ key: clientKey(request) });
   if (!success) {
+    logNetworkRateLimit(ctx, "party_create");
     return Response.json(
       { error: "Too many parties were started from this network. Try again in a minute." },
       { status: 429, headers: { ...API_HEADERS, "Retry-After": "60" } },
@@ -146,14 +182,21 @@ async function createParty(request: Request, env: Env): Promise<Response> {
   const limit = maxPartiesPerMonth(env.MAX_PARTIES_PER_MONTH);
   const reservation = await env.PARTY_QUOTA.getByName("global").reserveParty(limit);
   if (!reservation.allowed) {
-    console.warn("Monthly party creation safety limit reached", { limit });
+    logOperationalEvent(ctx, "warn", {
+      event: "party_creation_quota",
+      outcome: "rejected",
+      limit,
+      status: 429,
+    });
     return Response.json(
       { error: "Jelly Party reached its monthly safety limit. Please try again later." },
       { status: 429, headers: API_HEADERS },
     );
   }
   if (reservation.count === Math.ceil(limit / 2) || reservation.count === Math.ceil(limit * 0.8)) {
-    console.warn("Party creation safety limit threshold reached", {
+    logOperationalEvent(ctx, "warn", {
+      event: "party_creation_quota",
+      outcome: "threshold",
       count: reservation.count,
       limit,
     });
@@ -271,6 +314,12 @@ export class Party extends DurableObject<Env> {
       .getWebSockets()
       .filter((socket) => socket.readyState === WebSocket.OPEN && !this.peer(socket)).length;
     if (pending >= MAX_PENDING_CONNECTIONS) {
+      logOperationalEvent(this.ctx, "warn", {
+        event: "party_connection",
+        outcome: "rejected",
+        reason: "pending_limit",
+        status: 429,
+      });
       return new Response("Too many pending party connections", { status: 429 });
     }
     const pair = new WebSocketPair();
@@ -284,8 +333,10 @@ export class Party extends DurableObject<Env> {
 
   async webSocketMessage(socket: WebSocket, raw: string | ArrayBuffer): Promise<void> {
     if (socket.readyState !== WebSocket.OPEN) return;
-    if (!this.peer(socket) && this.pendingJoinDeadline(socket) <= Date.now()) {
-      socket.close(1008, "Join timed out");
+    const attachment = this.attachment(socket);
+    const joinDeadline = attachment ? 0 : this.pendingJoinDeadline(socket);
+    if (!attachment && joinDeadline <= Date.now()) {
+      this.closeTimedOutJoin(socket);
       return;
     }
     const parsed = parseClientMessage(
@@ -302,8 +353,7 @@ export class Party extends DurableObject<Env> {
       return this.send(socket, { type: "error", code: "invalid-message", message: parsed.error });
 
     const message = parsed.value;
-    const peer = this.peer(socket);
-    const attachment = this.attachment(socket);
+    const peer = attachment?.peer;
     if (attachment) socket.serializeAttachment({ ...attachment, lastSeen: Date.now() });
     if (message.type === "join") {
       if (peer)
@@ -323,6 +373,11 @@ export class Party extends DurableObject<Env> {
             new TextEncoder().encode(previous.attachment.reconnectToken),
           ))
       ) {
+        logOperationalEvent(this.ctx, "warn", {
+          event: "party_join",
+          outcome: "rejected",
+          reason: "identity_in_use",
+        });
         this.send(socket, {
           type: "error",
           code: "invalid-message",
@@ -332,6 +387,11 @@ export class Party extends DurableObject<Env> {
         return;
       }
       if (!previous && this.peers().length >= MAX_PARTY_CONNECTIONS) {
+        logOperationalEvent(this.ctx, "warn", {
+          event: "party_join",
+          outcome: "rejected",
+          reason: "party_full",
+        });
         this.send(socket, {
           type: "error",
           code: "invalid-message",
@@ -364,6 +424,7 @@ export class Party extends DurableObject<Env> {
       await this.ctx.storage.delete("emptySince");
       await this.scheduleCheck();
       const leaderId = this.leader()?.peer.id ?? message.peer.id;
+      const client = message.client ?? UNKNOWN_CLIENT;
       this.send(socket, {
         type: "welcome",
         peerId: message.peer.id,
@@ -373,8 +434,17 @@ export class Party extends DurableObject<Env> {
         playback,
         initializePlayback,
       });
+      logOperationalEvent(this.ctx, "info", {
+        event: "party_join",
+        outcome: "accepted",
+        reason: created ? "party_started" : previous ? "socket_replaced" : "participant",
+        browser: client.browser,
+        version: client.version,
+        source: client.source,
+        latency_ms: Date.now() - joinDeadline + PARTY_JOIN_TIMEOUT_MS,
+      });
       this.broadcastPresence();
-      this.reportMembership(created, message.peer.id, message.client ?? UNKNOWN_CLIENT);
+      this.reportMembership(created, message.peer.id, client);
       return;
     }
     if (!peer) {
@@ -385,7 +455,7 @@ export class Party extends DurableObject<Env> {
       });
     }
     if (message.type === "heartbeat") return;
-    const client = this.attachment(socket)?.client ?? UNKNOWN_CLIENT;
+    const client = attachment?.client ?? UNKNOWN_CLIENT;
     if (message.type === "telemetry") {
       this.analytics.once(
         message.outcome,
@@ -549,6 +619,12 @@ export class Party extends DurableObject<Env> {
   }
 
   async webSocketError(socket: WebSocket): Promise<void> {
+    if (this.peer(socket))
+      logOperationalEvent(this.ctx, "warn", {
+        event: "party_connection",
+        outcome: "closed",
+        reason: "socket_error",
+      });
     socket.close(1011, "Connection interrupted");
     await this.webSocketClose(socket);
   }
@@ -558,15 +634,25 @@ export class Party extends DurableObject<Env> {
     if (next === null || next > at) await this.ctx.storage.setAlarm(at);
   }
 
+  private closeTimedOutJoin(socket: WebSocket): void {
+    logOperationalEvent(this.ctx, "warn", {
+      event: "party_join",
+      outcome: "rejected",
+      reason: "join_timeout",
+    });
+    socket.close(1008, "Join timed out");
+  }
+
   async alarm(): Promise<void> {
     let pendingDeadline = Infinity;
+    let heartbeatTimeouts = 0;
     for (const socket of this.ctx.getWebSockets()) {
       if (socket.readyState !== WebSocket.OPEN) continue;
       const peer = this.attachment(socket);
       if (!peer) {
         const deadline = this.pendingJoinDeadline(socket);
         if (deadline > Date.now()) pendingDeadline = Math.min(pendingDeadline, deadline);
-        else socket.close(1008, "Join timed out");
+        else this.closeTimedOutJoin(socket);
         continue;
       }
       const seen = Math.max(
@@ -574,6 +660,7 @@ export class Party extends DurableObject<Env> {
         this.ctx.getWebSocketAutoResponseTimestamp(socket)?.getTime() ?? 0,
       );
       if (Date.now() - seen > 70_000) {
+        heartbeatTimeouts += 1;
         socket.serializeAttachment(null);
         socket.close(1011, "Heartbeat timed out");
       } else if (peer.pendingSync) {
@@ -596,6 +683,13 @@ export class Party extends DurableObject<Env> {
         });
       }
     }
+    if (heartbeatTimeouts)
+      logOperationalEvent(this.ctx, "warn", {
+        event: "party_connection",
+        outcome: "closed",
+        reason: "heartbeat_timeout",
+        count: heartbeatTimeouts,
+      });
     this.broadcastPresence();
     this.reportMembership();
     await this.analytics.flush();

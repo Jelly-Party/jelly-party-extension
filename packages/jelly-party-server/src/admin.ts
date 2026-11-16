@@ -1,10 +1,16 @@
 import { createRemoteJWKSet, jwtVerify } from "jose";
-import { usageReport } from "./analytics";
+import type { ReportFilters } from "jelly-party-lib";
+import { logOperationalEvent } from "./operational-log";
+import { usagePartyPage, usageReport } from "./usage-report";
 
 // Cache only the public-key resolver, never a user's claims or token.
 let keySet: { issuer: string; resolve: ReturnType<typeof createRemoteJWKSet> } | undefined;
 
-export async function adminRequest(request: Request, env: Env): Promise<Response> {
+export async function adminRequest(
+  request: Request,
+  env: Env,
+  ctx: ExecutionContext,
+): Promise<Response> {
   const headers = { "Cache-Control": "no-store", "X-Robots-Tag": "noindex, nofollow" };
   if (!env.ACCESS_TEAM_DOMAIN || !env.ACCESS_AUD) {
     return new Response("Dashboard access is not configured.", { status: 503, headers });
@@ -37,33 +43,33 @@ export async function adminRequest(request: Request, env: Env): Promise<Response
     forwarded.headers.set("X-Analytics-Expires", String(expiresAt));
     return env.LIVE_STATS.getByName("global").fetch(forwarded);
   }
-  if (url.pathname === "/admin/api/stats") {
+  if (url.pathname === "/admin/api/stats" || url.pathname === "/admin/api/parties") {
+    const view = url.pathname === "/admin/api/stats" ? "overview" : "parties";
+    const query = url.searchParams;
+    const startedAt = performance.now();
     try {
-      return Response.json(
-        await usageReport(
-          env.ANALYTICS_DB,
-          url.searchParams.get("from") ?? "",
-          url.searchParams.get("to") ?? "",
-          {
-            site: url.searchParams.get("site") || undefined,
-            browser: (url.searchParams.get("browser") ||
-              undefined) as import("jelly-party-lib").ReportFilters["browser"],
-            version: url.searchParams.get("version") || undefined,
-            source: (url.searchParams.get("source") ||
-              "production") as import("jelly-party-lib").ReportFilters["source"],
-            page: Number(url.searchParams.get("page") ?? 0),
-          },
-        ),
-        { headers },
-      );
+      const load = view === "overview" ? usageReport : usagePartyPage;
+      const data = await load(env.ANALYTICS_DB, query.get("from") ?? "", query.get("to") ?? "", {
+        site: query.get("site") || undefined,
+        browser: (query.get("browser") || undefined) as ReportFilters["browser"],
+        version: query.get("version") || undefined,
+        source: (query.get("source") || "production") as ReportFilters["source"],
+        page: view === "parties" ? Number(query.get("page") ?? 0) : undefined,
+      });
+      const durationMs = Math.round(performance.now() - startedAt);
+      if (durationMs >= 2000)
+        logOperationalEvent(ctx, "warn", { event: "dashboard_report_slow", view, durationMs });
+      return Response.json(data, {
+        headers: { ...headers, "Server-Timing": `report;dur=${durationMs}` },
+      });
     } catch (error) {
-      return new Response(
-        error instanceof RangeError ? error.message : "Could not load analytics.",
-        {
-          status: error instanceof RangeError ? 400 : 503,
-          headers,
-        },
-      );
+      if (error instanceof RangeError) return new Response(error.message, { status: 400, headers });
+      logOperationalEvent(ctx, "warn", {
+        event: "dashboard_report_failed",
+        view,
+        durationMs: Math.round(performance.now() - startedAt),
+      });
+      return new Response("Could not load analytics.", { status: 503, headers });
     }
   }
   if (url.pathname.startsWith("/admin/api/"))

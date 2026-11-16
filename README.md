@@ -122,14 +122,22 @@ full URLs, IPs, and message contents. Test and development extensions mark their
 production reports exclude it by default. Records from older clients have unknown client metadata.
 
 The dashboard separates confirmed and uncertain membership. Open durations stop at the last
-recorded evidence; old sessions with missing disconnects no longer grow indefinitely. Connected
-duration needs one participant; together duration needs two. Neither measures watch time.
-The funnel follows parties started in the selected UTC date range through a second participant,
-five minutes together, and at least one applied remote playback change. Older clients have no
-playback outcomes, and missing results never count as success. Filters select matching parties;
-party rows and the funnel use lifetime activity, while activity totals use the selected dates.
-History includes previous-period comparisons and pages of 100 starts. `vp run deploy` applies
-D1 migrations before uploading the Worker.
+membership evidence. Connected duration needs one participant and together duration needs two.
+Both measure connection time. The funnel follows parties started in the selected UTC dates through
+a second participant and five minutes together. Party details show lifetime activity and load in
+pages of 100 when opened. Activity counts and diagnostics use the selected dates. Browser, site,
+and version filters match individual diagnostic events and select whole parties for the funnel and
+party details.
+
+Playback reliability counts each remote command once per recipient and shows how many parties were
+affected. An eventual application counts as a success, with recoveries visible. Superseded commands,
+unanswered commands, and clients without outcome reporting are shown separately. Invite counters
+describe activity within the extension's permission screen.
+
+In Cloudflare Workers Logs, look for structured events about joins, connection and rate-limit
+failures, analytics delivery, and slow dashboard reports. The dashboard history endpoints also expose
+report duration in `Server-Timing`. Custom logs use bounded reasons without invite paths or personal
+data. `vp run deploy` applies D1 migrations before uploading the Worker.
 
 Cloudflare code deployments interrupt existing party WebSockets. The extension reconnects
 automatically; if its retries fail, the sidebar offers Retry.

@@ -9,7 +9,8 @@ import {
 import { beforeEach, afterEach, test, expect, vi } from "vite-plus/test";
 import { generateKeyPair, exportJWK, SignJWT } from "jose";
 import type { ServerMessage, LiveSnapshot } from "jelly-party-lib";
-import { analyticsSite, usageReport } from "../src/analytics";
+import { analyticsSite } from "../src/analytics";
+import { usagePartyPage, usageReport } from "../src/usage-report";
 import {
   MAX_PARTY_CONNECTIONS,
   MAX_PENDING_CONNECTIONS,
@@ -446,6 +447,7 @@ test("analytics storage failure does not prevent joining or chatting", async () 
 
 test("admin rejects missing/forged/expired/wrong-audience tokens and accepts a signed Access token", async () => {
   expect((await exports.default.fetch("https://example.com/admin/api/stats")).status).toBe(401);
+  expect((await exports.default.fetch("https://example.com/admin/api/parties")).status).toBe(401);
   const { privateKey, publicKey } = await generateKeyPair("RS256", { extractable: true });
   const jwk = { ...(await exportJWK(publicKey)), kid: "test", alg: "RS256", use: "sig" };
   vi.spyOn(globalThis, "fetch").mockImplementation(async () => Response.json({ keys: [jwk] }));
@@ -465,7 +467,27 @@ test("admin rejects missing/forged/expired/wrong-audience tokens and accepts a s
   expect((await request(await token("wrong"))).status).toBe(403);
   expect((await request(await token("analytics-test", "-1h"))).status).toBe(403);
   const valid = await token();
-  expect((await request(valid)).status).toBe(200);
+  const stats = await request(valid);
+  expect(stats.status).toBe(200);
+  expect(stats.headers.get("Server-Timing")).toMatch(/^report;dur=\d+$/);
+  expect(await stats.json()).not.toHaveProperty("parties");
+  const parties = (page: string) =>
+    exports.default.fetch(
+      `https://example.com/admin/api/parties?from=2026-09-01&to=2026-09-11&page=${page}`,
+      {
+        headers: { "Cf-Access-Jwt-Assertion": valid },
+      },
+    );
+  const firstPage = await parties("0");
+  expect(firstPage.status).toBe(200);
+  expect(firstPage.headers.get("Server-Timing")).toMatch(/^report;dur=\d+$/);
+  expect(await firstPage.json()).toEqual({
+    parties: [],
+    hasMoreParties: false,
+    page: 0,
+    totalParties: 0,
+  });
+  expect((await parties("-1")).status).toBe(400);
   expect((await request(valid, "?from=bad&to=2026-09-11")).status).toBe(400);
   expect((await request(valid, "?from=2026-02-31&to=2026-09-11")).status).toBe(400);
   expect(
@@ -518,7 +540,7 @@ test("party history includes whole parties across midnight and excludes empty ga
       ).bind(crypto.randomUUID(), start + minute * 60000, kind, key, site, value),
     ),
   );
-  const yesterday = await usageReport(env.ANALYTICS_DB, "2026-09-10", "2026-09-10");
+  const yesterday = await usagePartyPage(env.ANALYTICS_DB, "2026-09-10", "2026-09-10");
   expect(yesterday.parties).toMatchObject([
     {
       key: "closed",
@@ -532,7 +554,7 @@ test("party history includes whole parties across midnight and excludes empty ga
     },
   ]);
   expect(yesterday.hasMoreParties).toBe(false);
-  const today = await usageReport(env.ANALYTICS_DB, "2026-09-11", "2026-09-11");
+  const today = await usagePartyPage(env.ANALYTICS_DB, "2026-09-11", "2026-09-11");
   expect(today.parties).toMatchObject([
     {
       key: "active",
@@ -550,10 +572,17 @@ async function insertEvent(
   kind: string,
   at: number,
   value = 1,
-  extra: { site?: string; browser?: string; source?: string; outcome?: string } = {},
+  extra: {
+    site?: string;
+    browser?: string;
+    version?: string;
+    source?: string;
+    outcome?: string;
+    commandId?: string;
+  } = {},
 ) {
   await env.ANALYTICS_DB.prepare(
-    "INSERT INTO events (id,occurred_at,kind,party_key,site,value,browser,version,source,outcome) VALUES (?,?,?,?,?,?,?,?,?,?)",
+    "INSERT INTO events (id,occurred_at,kind,party_key,site,value,browser,version,source,outcome,command_id) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
   )
     .bind(
       crypto.randomUUID(),
@@ -563,9 +592,10 @@ async function insertEvent(
       extra.site ?? "youtube.com",
       value,
       extra.browser ?? "chrome",
-      "2.4.0",
+      extra.version ?? "2.4.0",
       extra.source ?? "production",
       extra.outcome ?? "",
+      extra.commandId ?? "",
     )
     .run();
 }
@@ -588,6 +618,7 @@ test("reports zero days, previous cohorts, confirmed together time, filters, and
   await env.ANALYTICS_DB.prepare("INSERT INTO party_presence VALUES (?,?,?,?)")
     .bind("current", 3, 2, start + 8 * 60000)
     .run();
+  await insertEvent("current", "invite_opened", start + 40 * 60000);
   const report = await usageReport(env.ANALYTICS_DB, "2026-09-10", "2026-09-11");
   expect(report.daily).toEqual([
     { day: "2026-09-10", parties: 2, participants: 2, messages: 0 },
@@ -597,26 +628,28 @@ test("reports zero days, previous cohorts, confirmed together time, filters, and
     started: 2,
     together: 1,
     fiveMinutes: 1,
-    synced: 1,
     uncertain: 2,
     medianTimeToJoinMs: 60000,
   });
   expect(report.previousFunnel.started).toBe(1);
-  expect(report.parties.find((p) => p.key === "current")).toMatchObject({
+  const partyPage = await usagePartyPage(env.ANALYTICS_DB, "2026-09-10", "2026-09-11");
+  expect(partyPage.parties.find((p) => p.key === "current")).toMatchObject({
     durationMs: 8 * 60000,
     togetherMs: 7 * 60000,
     status: "uncertain",
   });
-  const filtered = await usageReport(env.ANALYTICS_DB, "2026-09-10", "2026-09-10", {
+  const filtered = await usagePartyPage(env.ANALYTICS_DB, "2026-09-10", "2026-09-10", {
     site: "netflix.com",
     browser: "firefox",
     version: "2.4.0",
   });
   expect(filtered.parties.map((p) => p.key)).toEqual(["firefox"]);
-  const tests = await usageReport(env.ANALYTICS_DB, "2026-09-10", "2026-09-10", { source: "test" });
+  const tests = await usagePartyPage(env.ANALYTICS_DB, "2026-09-10", "2026-09-10", {
+    source: "test",
+  });
   expect(tests.totalParties).toBe(1);
   await expect(
-    usageReport(env.ANALYTICS_DB, "2026-09-10", "2026-09-10", { page: -1 }),
+    usagePartyPage(env.ANALYTICS_DB, "2026-09-10", "2026-09-10", { page: -1 }),
   ).rejects.toThrow(RangeError);
 });
 
@@ -629,13 +662,20 @@ test("history paginates more than 100 matching starts deterministically", async 
       ).bind(`event-${i}`, start, `party-${String(i).padStart(3, "0")}`),
     ),
   );
-  const first = await usageReport(env.ANALYTICS_DB, "2026-09-10", "2026-09-10");
-  const second = await usageReport(env.ANALYTICS_DB, "2026-09-10", "2026-09-10", { page: 1 });
+  const first = await usagePartyPage(env.ANALYTICS_DB, "2026-09-10", "2026-09-10");
+  const second = await usagePartyPage(env.ANALYTICS_DB, "2026-09-10", "2026-09-10", { page: 1 });
   expect(first.parties).toHaveLength(100);
   expect(first.hasMoreParties).toBe(true);
   expect(first.totalParties).toBe(102);
   expect(second.parties.map((p) => p.key)).toEqual(["party-100", "party-101"]);
   expect(second.hasMoreParties).toBe(false);
+  expect(second.totalParties).toBe(102);
+  expect(await usagePartyPage(env.ANALYTICS_DB, "2026-09-10", "2026-09-10", { page: 2 })).toEqual({
+    parties: [],
+    hasMoreParties: false,
+    page: 2,
+    totalParties: 102,
+  });
 });
 
 test("live snapshots exclude tests and separate stale membership without deleting quiet parties", async () => {
@@ -732,7 +772,7 @@ test("membership alarms preserve responsive peers and clean up timed-out sockets
     .toBe(0);
   const today = new Date().toISOString().slice(0, 10);
   await expect
-    .poll(async () => (await usageReport(env.ANALYTICS_DB, today, today)).parties[0]?.status)
+    .poll(async () => (await usagePartyPage(env.ANALYTICS_DB, today, today)).parties[0]?.status)
     .toBe("ended");
   socket.close();
 });
@@ -841,38 +881,96 @@ test("invite telemetry validates bounded reports and never persists extra privat
   expect(JSON.stringify(rows)).not.toMatch(/Private|private-path|raw user agent/);
 });
 
-test("playback rates attribute replies across midnight to the attempted command's date", async () => {
+test("diagnostics use exact event filters and attribute replies to the attempt across midnight", async () => {
   const start = Date.parse("2026-09-10T23:59:59Z");
-  for (const [kind, at, outcome] of [
-    ["sync_attempt", start, ""],
-    ["sync_result", start + 2000, "applied"],
-  ] as const) {
-    await env.ANALYTICS_DB.prepare(
-      "INSERT INTO events (id,occurred_at,kind,party_key,site,value,command_id,outcome) VALUES (?,?,?,?,?,1,?,?)",
-    )
-      .bind(crypto.randomUUID(), at, kind, "party", "youtube.com", "command", outcome)
-      .run();
-  }
-  const yesterday = await usageReport(env.ANALYTICS_DB, "2026-09-10", "2026-09-10");
-  expect(yesterday.outcomes.map((row) => [row.kind, row.count])).toEqual([
+  const match = { site: "netflix.com", browser: "firefox", version: "2.5.0" } as const;
+  await insertEvent("party", "party_created", start - 5000);
+  await insertEvent("party", "participant_joined", start - 4000);
+  await insertEvent("party", "participant_joined", start - 3000, 1, { source: "test" });
+  await insertEvent("party", "video_ready", start - 2000, 1, match);
+  await insertEvent("party", "video_missing", start - 1000, 1, { ...match, source: "test" });
+  await insertEvent("party", "video_missing", start, 1, { ...match, version: "2.4.0" });
+  await insertEvent("party", "sync_attempt", start, 1, { ...match, commandId: "command" });
+  await insertEvent("party", "sync_result", start + 2000, 1, {
+    commandId: "command",
+    outcome: "applied",
+  });
+
+  const prior = await usageReport(env.ANALYTICS_DB, "2026-09-10", "2026-09-10", match);
+  expect(prior.funnel.started).toBe(1);
+  expect(prior.lastEventAt).toBe(start);
+  expect(prior.outcomes.map((row) => [row.kind, row.count])).toEqual([
     ["sync_attempt", 1],
     ["sync_result", 1],
+    ["video_ready", 1],
   ]);
-  const today = await usageReport(env.ANALYTICS_DB, "2026-09-11", "2026-09-11");
-  expect(today.outcomes).toEqual([]);
-  expect(yesterday.playbackResults).toMatchObject([
-    { attempts: 1, applied: 1, blocked: 0, failed: 0 },
+  expect(prior.playbackResults).toMatchObject([{ ...match, attempts: 1, applied: 1 }]);
+
+  const next = await usageReport(env.ANALYTICS_DB, "2026-09-11", "2026-09-11", match);
+  expect(next.lastEventAt).toBeNull();
+  expect(next.outcomes).toEqual([]);
+  expect(next.playbackResults).toEqual([]);
+  expect(next.playback.attempts).toBe(0);
+
+  const page = await usagePartyPage(env.ANALYTICS_DB, "2026-09-10", "2026-09-10", match);
+  expect(page.parties).toMatchObject([
+    { key: "party", participants: 1, sites: ["netflix.com", "youtube.com"] },
   ]);
-  expect(today.playbackResults).toEqual([]);
-  for (const outcome of ["video-missing", "autoplay-blocked", "timeout", "failed"]) {
-    await env.ANALYTICS_DB.prepare(
-      "INSERT INTO events (id,occurred_at,kind,party_key,site,value,command_id,outcome) VALUES (?,?, 'sync_result','party','youtube.com',1,'command',?)",
-    )
-      .bind(crypto.randomUUID(), start + 3000, outcome)
-      .run();
+  const testPage = await usagePartyPage(env.ANALYTICS_DB, "2026-09-10", "2026-09-10", {
+    ...match,
+    source: "test",
+  });
+  expect(testPage.totalParties).toBe(0);
+});
+
+test("playback outcomes are exclusive and count affected parties independently of attempts", async () => {
+  const now = Date.parse("2026-09-10T22:00:00Z");
+  vi.spyOn(Date, "now").mockReturnValue(now);
+  const recent = now - 60_000;
+  const old = now - 600_000;
+  const attempts = [
+    { party: "1", id: "applied", at: old, outcomes: ["applied"] },
+    { party: "1", id: "recovered", at: old, outcomes: ["autoplay-blocked", "applied"] },
+    { party: "2", id: "blocked", at: old, outcomes: ["video-missing"] },
+    { party: "2", id: "failed", at: old, outcomes: ["video-missing", "failed"] },
+    { party: "3", id: "timeout", at: recent, outcomes: ["timeout"] },
+    { party: "3", id: "no-reply", at: old, outcomes: [] },
+    { party: "4", id: "superseded", at: old, outcomes: ["superseded"] },
+    { party: "5", id: "legacy-timeout", at: old, version: "2.3.0", outcomes: ["timeout"] },
+    { party: "5", id: "legacy-superseded", at: old, version: "unknown", outcomes: ["superseded"] },
+    { party: "5", id: "legacy-applied", at: old, version: "2.3.0", outcomes: ["applied"] },
+    { party: "6", id: "pending", at: recent, version: "3.0.0", outcomes: [] },
+  ];
+  for (const { party, id, at, outcomes, version } of attempts) {
+    await insertEvent(party, "sync_attempt", at, 1, { version, commandId: id });
+    for (const [i, outcome] of outcomes.entries())
+      await insertEvent(party, "sync_result", at + i + 1, 1, { version, commandId: id, outcome });
   }
-  const retried = await usageReport(env.ANALYTICS_DB, "2026-09-10", "2026-09-10");
-  expect(retried.playbackResults).toMatchObject([
-    { attempts: 1, applied: 1, blocked: 1, failed: 1 },
-  ]);
+  await insertEvent("2", "sync_result", old + 100, 1, {
+    source: "test",
+    commandId: "blocked",
+    outcome: "applied",
+  });
+  await insertEvent("7", "sync_result", old + 100, 1, { commandId: "failed", outcome: "applied" });
+
+  const report = await usageReport(env.ANALYTICS_DB, "2026-09-10", "2026-09-10");
+  expect(report.playback).toEqual({
+    attempts: 11,
+    parties: 6,
+    affectedParties: 2,
+    applied: 3,
+    recovered: 1,
+    blocked: 1,
+    failed: 1,
+    superseded: 1,
+    unanswered: 2,
+    unsupported: 2,
+    pending: 1,
+  });
+  expect(report.playbackResults.find((row) => row.version === "2.3.0")).toMatchObject({
+    attempts: 2,
+    applied: 1,
+    unsupported: 1,
+    affectedParties: 0,
+  });
 });

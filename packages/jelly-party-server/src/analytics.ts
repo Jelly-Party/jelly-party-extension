@@ -1,5 +1,6 @@
 import { DurableObject } from "cloudflare:workers";
 import { parse } from "tldts";
+import { logOperationalEvent } from "./operational-log";
 import {
   MEMBERSHIP_FRESH_MS,
   UNKNOWN_CLIENT,
@@ -9,7 +10,6 @@ import {
   type UsageEvent,
   type SyncOutcome,
 } from "jelly-party-lib";
-export { usageReport } from "./usage-report";
 export function analyticsSite(value: string): string {
   try {
     const url = new URL(value);
@@ -34,10 +34,18 @@ interface StoredEvent {
   revision: number;
 }
 
+const FAILURE_LOG_INTERVAL_MS = 5 * 60_000;
+type StagingStage = "membership" | "deduplication" | "event";
+type DeliveryStage = "outbox_read" | "d1" | "live_stats" | "outbox_checkpoint";
+type DeliveryFailure = { stage: DeliveryStage; since: number; loggedAt: number };
+
 export class PartyAnalytics {
   private ready = false;
   private flushing: Promise<void> | undefined;
   private dirty = false;
+  private readonly stagingLogAt = new Map<StagingStage, number>();
+  private nextDelayedLogAt = 0;
+  private deliveryFailure?: DeliveryFailure;
   constructor(
     private ctx: DurableObjectState,
     private env: Env,
@@ -51,8 +59,14 @@ export class PartyAnalytics {
         CREATE TABLE IF NOT EXISTS analytics_outbox (id TEXT PRIMARY KEY, payload TEXT NOT NULL);
         CREATE TABLE IF NOT EXISTS analytics_snapshot (singleton INTEGER PRIMARY KEY CHECK (singleton=1), payload TEXT NOT NULL);
         CREATE TABLE IF NOT EXISTS analytics_outcomes (key TEXT PRIMARY KEY);
-        CREATE TABLE IF NOT EXISTS analytics_delivery (singleton INTEGER PRIMARY KEY CHECK (singleton=1), revision INTEGER NOT NULL);`);
+        CREATE TABLE IF NOT EXISTS analytics_delivery (singleton INTEGER PRIMARY KEY CHECK (singleton=1), revision INTEGER NOT NULL);
+        CREATE TABLE IF NOT EXISTS analytics_delivery_failure (singleton INTEGER PRIMARY KEY CHECK (singleton=1), stage TEXT NOT NULL, since INTEGER NOT NULL, logged_at INTEGER NOT NULL);`);
       sql.exec("INSERT OR IGNORE INTO analytics_state VALUES (1, ?, 0)", crypto.randomUUID());
+      this.deliveryFailure ??= sql
+        .exec<DeliveryFailure>(
+          "SELECT stage, since, logged_at AS loggedAt FROM analytics_delivery_failure",
+        )
+        .toArray()[0];
       this.ready = true;
     }
     return sql
@@ -112,7 +126,7 @@ export class PartyAnalytics {
         );
       this.kick();
     } catch {
-      console.warn("Analytics membership unavailable");
+      this.logStagingFailure("membership");
     }
   }
 
@@ -129,7 +143,7 @@ export class PartyAnalytics {
       )
         this.event(kind, site, client);
     } catch {
-      console.warn("Analytics outcome unavailable");
+      this.logStagingFailure("deduplication");
     }
   }
 
@@ -172,8 +186,15 @@ export class PartyAnalytics {
       );
       this.kick();
     } catch {
-      console.warn("Analytics event unavailable");
+      this.logStagingFailure("event");
     }
+  }
+
+  private logStagingFailure(stage: StagingStage): void {
+    const now = Date.now();
+    if (now < (this.stagingLogAt.get(stage) ?? 0)) return;
+    this.stagingLogAt.set(stage, now + FAILURE_LOG_INTERVAL_MS);
+    logOperationalEvent(this.ctx, "warn", { event: "analytics_staging", outcome: "failed", stage });
   }
 
   private kick(): void {
@@ -183,73 +204,136 @@ export class PartyAnalytics {
 
   flush(): Promise<void> {
     if (this.flushing) return this.flushing;
-    let delivered = false;
+    let pending: boolean | undefined;
     this.flushing = Promise.resolve()
-      .then(() => {
+      .then(async () => {
         this.dirty = false;
-        return this.deliver();
-      })
-      .then(() => {
-        delivered = true;
-      })
-      .catch(() => {
-        console.warn("Analytics delivery pending; retrying on alarm");
+        pending = await this.deliver();
       })
       .finally(() => {
         this.flushing = undefined;
-        if (delivered && (this.dirty || this.pending())) this.kick();
+        if (pending !== undefined && (pending || this.dirty)) this.kick();
       });
     return this.flushing;
   }
 
-  private async deliver(): Promise<void> {
-    this.identity();
-    // One bounded batch per turn. The party alarm drains any backlog after an outage.
-    const rows = this.ctx.storage.sql
-      .exec<{ id: string; payload: string }>(
-        "SELECT id,payload FROM analytics_outbox ORDER BY rowid LIMIT 100",
-      )
-      .toArray();
-    const stored = this.ctx.storage.sql
-      .exec<{ payload: string }>("SELECT payload FROM analytics_snapshot")
-      .toArray()[0];
-    const snapshot = stored ? (JSON.parse(stored.payload) as PartySnapshot) : undefined;
-    const statements = rows.map((row) => {
-      const e = JSON.parse(row.payload) as StoredEvent;
-      return this.env.ANALYTICS_DB.prepare(
-        "INSERT OR IGNORE INTO events (id,occurred_at,kind,party_key,site,value,browser,version,source,outcome,command_id,revision) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
-      ).bind(
-        e.id,
-        e.at,
-        e.kind,
-        e.key,
-        e.site,
-        e.value,
-        e.client.browser,
-        e.client.version,
-        e.client.source,
-        e.outcome,
-        e.commandId,
-        e.revision,
-      );
-    });
-    if (snapshot)
-      statements.push(
+  private async deliver(): Promise<boolean | undefined> {
+    let stage: DeliveryStage = "outbox_read";
+    let batchSize = 0;
+    let oldestEventAt: number | undefined;
+    try {
+      this.identity();
+      // One bounded batch per turn. The party alarm drains any backlog after an outage.
+      const rows = this.ctx.storage.sql
+        .exec<{ id: string; payload: string }>(
+          "SELECT id,payload FROM analytics_outbox ORDER BY rowid LIMIT 100",
+        )
+        .toArray();
+      batchSize = rows.length;
+      const events = rows.map((row) => JSON.parse(row.payload) as StoredEvent);
+      oldestEventAt = events[0]?.at;
+      const stored = this.ctx.storage.sql
+        .exec<{ payload: string }>("SELECT payload FROM analytics_snapshot")
+        .toArray()[0];
+      const snapshot = stored ? (JSON.parse(stored.payload) as PartySnapshot) : undefined;
+      stage = "d1";
+      const statements = events.map((e) =>
         this.env.ANALYTICS_DB.prepare(
-          `INSERT INTO party_presence VALUES (?,?,?,?) ON CONFLICT(party_key) DO UPDATE SET revision=excluded.revision,peers=excluded.peers,observed_at=excluded.observed_at WHERE excluded.revision > party_presence.revision`,
-        ).bind(snapshot.key, snapshot.revision, snapshot.peers, snapshot.updatedAt),
+          "INSERT OR IGNORE INTO events (id,occurred_at,kind,party_key,site,value,browser,version,source,outcome,command_id,revision) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+        ).bind(
+          e.id,
+          e.at,
+          e.kind,
+          e.key,
+          e.site,
+          e.value,
+          e.client.browser,
+          e.client.version,
+          e.client.source,
+          e.outcome,
+          e.commandId,
+          e.revision,
+        ),
       );
-    if (statements.length) await this.env.ANALYTICS_DB.batch(statements);
-    // Keep the snapshot until both destinations accepted it. Revision checks make replay safe.
-    if (snapshot) {
-      await this.env.LIVE_STATS.getByName("global").update(snapshot);
-      this.ctx.storage.sql.exec(
-        "INSERT OR REPLACE INTO analytics_delivery VALUES (1, ?)",
-        snapshot.revision,
-      );
+      if (snapshot)
+        statements.push(
+          this.env.ANALYTICS_DB.prepare(
+            `INSERT INTO party_presence VALUES (?,?,?,?) ON CONFLICT(party_key) DO UPDATE SET revision=excluded.revision,peers=excluded.peers,observed_at=excluded.observed_at WHERE excluded.revision > party_presence.revision`,
+          ).bind(snapshot.key, snapshot.revision, snapshot.peers, snapshot.updatedAt),
+        );
+      if (statements.length) await this.env.ANALYTICS_DB.batch(statements);
+      // Keep the snapshot until both destinations accepted it. Revision checks make replay safe.
+      stage = "live_stats";
+      if (snapshot) await this.env.LIVE_STATS.getByName("global").update(snapshot);
+      stage = "outbox_checkpoint";
+      if (snapshot)
+        this.ctx.storage.sql.exec(
+          "INSERT OR REPLACE INTO analytics_delivery VALUES (1, ?)",
+          snapshot.revision,
+        );
+      for (const row of rows)
+        this.ctx.storage.sql.exec("DELETE FROM analytics_outbox WHERE id = ?", row.id);
+      const pending = this.dirty || this.pending();
+      const now = Date.now();
+      const oldestEventAge = oldestEventAt === undefined ? 0 : now - oldestEventAt;
+      if (this.deliveryFailure && !pending) {
+        const { stage, since } = this.deliveryFailure;
+        this.ctx.storage.sql.exec("DELETE FROM analytics_delivery_failure");
+        this.deliveryFailure = undefined;
+        logOperationalEvent(this.ctx, "info", {
+          event: "analytics_delivery",
+          outcome: "recovered",
+          stage,
+          outage_ms: now - since,
+        });
+      } else if (
+        !this.deliveryFailure &&
+        oldestEventAge >= MEMBERSHIP_FRESH_MS &&
+        now >= this.nextDelayedLogAt
+      ) {
+        this.nextDelayedLogAt = now + FAILURE_LOG_INTERVAL_MS;
+        logOperationalEvent(this.ctx, "warn", {
+          event: "analytics_delivery",
+          outcome: "delayed",
+          batch_size: batchSize,
+          oldest_event_age_ms: oldestEventAge,
+        });
+      }
+      return pending;
+    } catch {
+      this.logDeliveryFailure(stage, batchSize, oldestEventAt);
+      return undefined;
     }
-    for (const row of rows)
-      this.ctx.storage.sql.exec("DELETE FROM analytics_outbox WHERE id = ?", row.id);
+  }
+
+  private logDeliveryFailure(
+    stage: DeliveryStage,
+    batchSize: number,
+    oldestEventAt?: number,
+  ): void {
+    const now = Date.now();
+    const previous = this.deliveryFailure;
+    if (previous?.stage === stage && now - previous.loggedAt < FAILURE_LOG_INTERVAL_MS) return;
+    const since = previous?.since ?? now;
+    this.deliveryFailure = { stage, since, loggedAt: now };
+    logOperationalEvent(this.ctx, "warn", {
+      event: "analytics_delivery",
+      outcome: "retry_pending",
+      stage,
+      batch_size: batchSize,
+      oldest_event_age_ms: oldestEventAt === undefined ? undefined : now - oldestEventAt,
+      outage_ms: now - since,
+    });
+    try {
+      this.ctx.storage.sql.exec(
+        "INSERT OR REPLACE INTO analytics_delivery_failure VALUES (1, ?, ?, ?)",
+        stage,
+        since,
+        now,
+      );
+    } catch {
+      // Keep reporting failures even when local storage cannot checkpoint the log.
+    }
   }
 
   pending(): boolean {

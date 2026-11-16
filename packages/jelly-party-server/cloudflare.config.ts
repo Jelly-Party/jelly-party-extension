@@ -7,6 +7,7 @@ const relay = defineWorker({
   compatibilityDate: "2026-09-01",
   entrypoint,
   exports: {
+    OperationalLog: exports.worker(),
     Party: exports.durableObject({
       storage: "sqlite",
     }),
@@ -27,6 +28,11 @@ export default defineConfig({
     limits: {
       cpuMs: 100,
       subrequests: 8,
+    },
+    observability: {
+      enabled: true,
+      logs: { enabled: true, invocationLogs: false },
+      traces: { enabled: false },
     },
     assets: {
       notFoundHandling: "404-page",
@@ -63,6 +69,13 @@ export default defineConfig({
       }),
       PARTY_CONNECTION_RATE_LIMITER: bindings.rateLimit({
         namespace: "9202102",
+        simple: {
+          limit: 30,
+          period: 60,
+        },
+      }),
+      INVITE_TELEMETRY_RATE_LIMITER: bindings.rateLimit({
+        namespace: "9202103",
         simple: {
           limit: 30,
           period: 60,

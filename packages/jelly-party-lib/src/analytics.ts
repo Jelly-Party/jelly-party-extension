@@ -73,7 +73,6 @@ export interface Funnel {
   started: number;
   together: number;
   fiveMinutes: number;
-  synced: number;
   uncertain: number;
   medianTimeToJoinMs: number | null;
 }
@@ -90,6 +89,25 @@ export interface UsageParty {
   messages: number;
   sites: string[];
 }
+export interface UsagePartyPage {
+  parties: UsageParty[];
+  hasMoreParties: boolean;
+  page: number;
+  totalParties: number;
+}
+export interface PlaybackSummary {
+  attempts: number;
+  parties: number;
+  affectedParties: number;
+  applied: number;
+  recovered: number;
+  blocked: number;
+  failed: number;
+  superseded: number;
+  unanswered: number;
+  unsupported: number;
+  pending: number;
+}
 export interface UsageReport {
   from: string;
   to: string;
@@ -102,15 +120,8 @@ export interface UsageReport {
   daily: Array<{ day: string; parties: number; participants: number; messages: number }>;
   sites: Array<{ site: string; parties: number; participants: number }>;
   sizes: Array<{ peak: number; parties: number }>;
-  playbackResults: Array<{
-    site: string;
-    browser: string;
-    version: string;
-    attempts: number;
-    applied: number;
-    blocked: number;
-    failed: number;
-  }>;
+  playback: PlaybackSummary;
+  playbackResults: Array<PlaybackSummary & { site: string; browser: string; version: string }>;
   outcomes: Array<{
     site: string;
     browser: string;
@@ -120,10 +131,6 @@ export interface UsageReport {
     count: number;
   }>;
   filters: { sites: string[]; browsers: string[]; versions: string[] };
-  parties: UsageParty[];
-  hasMoreParties: boolean;
-  page: number;
-  totalParties: number;
 }
 export function isClientInfo(value: unknown): value is ClientInfo {
   if (!value || typeof value !== "object") return false;
