@@ -61,6 +61,10 @@ test("two peers create, join, chat, and synchronize playback in both directions"
     await joinPage.getByRole("button", { name: "Open video and join" }).click();
     await joinPage.waitForURL(videoUrl);
     await expect(joinPage.locator("video")).toHaveJSProperty("readyState", 4);
+    // Loop like the host. A guest that reached the end first would pause the party.
+    await joinPage.locator("video").evaluate((video: HTMLVideoElement) => {
+      video.loop = true;
+    });
 
     const sidebarB = await openSidebar(peerB, joinPage);
     await expect(sidebarB.getByTestId("connection-status")).toContainText("Connected");
@@ -91,6 +95,9 @@ test("two peers create, join, chat, and synchronize playback in both directions"
     });
     await expect.poll(() => paused(joinPage)).toBe(true);
     await expect(sidebarB.getByTestId("party-activity")).toContainText("Mira paused the video");
+    await joinPage.locator("video").evaluate((video: HTMLVideoElement) => {
+      video.loop = false;
+    });
 
     const secondInvitePage = await peerA.context.newPage();
     await secondInvitePage.goto(invite);
